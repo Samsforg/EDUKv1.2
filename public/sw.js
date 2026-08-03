@@ -69,29 +69,39 @@ self.addEventListener("fetch", (event) => {
 });
 
 // ---------- HELPERS ----------
+async function isFresh(cachedResponse, maxAgeSeconds) {
+  if (!cachedResponse) return false;
+  if (!maxAgeSeconds) return true;
+  const cachedDate = cachedResponse.headers.get("date");
+  if (!cachedDate) return true;
+  const age = (Date.now() - new Date(cachedDate).getTime()) / 1000;
+  return age < maxAgeSeconds;
+}
+
 async function cacheFirst(request, cacheName, maxAgeSeconds, maxEntries = 50) {
-  const cache = await caches.open("edukora-edu");
+  const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
-  if (cached) return cached;
+  if (cached && (await isFresh(cached, maxAgeSeconds))) return cached;
   try {
     const response = await fetch(request);
     if (response.ok) {
-      const cache = await caches.open("edukora-edu");
+      const cache = await caches.open(cacheName);
       cache.put(request, response.clone());
       // Cleanup old entries
       const keys = await cache.keys();
-      if (keys.length > 200) {
+      if (keys.length > maxEntries) {
         await cache.delete(keys[0]);
       }
     }
     return response;
   } catch {
-    return caches.match("/offline");
+    return cached || caches.match("/offline");
   }
 }
 
 async function networkFirst(request, cacheName, maxEntries, maxAgeSeconds, timeout) {
   const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout * 1000);
@@ -107,7 +117,6 @@ async function networkFirst(request, cacheName, maxEntries, maxAgeSeconds, timeo
     }
     return response;
   } catch {
-    const cached = await cache.match(request);
     return cached || caches.match("/offline");
   }
 }
@@ -197,7 +206,7 @@ self.addEventListener("notificationclick", (event) => {
       return self.clients.openWindow(url);
     })
   );
-}
+});
 
 // ---------- HELPERS ----------
 async function openCache(name) {

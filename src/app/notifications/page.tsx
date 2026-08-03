@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PushSubscribe from "@/components/PushSubscribe";
 
 interface Notification {
   id: number;
@@ -51,6 +52,7 @@ export default function NotificationsPage() {
           <h1 className="font-title-md text-title-md text-on-surface">Notifications</h1>
           <p className="font-label-xs text-label-xs text-on-surface-variant">Tes réussites et rappels</p>
         </div>
+        <PushSubscribe />
       </header>
 
       <main className="px-margin-mobile pt-6 space-y-3">
