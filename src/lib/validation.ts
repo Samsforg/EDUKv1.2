@@ -9,10 +9,12 @@ export const LoginSchema = z.object({
 export const RegisterSchema = z.object({
   first_name: z.string().min(1).max(50),
   last_name: z.string().min(1).max(50),
-  email: z.string().email().optional().or(z.literal("")),
-  phone: z.string().min(8).max(20).optional().or(z.literal("")),
+  email: z.string().email().optional().or(z.literal("")).nullable(),
+  phone: z.string().min(8).max(20).optional().or(z.literal("")).nullable(),
   password: z.string().min(6).max(128),
   referral_code: z.string().optional(),
+  role: z.enum(["student", "teacher"]).optional().default("student"),
+  serie_id: z.number().int().positive().nullable().optional(),
 }).refine((d) => d.email || d.phone, { message: "Email ou téléphone requis" });
 
 // ===== QUIZ =====

@@ -25,7 +25,10 @@ export async function POST(req: NextRequest) {
     expires,
   );
 
-  const baseUrl = process.env.NODE_ENV === "production" ? "https://edukora.app" : `http://localhost:3001`;
+  const baseUrl =
+    process.env.NODE_ENV === "production"
+      ? process.env.NEXT_PUBLIC_APP_URL || "https://edu-kv1-2.vercel.app"
+      : `http://localhost:${process.env.PORT || 3001}`;
   return NextResponse.json({
     ok: true,
     // En dev, on renvoie le lien directement (pas d'infrastructure e-mail).

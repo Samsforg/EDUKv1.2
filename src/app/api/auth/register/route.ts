@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const v = validate(RegisterSchema, body);
   if (!v.ok) return NextResponse.json({ error: v.errors[0] }, { status: 400 });
 
-  const { email, phone, password, first_name, last_name, referral_code } = v.data;
+  const { email, phone, password, first_name, last_name, referral_code, role, serie_id } = v.data;
   const db = getDb();
 
   if (!password || password.length < 6) {
@@ -49,7 +49,6 @@ export async function POST(req: NextRequest) {
   }
 
   const referralCode = `EDK-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-  const finalRole = "student";
 
   let referredBy: number | null = null;
   if (referral_code) {
@@ -60,16 +59,31 @@ export async function POST(req: NextRequest) {
     if (referrer) referredBy = referrer.id;
   }
 
+  let classLevel: string | null = null;
+  if (serie_id) {
+    const serie = queryOne<{ code: string; name: string }>(
+      "SELECT code, name FROM series WHERE id = ?",
+      serie_id,
+    );
+    if (!serie) {
+      return NextResponse.json({ error: "Série inconnue" }, { status: 400 });
+    }
+    classLevel = `Terminale ${serie.code}`;
+  } else {
+    classLevel = "Terminale";
+  }
+
   const result = run(
-    `INSERT INTO users (role, email, phone, password_hash, first_name, last_name, class_level, referral_code, referred_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    finalRole,
+    `INSERT INTO users (role, email, phone, password_hash, first_name, last_name, class_level, serie_id, referral_code, referred_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    role,
     email ?? null,
     phone ?? null,
     hashPassword(password),
     first_name,
     last_name,
-    "Terminale",
+    classLevel,
+    serie_id ?? null,
     referralCode,
     referredBy,
   );
@@ -87,7 +101,7 @@ export async function POST(req: NextRequest) {
 
   const token = await createSession(userId);
   const res = NextResponse.json(
-    { ok: true, user: { id: userId, first_name, last_name, email, role: finalRole } },
+    { ok: true, user: { id: userId, first_name, last_name, email, role } },
     { status: 201 },
   );
   setSessionCookie(res, token);

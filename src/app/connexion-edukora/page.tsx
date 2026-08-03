@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function Page() {
+function ConnexionPage() {
   const router = useRouter();
+  const params = useSearchParams();
+  const from = params.get("from");
   const [showPassword, setShowPassword] = useState(false);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -13,23 +15,31 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
 
+  function afterLogin(role?: string) {
+    if (from && !from.startsWith("/connexion") && !from.startsWith("/inscription")) {
+      router.replace(from);
+      return;
+    }
+    router.replace(
+      role === "parent"
+        ? "/espace-parent"
+        : role === "admin"
+          ? "/espace-admin"
+          : "/accueil-edukora",
+    );
+  }
+
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => {
         if (d.user) {
-          router.replace(
-            d.user.role === "parent"
-              ? "/espace-parent"
-              : d.user.role === "admin"
-                ? "/espace-admin"
-                : "/accueil-edukora",
-          );
+          afterLogin(d.user.role);
         }
       })
       .catch(() => {})
       .finally(() => setChecking(false));
-  }, [router]);
+  }, [router, from]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,13 +59,7 @@ export default function Page() {
       if (!res.ok) {
         setError(data.error ?? "Identifiant ou mot de passe incorrect.");
       } else {
-        router.push(
-          data.user?.role === "parent"
-            ? "/espace-parent"
-            : data.user?.role === "admin"
-              ? "/espace-admin"
-              : "/accueil-edukora",
-        );
+        afterLogin(data.user?.role);
       }
     } catch {
       setError("Erreur réseau. Réessayez.");
@@ -203,5 +207,13 @@ export default function Page() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <ConnexionPage />
+    </Suspense>
   );
 }

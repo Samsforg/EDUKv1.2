@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 const PUBLIC_ROUTES = [
   "/",
-  "/login",
-  "/register",
-  "/reset-password",
-  "/api/auth/login",
-  "/api/auth/register",
-  "/api/auth/me",
-  "/api/health",
-  "/manifest.webmanifest",
+  "/connexion-edukora",
+  "/inscription-1-2-edukora",
+  "/mot-de-passe-oubli-edukora",
+  "/reinitialiser-mot-de-passe",
   "/offline",
   "/icons",
   "/_next",
+  "/api/auth",
+  "/api/health",
+  "/api/series",
+  "/manifest.webmanifest",
 ];
 
 const TEACHER_ROUTES = ["/prof", "/api/prof"];
@@ -41,7 +41,7 @@ export function middleware(req: NextRequest) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Non connecté" }, { status: 401 });
     }
-    const loginUrl = new URL("/login", req.url);
+    const loginUrl = new URL("/connexion-edukora", req.url);
     loginUrl.searchParams.set("from", pathname);
     return NextResponse.redirect(loginUrl);
   }
