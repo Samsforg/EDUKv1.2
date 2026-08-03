@@ -1,49 +1,74 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { getDb, queryOne, run } from "@/lib/db";
 import { creditChallengeContribution } from "@/lib/defis";
 import type { User } from "@/lib/types";
 
 const COOKIE_NAME = "edukora_session";
 const SESSION_DAYS = 30;
+const TOKEN_VERSION = "v1";
+
+// Sessions sans état : token signé HMAC vérifiable sur TOUTES les instances
+// (Vercel : chaque fonction a sa propre base SQLite /tmp — une session stockée
+// en base ne serait pas lisible par les pages rendues par d'autres instances).
+// Définir SESSION_SECRET en variable d'environnement en production.
+function sessionSecret(): string {
+  return process.env.SESSION_SECRET || "edukora-session-secret-v1-demo";
+}
+
+function signSessionToken(payload: string): string {
+  return createHmac("sha256", sessionSecret()).update(payload).digest("base64url");
+}
+
+function signPayload(userId: number, exp: number): string {
+  const payload = Buffer.from(JSON.stringify({ uid: userId, exp })).toString("base64url");
+  return `${TOKEN_VERSION}.${payload}.${signSessionToken(payload)}`;
+}
+
+function verifySessionToken(token: string): { uid: number; exp: number } | null {
+  const parts = token.split(".");
+  if (parts.length !== 3 || parts[0] !== TOKEN_VERSION) return null;
+  const [, payload, sig] = parts;
+  const expected = signSessionToken(payload);
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as {
+      uid: number;
+      exp: number;
+    };
+    if (typeof data.uid !== "number" || typeof data.exp !== "number") return null;
+    if (data.exp < Date.now()) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
 
 export async function getCurrentUser(): Promise<User | null> {
   const token = (await cookies()).get(COOKIE_NAME)?.value;
   if (!token) return null;
-  const session = queryOne<{ user_id: number; expires_at: string }>(
-    "SELECT user_id, expires_at FROM sessions WHERE token = ?",
-    token,
-  );
+  const session = verifySessionToken(token);
   if (!session) return null;
-  if (new Date(session.expires_at) < new Date()) {
-    run("DELETE FROM sessions WHERE token = ?", token);
-    return null;
-  }
   const user = queryOne<User>(
     `SELECT id, role, email, phone, first_name, last_name, serie_id, class_level,
             xp, streak, referral_code, commune, blocked
      FROM users WHERE id = ?`,
-    session.user_id,
+    session.uid,
   );
   if (!user) return null;
-  if (user.blocked) {
-    run("DELETE FROM sessions WHERE token = ?", token);
-    return null;
-  }
+  if (user.blocked) return null;
   return user;
 }
 
 export async function createSession(userId: number): Promise<string> {
-  const { generateToken } = await import("@/lib/auth");
-  const token = generateToken();
-  const expires = new Date(Date.now() + SESSION_DAYS * 24 * 3600 * 1000).toISOString();
-  run("INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)", token, userId, expires);
-  return token;
+  return signPayload(userId, Date.now() + SESSION_DAYS * 24 * 3600 * 1000);
 }
 
 export async function destroySession(): Promise<void> {
-  const token = (await cookies()).get(COOKIE_NAME)?.value;
-  if (token) run("DELETE FROM sessions WHERE token = ?", token);
+  // Token sans état : aucune révocation en base nécessaire.
 }
 
 export function setSessionCookie(res: NextResponse, token: string) {
