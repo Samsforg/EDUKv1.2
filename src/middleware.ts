@@ -36,7 +36,7 @@ export function middleware(req: NextRequest) {
   }
 
   // Check session cookie
-  const session = req.cookies.get("session")?.value;
+  const session = req.cookies.get("edukora_session")?.value;
   if (!session) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Non connecté" }, { status: 401 });

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
+import PageHeader from "@/components/PageHeader";
 import { PairingCodeCard } from "@/components/PairingCodeCard";
 import { DisputeButton } from "@/components/DisputeButton";
 
@@ -55,16 +56,25 @@ export default function ProfilePage() {
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen pb-16 font-['Hanken_Grotesk']">
-      <header className="sticky top-0 z-40 bg-surface border-b border-outline-variant flex items-center gap-3 px-margin-mobile h-16">
-        <Link href="/accueil-edukora" className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100">
-          <span className="material-symbols-outlined">arrow_back</span>
-        </Link>
-        <h1 className="font-title-md text-title-md text-on-surface flex-1">Mon profil</h1>
-        <ThemeToggle />
-        <button onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); location.href = "/connexion-edukora"; }} className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100">
-          <span className="material-symbols-outlined">logout</span>
-        </button>
-      </header>
+      <PageHeader
+        title="Mon profil"
+        backHref="/accueil-edukora"
+        right={
+          <>
+            <ThemeToggle />
+            <button
+              onClick={async () => {
+                await fetch("/api/auth/logout", { method: "POST" });
+                location.href = "/connexion-edukora";
+              }}
+              aria-label="Se déconnecter"
+              className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100"
+            >
+              <span className="material-symbols-outlined">logout</span>
+            </button>
+          </>
+        }
+      />
 
       <main className="px-margin-mobile pt-6 pb-10 space-y-6">
         <section className="bg-surface border border-outline-variant rounded-xl p-5 flex items-center gap-4">

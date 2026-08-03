@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
         darkMode: "class",
+        content: [
+          "./src/**/*.{js,ts,jsx,tsx,mdx}",
+        ],
         theme: {
           extend: {
             "colors": {
@@ -78,7 +81,14 @@ module.exports = {
                     "display-lg": ["Hanken Grotesk"],
                     "body-md": ["Inter"],
                     "label-sm": ["Inter"],
-                    "metric-num": ["Hanken Grotesk"]
+                    "metric-num": ["Hanken Grotesk"],
+                    "title-md": ["Hanken Grotesk"],
+                    "title-sm": ["Hanken Grotesk"],
+                    "title-lg": ["Hanken Grotesk"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "headline-sm": ["Hanken Grotesk"],
+                    "body-sm": ["Inter"],
+                    "label-md": ["Inter"]
             },
             "fontSize": {
                     "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
@@ -87,7 +97,14 @@ module.exports = {
                     "display-lg-mobile": ["26px", {"lineHeight": "32px", "fontWeight": "700"}],
                     "display-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
                     "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
-                    "label-sm": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}]
+                    "label-sm": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "title-sm": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "title-lg": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}]
             }
           },
         },

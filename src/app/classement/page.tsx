@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageHeader from "@/components/PageHeader";
 
 interface RankedUser {
   rank: number;
@@ -110,17 +111,10 @@ export default function ClassementPage() {
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen pb-16 font-['Hanken_Grotesk']">
-      <header className="sticky top-0 z-40 bg-surface border-b border-outline-variant flex items-center gap-3 px-margin-mobile h-16">
-        <Link href="/accueil-edukora" className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100">
-          <span className="material-symbols-outlined">arrow_back</span>
-        </Link>
-        <div className="flex-1">
-          <h1 className="font-title-md text-title-md text-on-surface truncate">Classement</h1>
-          <p className="font-label-xs text-label-xs text-on-surface-variant">
-            {total ? `${total} élèves en lice` : " "}
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        title="Classement"
+        subtitle={total ? `${total} élèves en lice` : " "}
+      />
 
       <div className="sticky top-16 z-30 bg-background/95 backdrop-blur px-margin-mobile py-2.5">
         <div className="bg-surface-container-low p-1 rounded-full flex items-center gap-1 overflow-x-auto">

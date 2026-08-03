@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageHeader from "@/components/PageHeader";
 
 interface Category {
   id: number;
@@ -45,15 +46,7 @@ export default function ForumPage() {
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen pb-24 font-['Hanken_Grotesk']">
-      <header className="sticky top-0 z-40 bg-surface border-b border-outline-variant flex items-center gap-3 px-margin-mobile h-16">
-        <Link href="/accueil-edukora" className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100">
-          <span className="material-symbols-outlined">arrow_back</span>
-        </Link>
-        <div className="flex-1">
-          <h1 className="font-title-md text-title-md text-on-surface">Communauté</h1>
-          <p className="font-label-xs text-label-xs text-on-surface-variant">Entraide entre élèves de Côte d&apos;Ivoire</p>
-        </div>
-      </header>
+      <PageHeader title="Communauté" subtitle="Entraide entre élèves de Côte d'Ivoire" />
 
       <main className="px-margin-mobile pt-4 space-y-5">
         {loading ? (

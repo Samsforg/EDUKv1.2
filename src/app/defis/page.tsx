@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageHeader from "@/components/PageHeader";
 
 interface SideScore {
   xp: number;
@@ -122,18 +123,16 @@ export default function DefisPage() {
   const actifs = data?.actifs ?? [];
 
   return (
-    <div className="bg-background text-on-background font-['Hanken_Grotesk'] min-h-screen pb-28">
-      <header className="bg-surface border-b border-outline-variant sticky top-0 z-50 flex items-center justify-between px-margin-mobile h-16">
-        <div className="flex items-center gap-3">
-          <Link href="/accueil-edukora" className="p-2 -ml-2 rounded-full text-primary hover:bg-surface-container-low active:scale-95 duration-100">
-            <span className="material-symbols-outlined">arrow_back</span>
-          </Link>
-          <h1 className="font-title-md text-title-md font-bold text-primary">Défis Inter-Communes</h1>
-        </div>
-        <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center border-2 border-primary text-primary font-bold text-sm">
-          {(data?.me?.commune ?? "?").slice(0, 1).toUpperCase()}
-        </div>
-      </header>
+    <div className="bg-background text-on-background font-['Hanken_Grotesk'] min-h-screen pb-24">
+      <PageHeader
+        title="Défis Inter-Communes"
+        subtitle="Affronte les communes voisines"
+        right={
+          <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center border-2 border-primary text-primary font-bold text-sm">
+            {(data?.me?.commune ?? "?").slice(0, 1).toUpperCase()}
+          </div>
+        }
+      />
 
       <main className="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg space-y-8">
         <div>
