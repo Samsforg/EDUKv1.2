@@ -85,7 +85,14 @@ function ConnexionPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-surface text-on-surface flex flex-col items-center justify-center p-4">
+    <div className="min-h-dvh bg-surface text-on-surface flex flex-col items-center justify-center p-4 relative">
+      <Link
+        href="/"
+        aria-label="Retour à l'accueil"
+        className="absolute top-4 left-4 w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors active:scale-95 duration-100 z-10"
+      >
+        <span className="material-symbols-outlined">arrow_back</span>
+      </Link>
       <main className="w-full max-w-md bg-surface-container-lowest rounded-xl shadow-sm border border-surface-variant p-6 sm:p-8 flex flex-col">
         <header className="flex flex-col items-center text-center mb-8">
           <div className="w-14 h-14 mb-4 bg-surface-container-lowest rounded-2xl flex items-center justify-center p-1">
