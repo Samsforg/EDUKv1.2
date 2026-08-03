@@ -68,7 +68,6 @@ export default function Page() {
       <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-outline-variant/60">
         <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 h-16">
           <Link href="/" className="flex items-center gap-3">
-            <img src="/images/logo-edukora.png" alt="Edukora Logo" className="w-10 h-10 object-contain" />
             <span className="font-headline-md text-headline-md font-bold text-primary">Edukora</span>
           </Link>
           <nav className="hidden md:flex items-center gap-8 font-label-sm font-semibold text-on-surface-variant">
@@ -463,7 +462,6 @@ export default function Page() {
           <div className="grid md:grid-cols-4 gap-12 mb-16">
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <img src="/images/logo-edukora.png" alt="Edukora Logo" className="w-8 h-8 object-contain" />
                 <span className="font-headline-md font-bold text-primary">Edukora</span>
               </div>
               <p className="text-label-sm text-on-surface-variant leading-relaxed">
