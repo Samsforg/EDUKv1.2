@@ -1,0 +1,51 @@
+{
+  "id": "/accueil-edukora",
+  "name": "Edukora - Réussir son BAC & BEPC",
+  "short_name": "Edukora",
+  "description": "L'allié n°1 pour réussir le BAC et le BEPC en Côte d'Ivoire. Fiches certifiées, tuteur IA et simulateur d'examen.",
+  "lang": "fr",
+  "start_url": "/accueil-edukora",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f9f9fc",
+  "theme_color": "#0047ab",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/launcher-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/launcher-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Simulateur d'examen",
+      "short_name": "Simulateur",
+      "description": "S'entraîner aux épreuves BAC/BEPC notées sur 20",
+      "url": "/simulateur",
+      "icons": [{ "src": "/icons/launcher-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Quiz par matière",
+      "short_name": "Quiz",
+      "description": "Réviser avec des quiz notés",
+      "url": "/quiz",
+      "icons": [{ "src": "/icons/launcher-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Parler à Kora",
+      "short_name": "Kora",
+      "description": "Poser tes questions à ton tuteur IA",
+      "url": "/tuteur-ia",
+      "icons": [{ "src": "/icons/launcher-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

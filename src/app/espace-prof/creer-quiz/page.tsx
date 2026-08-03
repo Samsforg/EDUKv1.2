@@ -1,0 +1,196 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+interface Subject {
+  id: number;
+  name: string;
+}
+
+interface QDraft {
+  question: string;
+  options: string[];
+  answerIndex: number;
+  explanation: string;
+}
+
+const EMPTY_Q: QDraft = { question: "", options: ["", "", "", ""], answerIndex: 0, explanation: "" };
+
+export default function CreateQuizPage() {
+  const router = useRouter();
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [title, setTitle] = useState("");
+  const [subjectId, setSubjectId] = useState<number | null>(null);
+  const [level, setLevel] = useState("Terminale");
+  const [questions, setQuestions] = useState<QDraft[]>([{ ...EMPTY_Q }]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.user || d.user.role !== "teacher") router.replace("/connexion-edukora");
+      });
+    fetch("/api/subjects")
+      .then((r) => r.json())
+      .then((d) => {
+        setSubjects(d.subjects ?? []);
+        setSubjectId((d.subjects?.[0]?.id) ?? null);
+      });
+  }, [router]);
+
+  function updateQuestion(i: number, patch: Partial<QDraft>) {
+    setQuestions((prev) => prev.map((q, qi) => (qi === i ? { ...q, ...patch } : q)));
+  }
+
+  function addQuestion() {
+    setQuestions((prev) => [...prev, { ...EMPTY_Q }]);
+  }
+
+  function removeQuestion(i: number) {
+    setQuestions((prev) => (prev.length > 1 ? prev.filter((_, qi) => qi !== i) : prev));
+  }
+
+  async function save() {
+    setError(null);
+    if (!title.trim()) return setError("Donne un titre au quiz.");
+    if (!subjectId) return setError("Choisis une matière.");
+    for (const q of questions) {
+      if (!q.question.trim()) return setError("Toutes les questions doivent avoir un énoncé.");
+      if (q.options.some((o) => !o.trim())) return setError("Toutes les options doivent être remplies.");
+    }
+    setSaving(true);
+    const res = await fetch("/api/prof/quiz", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, subject_id: subjectId, level, questions }),
+    });
+    const data = await res.json();
+    setSaving(false);
+    if (data.error) return setError(data.error);
+    setDone(true);
+    setTimeout(() => router.push("/espace-prof"), 1200);
+  }
+
+  if (done) {
+    return (
+      <div className="min-h-dvh bg-surface flex flex-col items-center justify-center gap-4 px-6 font-['Hanken_Grotesk']">
+        <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
+          <span className="material-symbols-outlined text-on-primary text-3xl">check</span>
+        </div>
+        <p className="font-headline-md text-on-surface">Quiz publié !</p>
+        <p className="font-body-sm text-on-surface-variant">Tes élèves peuvent déjà le trouver dans l&apos;onglet Quiz.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-background text-on-background font-body-md min-h-screen pb-28 font-['Hanken_Grotesk']">
+      <header className="sticky top-0 z-40 bg-surface border-b border-outline-variant flex items-center gap-3 px-4 h-16">
+        <Link href="/espace-prof" className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100">
+          <span className="material-symbols-outlined">arrow_back</span>
+        </Link>
+        <h1 className="font-title-md text-title-md text-on-surface flex-1">Nouveau quiz</h1>
+      </header>
+
+      <main className="px-4 pt-6 max-w-2xl mx-auto space-y-6">
+        {error && <p className="bg-error-container/20 text-error font-label-sm px-4 py-3 rounded-xl">{error}</p>}
+
+        <section className="bg-surface border border-outline-variant rounded-xl p-4 space-y-3">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Titre du quiz (ex : Quiz Chimie : Réactions)"
+            className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 font-body-md text-on-surface focus:outline-none focus:border-primary"
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <select
+              value={subjectId ?? ""}
+              onChange={(e) => setSubjectId(Number(e.target.value))}
+              className="rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-3 font-body-sm text-on-surface focus:outline-none focus:border-primary"
+            >
+              {subjects.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+            <select
+              value={level}
+              onChange={(e) => setLevel(e.target.value)}
+              className="rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-3 font-body-sm text-on-surface focus:outline-none focus:border-primary"
+            >
+              {["Seconde", "Première", "Terminale", "Tous niveaux"].map((l) => (
+                <option key={l} value={l}>{l}</option>
+              ))}
+            </select>
+          </div>
+        </section>
+
+        {questions.map((q, i) => (
+          <section key={i} className="bg-surface border border-outline-variant rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-label-md font-semibold text-primary">Question {i + 1}</span>
+              {questions.length > 1 && (
+                <button onClick={() => removeQuestion(i)} className="text-error font-label-sm hover:opacity-80">Supprimer</button>
+              )}
+            </div>
+            <textarea
+              value={q.question}
+              onChange={(e) => updateQuestion(i, { question: e.target.value })}
+              placeholder="Énoncé de la question…"
+              rows={2}
+              className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 font-body-md text-on-surface focus:outline-none focus:border-primary resize-none"
+            />
+            <div className="space-y-2">
+              {q.options.map((opt, oi) => (
+                <div key={oi} className="flex items-center gap-2">
+                  <button
+                    onClick={() => updateQuestion(i, { answerIndex: oi })}
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${q.answerIndex === oi ? "border-primary" : "border-outline-variant"}`}
+                    aria-label={`Bonne réponse : option ${oi + 1}`}
+                  >
+                    {q.answerIndex === oi && <div className="w-3 h-3 rounded-full bg-primary"></div>}
+                  </button>
+                  <input
+                    value={opt}
+                    onChange={(e) => updateQuestion(i, { options: q.options.map((o, x) => (x === oi ? e.target.value : o)) })}
+                    placeholder={`Option ${oi + 1}${q.answerIndex === oi ? " (bonne réponse)" : ""}`}
+                    className="flex-1 rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-2.5 font-body-sm text-on-surface focus:outline-none focus:border-primary"
+                  />
+                </div>
+              ))}
+            </div>
+            <input
+              value={q.explanation}
+              onChange={(e) => updateQuestion(i, { explanation: e.target.value })}
+              placeholder="Explication du corrigé (optionnel)"
+              className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-2.5 font-body-sm text-on-surface focus:outline-none focus:border-primary"
+            />
+          </section>
+        ))}
+
+        <button
+          onClick={addQuestion}
+          className="w-full h-12 rounded-full border-2 border-dashed border-outline-variant text-on-surface-variant font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100"
+        >
+          <span className="material-symbols-outlined text-[18px]">add</span> Ajouter une question
+        </button>
+      </main>
+
+      <footer className="fixed bottom-0 left-0 right-0 bg-surface border-t border-outline-variant px-4 py-3">
+        <div className="max-w-2xl mx-auto">
+          <button
+            onClick={save}
+            disabled={saving}
+            className="w-full h-12 rounded-full bg-primary text-on-primary font-label-md font-semibold flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-transform duration-100"
+          >
+            {saving ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : <>Publier le quiz <span className="material-symbols-outlined text-[18px]">rocket_launch</span></>}
+          </button>
+        </div>
+      </footer>
+    </div>
+  );
+}

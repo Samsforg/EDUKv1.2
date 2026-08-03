@@ -1,0 +1,1422 @@
+[
+  {
+    "slug": "accueil-avec-logo-edukora",
+    "folder": "accueil_avec_logo_edukora",
+    "title": "Edukora - Tableau de Bord"
+  },
+  {
+    "slug": "accueil-avec-notification-d-analyse-edukora",
+    "folder": "accueil_avec_notification_d_analyse_edukora",
+    "title": "Edukora - Tableau de Bord"
+  },
+  {
+    "slug": "accueil-avec-notification-de-parrainage-edukora",
+    "folder": "accueil_avec_notification_de_parrainage_edukora",
+    "title": "Edukora - Tableau de Bord"
+  },
+  {
+    "slug": "accueil-avec-notification-edukora",
+    "folder": "accueil_avec_notification_edukora",
+    "title": "Edukora - Tableau de Bord"
+  },
+  {
+    "slug": "accueil-avec-objectifs-de-s-rie-edukora",
+    "folder": "accueil_avec_objectifs_de_s_rie_edukora",
+    "title": "Edukora - Tableau de Bord"
+  },
+  {
+    "slug": "accueil-avec-s-ries-edukora",
+    "folder": "accueil_avec_s_ries_edukora",
+    "title": "Edukora - Tableau de Bord"
+  },
+  {
+    "slug": "accueil-avec-statut-de-ligue-edukora",
+    "folder": "accueil_avec_statut_de_ligue_edukora",
+    "title": "Edukora - Tableau de Bord"
+  },
+  {
+    "slug": "accueil-edukora",
+    "folder": "accueil_edukora",
+    "title": "Edukora - Tableau de Bord"
+  },
+  {
+    "slug": "accueil-invitation-installation-pwa",
+    "folder": "accueil_invitation_installation_pwa",
+    "title": "Edukora - Accueil"
+  },
+  {
+    "slug": "accueil-mode-hors-ligne-scores-en-attente",
+    "folder": "accueil_mode_hors_ligne_scores_en_attente",
+    "title": "Edukora - Mode Hors-ligne"
+  },
+  {
+    "slug": "accueil-plan-de-r-vision-int-gr",
+    "folder": "accueil_plan_de_r_vision_int_gr",
+    "title": "Edukora - Tableau de Bord"
+  },
+  {
+    "slug": "accueil-premium-edukora",
+    "folder": "accueil_premium_edukora",
+    "title": "Edukora Premium - Home"
+  },
+  {
+    "slug": "accueil-simplifi-edukora",
+    "folder": "accueil_simplifi_edukora",
+    "title": "Edukora - Tableau de Bord"
+  },
+  {
+    "slug": "accueil-synchronisation-en-cours",
+    "folder": "accueil_synchronisation_en_cours",
+    "title": "Edukora - Synchronisation"
+  },
+  {
+    "slug": "accueil-synchronisation-r-ussie",
+    "folder": "accueil_synchronisation_r_ussie",
+    "title": "Edukora - Accueil"
+  },
+  {
+    "slug": "alertes-facturation-edukora-premium",
+    "folder": "alertes_facturation_edukora_premium",
+    "title": "Alertes Facturation | Edukora"
+  },
+  {
+    "slug": "analyse-comparative-par-mati-re-pomodoro",
+    "folder": "analyse_comparative_par_mati_re_pomodoro",
+    "title": "Analyse par Matière - Edukora"
+  },
+  {
+    "slug": "analyse-d-taill-e-de-fiche-professeur",
+    "folder": "analyse_d_taill_e_de_fiche_professeur",
+    "title": "analyse_d_taill_e_de_fiche_professeur"
+  },
+  {
+    "slug": "analyse-de-fiche-professeur",
+    "folder": "analyse_de_fiche_professeur",
+    "title": "Edukora Professor Dashboard - Analyse Pédagogique"
+  },
+  {
+    "slug": "analyse-de-niveau-ia",
+    "folder": "analyse_de_niveau_ia",
+    "title": "Edukora Academic - Analyse IA"
+  },
+  {
+    "slug": "analyse-de-performance-orale",
+    "folder": "analyse_de_performance_orale",
+    "title": "Edukora - Rapport de Performance Orale"
+  },
+  {
+    "slug": "analyse-ia-en-cours",
+    "folder": "analyse_ia_en_cours",
+    "title": "Edukora Professor - Analyse IA"
+  },
+  {
+    "slug": "aper-u-et-publication-du-quiz",
+    "folder": "aper_u_et_publication_du_quiz",
+    "title": "Edukora Pro - Aperçu du Quiz"
+  },
+  {
+    "slug": "aper-u-invitation-e-mail-experts",
+    "folder": "aper_u_invitation_e_mail_experts",
+    "title": "Edukora Expert - Invitation E-mail"
+  },
+  {
+    "slug": "aper-u-invitation-whatsapp-experts",
+    "folder": "aper_u_invitation_whatsapp_experts",
+    "title": "Edukora Expert - Invitation WhatsApp"
+  },
+  {
+    "slug": "aper-u-notification-r-sultat-notification-parent",
+    "folder": "aper_u_notification_r_sultat_notification_parent",
+    "title": "Edukora Parent - Dashboard"
+  },
+  {
+    "slug": "approbation-des-cours-admin",
+    "folder": "approbation_des_cours_admin",
+    "title": "Edukora Admin - Validation des Contenus"
+  },
+  {
+    "slug": "assigner-une-valuation",
+    "folder": "assigner_une_valuation",
+    "title": "Edukora | Assignation de Ressources"
+  },
+  {
+    "slug": "attente-de-validation-ussd-1",
+    "folder": "attente_de_validation_ussd_1",
+    "title": "Edukora - Validation de Paiement"
+  },
+  {
+    "slug": "attente-de-validation-ussd-2",
+    "folder": "attente_de_validation_ussd_2",
+    "title": "Edukora - Validation de Paiement"
+  },
+  {
+    "slug": "banque-d-images-partag-e-professeur",
+    "folder": "banque_d_images_partag_e_professeur",
+    "title": "Banque d'Images Partagée - Edukora Pro"
+  },
+  {
+    "slug": "bienvenue-diagnostic-ia",
+    "folder": "bienvenue_diagnostic_ia",
+    "title": "Edukora - Diagnostic Onboarding"
+  },
+  {
+    "slug": "bienvenue-sur-edukora",
+    "folder": "bienvenue_sur_edukora",
+    "title": "Bienvenue sur Edukora"
+  },
+  {
+    "slug": "bo-te-id-es-communautaire",
+    "folder": "bo_te_id_es_communautaire",
+    "title": "Edukora Support - Boîte à Idées"
+  },
+  {
+    "slug": "bulletin-trimestriel-d-tail",
+    "folder": "bulletin_trimestriel_d_tail",
+    "title": "Edukora Professeur - Détails Bulletin"
+  },
+  {
+    "slug": "centre-d-aide-edukora",
+    "folder": "centre_d_aide_edukora",
+    "title": "Edukora | Centre d'Aide"
+  },
+  {
+    "slug": "centre-de-feedback-accueil",
+    "folder": "centre_de_feedback_accueil",
+    "title": "Edukora - Feedback & Amélioration"
+  },
+  {
+    "slug": "centre-de-mod-ration-dashboard",
+    "folder": "centre_de_mod_ration_dashboard",
+    "title": "Edukora | Administration & Modération"
+  },
+  {
+    "slug": "centre-de-notifications-edukora",
+    "folder": "centre_de_notifications_edukora",
+    "title": "Centre de Notifications - Edukora BAC"
+  },
+  {
+    "slug": "centre-de-notifications-mis-jour-edukora",
+    "folder": "centre_de_notifications_mis_jour_edukora",
+    "title": "Centre de Notifications - Edukora BAC"
+  },
+  {
+    "slug": "certificat-de-r-ussite",
+    "folder": "certificat_de_r_ussite",
+    "title": "certificat_de_r_ussite"
+  },
+  {
+    "slug": "chargement-accueil-skeleton",
+    "folder": "chargement_accueil_skeleton",
+    "title": "Chargement en cours... | Edukora"
+  },
+  {
+    "slug": "chargement-classement-skeleton",
+    "folder": "chargement_classement_skeleton",
+    "title": "Edukora - Classement (Chargement)"
+  },
+  {
+    "slug": "chargement-statistiques-skeleton",
+    "folder": "chargement_statistiques_skeleton",
+    "title": "Statistiques - Edukora"
+  },
+  {
+    "slug": "chec-de-paiement-d-lai-d-pass",
+    "folder": "chec_de_paiement_d_lai_d_pass",
+    "title": "Edukora | Paiement Expiré"
+  },
+  {
+    "slug": "chec-de-paiement-solde-insuffisant",
+    "folder": "chec_de_paiement_solde_insuffisant",
+    "title": "Edukora - Paiement échoué"
+  },
+  {
+    "slug": "classement-de-ligue-argent",
+    "folder": "classement_de_ligue_argent",
+    "title": "Edukora - Classement de la Ligue"
+  },
+  {
+    "slug": "classement-des-ambassadeurs-edukora",
+    "folder": "classement_des_ambassadeurs_edukora",
+    "title": "Classement Ambassadeurs - Edukora"
+  },
+  {
+    "slug": "classement-global-edukora",
+    "folder": "classement_global_edukora",
+    "title": "Classement Global - BAC Edukora"
+  },
+  {
+    "slug": "classement-par-commune-edukora",
+    "folder": "classement_par_commune_edukora",
+    "title": "Classement Global - BAC Edukora"
+  },
+  {
+    "slug": "conditions-g-n-rales-d-utilisation",
+    "folder": "conditions_g_n_rales_d_utilisation",
+    "title": "Edukora - Conditions Générales d'Utilisation"
+  },
+  {
+    "slug": "conditions-g-n-rales-de-vente-paiements",
+    "folder": "conditions_g_n_rales_de_vente_paiements",
+    "title": "Edukora - Conditions Générales de Vente"
+  },
+  {
+    "slug": "confidentialit-du-compte-parent",
+    "folder": "confidentialit_du_compte_parent",
+    "title": "Confidentialité - Edukora"
+  },
+  {
+    "slug": "configuration-des-r-gles-de-fraude-1",
+    "folder": "configuration_des_r_gles_de_fraude_1",
+    "title": "Edukora Admin | Moteur de Règles de Fraude"
+  },
+  {
+    "slug": "configuration-des-r-gles-de-fraude-2",
+    "folder": "configuration_des_r_gles_de_fraude_2",
+    "title": "Edukora Admin | Fraud Rule Engine"
+  },
+  {
+    "slug": "configuration-du-bulletin",
+    "folder": "configuration_du_bulletin",
+    "title": "Configuration des Bulletins - Edukora"
+  },
+  {
+    "slug": "configuration-du-proctoring-ia",
+    "folder": "configuration_du_proctoring_ia",
+    "title": "Edukora Proctor - Configuration"
+  },
+  {
+    "slug": "configuration-du-syst-me-de-certification",
+    "folder": "configuration_du_syst_me_de_certification",
+    "title": "Edukora Professor - Configuration de Certification"
+  },
+  {
+    "slug": "configuration-du-test-blanc-param-tres",
+    "folder": "configuration_du_test_blanc_param_tres",
+    "title": "Edukora Pro - Configuration Test Blanc"
+  },
+  {
+    "slug": "configuration-mod-ration-ia",
+    "folder": "configuration_mod_ration_ia",
+    "title": "Config IA - Modération Edukora"
+  },
+  {
+    "slug": "confirmation-d-envoi-experts-edukora",
+    "folder": "confirmation_d_envoi_experts_edukora",
+    "title": "Récupération de compte - Edukora Expert"
+  },
+  {
+    "slug": "confirmation-de-commande",
+    "folder": "confirmation_de_commande",
+    "title": "Confirmation de Commande - Edukora"
+  },
+  {
+    "slug": "connexion-administrateur-edukora",
+    "folder": "connexion_administrateur_edukora",
+    "title": "Connexion Sécurisée | Edukora Admin"
+  },
+  {
+    "slug": "connexion-edukora",
+    "folder": "connexion_edukora",
+    "title": "Connexion | Edukora Professor Dashboard"
+  },
+  {
+    "slug": "connexion-edukora-fr",
+    "folder": "connexion_edukora_fr",
+    "title": "Connexion | Edukora Professor Dashboard"
+  },
+  {
+    "slug": "connexion-expert-edukora",
+    "folder": "connexion_expert_edukora",
+    "title": "Edukora | Expert Login"
+  },
+  {
+    "slug": "connexion-parent-edukora",
+    "folder": "connexion_parent_edukora",
+    "title": "Connexion Parent - Edukora"
+  },
+  {
+    "slug": "correction-d-taill-e-bac",
+    "folder": "correction_d_taill_e_bac",
+    "title": "Correction - EduKora BAC"
+  },
+  {
+    "slug": "correction-manuelle-vue-d-taill-e",
+    "folder": "correction_manuelle_vue_d_taill_e",
+    "title": "Edukora Grading - Correction Hub"
+  },
+  {
+    "slug": "correction-rem-diation",
+    "folder": "correction_rem_diation",
+    "title": "Correction & Remédiation - Edukora"
+  },
+  {
+    "slug": "cr-ation-de-quiz-infos-g-n-rales",
+    "folder": "cr_ation_de_quiz_infos_g_n_rales",
+    "title": "Edukora Pro - Création de Quiz"
+  },
+  {
+    "slug": "cr-er-un-code-promo-administration",
+    "folder": "cr_er_un_code_promo_administration",
+    "title": "Edukora Admin - Créer un code promo"
+  },
+  {
+    "slug": "d-blocage-de-badge-animation",
+    "folder": "d_blocage_de_badge_animation",
+    "title": "Edukora - Badge Débloqué"
+  },
+  {
+    "slug": "d-fis-inter-communes-s-lection",
+    "folder": "d_fis_inter_communes_s_lection",
+    "title": "Défis Inter-Communes - Sélection"
+  },
+  {
+    "slug": "d-fis-sp-cifiques-par-ligue",
+    "folder": "d_fis_sp_cifiques_par_ligue",
+    "title": "Edukora - Défis de la Ligue"
+  },
+  {
+    "slug": "d-tail-de-fiche-certifi-e-edukora",
+    "folder": "d_tail_de_fiche_certifi_e_edukora",
+    "title": "Détails de la Fiche - Edukora"
+  },
+  {
+    "slug": "d-tail-de-la-classe-terminale-c1",
+    "folder": "d_tail_de_la_classe_terminale_c1",
+    "title": "Edukora - Terminale C1"
+  },
+  {
+    "slug": "d-tail-de-la-synchronisation",
+    "folder": "d_tail_de_la_synchronisation",
+    "title": "État de Synchronisation - Edukora"
+  },
+  {
+    "slug": "d-tail-du-d-fi-progression",
+    "folder": "d_tail_du_d_fi_progression",
+    "title": "Détail du Défi - Cocody vs Abobo"
+  },
+  {
+    "slug": "d-tail-du-litige-analyse-expert",
+    "folder": "d_tail_du_litige_analyse_expert",
+    "title": "Détail du Litige | Edukora Professor Dashboard"
+  },
+  {
+    "slug": "d-tail-du-replay-session-live",
+    "folder": "d_tail_du_replay_session_live",
+    "title": "Détail du Replay - Edukora"
+  },
+  {
+    "slug": "d-tail-du-suivi-feedback",
+    "folder": "d_tail_du_suivi_feedback",
+    "title": "Détails de la Contribution - Edukora"
+  },
+  {
+    "slug": "d-tail-du-ticket-support",
+    "folder": "d_tail_du_ticket_support",
+    "title": "Edukora Support Console - Ticket Detail"
+  },
+  {
+    "slug": "d-tail-et-contexte-du-signalement",
+    "folder": "d_tail_et_contexte_du_signalement",
+    "title": "Analyse de Signalement - Edukora Admin"
+  },
+  {
+    "slug": "d-tails-et-ressources-du-live",
+    "folder": "d_tails_et_ressources_du_live",
+    "title": "Détails du Live - Edukora"
+  },
+  {
+    "slug": "discussion-avec-le-professeur",
+    "folder": "discussion_avec_le_professeur",
+    "title": "Edukora - Messagerie"
+  },
+  {
+    "slug": "diteur-d-preuve-cr-ation-du-sujet",
+    "folder": "diteur_d_preuve_cr_ation_du_sujet",
+    "title": "Edukora Pro - Éditeur de Tests Blancs"
+  },
+  {
+    "slug": "diteur-de-questions-avec-g-n-rateur-d-images-ia",
+    "folder": "diteur_de_questions_avec_g_n_rateur_d_images_ia",
+    "title": "Edukora Pro - Éditeur de Questions"
+  },
+  {
+    "slug": "diteur-de-questions-quiz-professeur",
+    "folder": "diteur_de_questions_quiz_professeur",
+    "title": "Edukora Pro - Éditeur de Questions"
+  },
+  {
+    "slug": "dition-de-fiche-avec-assistant-ia",
+    "folder": "dition_de_fiche_avec_assistant_ia",
+    "title": "Modifier la Fiche - EduKora BAC"
+  },
+  {
+    "slug": "dition-de-fiche-l-ve",
+    "folder": "dition_de_fiche_l_ve",
+    "title": "Modifier la Fiche - EduKora BAC"
+  },
+  {
+    "slug": "enqu-te-de-fraude-d-tail-1",
+    "folder": "enqu_te_de_fraude_d_tail_1",
+    "title": "Edukora Admin - Investigation"
+  },
+  {
+    "slug": "enqu-te-de-fraude-d-tail-2",
+    "folder": "enqu_te_de_fraude_d_tail_2",
+    "title": "Edukora Admin - Enquête"
+  },
+  {
+    "slug": "entra-nement-oral-en-direct",
+    "folder": "entra_nement_oral_en_direct",
+    "title": "Edukora - Session Orale IA"
+  },
+  {
+    "slug": "espace-live-edukora-1",
+    "folder": "espace_live_edukora_1",
+    "title": "Edukora - Espace Live"
+  },
+  {
+    "slug": "espace-live-edukora-2",
+    "folder": "espace_live_edukora_2",
+    "title": "Edukora - Espace Live"
+  },
+  {
+    "slug": "espace-live-sessions-de-r-vision",
+    "folder": "espace_live_sessions_de_r_vision",
+    "title": "Edukora Live - Sessions"
+  },
+  {
+    "slug": "examen-en-cours-bac",
+    "folder": "examen_en_cours_bac",
+    "title": "EduKora BAC - Session d'Examen"
+  },
+  {
+    "slug": "explorateur-de-fiches-edukora",
+    "folder": "explorateur_de_fiches_edukora",
+    "title": "Explorateur de fiches - Edukora"
+  },
+  {
+    "slug": "explorateur-de-mati-res-bepc-bac-par-s-rie",
+    "folder": "explorateur_de_mati_res_bepc_bac_par_s_rie",
+    "title": "Edukora - Catalogue des Cours"
+  },
+  {
+    "slug": "explorateur-de-mati-res-bepc-options",
+    "folder": "explorateur_de_mati_res_bepc_options",
+    "title": "Edukora - Catalogue des Cours"
+  },
+  {
+    "slug": "exportation-des-donn-es-admin",
+    "folder": "exportation_des_donn_es_admin",
+    "title": "Edukora Admin - Exportation des Données"
+  },
+  {
+    "slug": "file-de-validation-edukora-expert",
+    "folder": "file_de_validation_edukora_expert",
+    "title": "Edukora Professor - Validation Lab"
+  },
+  {
+    "slug": "file-de-validation-tat-vide",
+    "folder": "file_de_validation_tat_vide",
+    "title": "Validation Queue - Edukora Professor"
+  },
+  {
+    "slug": "file-des-signalements",
+    "folder": "file_des_signalements",
+    "title": "Modération Edukora - Signalements"
+  },
+  {
+    "slug": "file-des-tickets-support-1",
+    "folder": "file_des_tickets_support_1",
+    "title": "Edukora Support Console - Subscription Tickets"
+  },
+  {
+    "slug": "file-des-tickets-support-2",
+    "folder": "file_des_tickets_support_2",
+    "title": "Console de Support Edukora - Tickets d'Abonnement"
+  },
+  {
+    "slug": "fin-de-session-r-compenses",
+    "folder": "fin_de_session_r_compenses",
+    "title": "Edukora - Session Terminée"
+  },
+  {
+    "slug": "g-n-ration-de-quiz-ia-param-tres",
+    "folder": "g_n_ration_de_quiz_ia_param_tres",
+    "title": "Edukora Professor - Configuration IA"
+  },
+  {
+    "slug": "g-n-ration-de-quiz-ia-s-lection-du-support",
+    "folder": "g_n_ration_de_quiz_ia_s_lection_du_support",
+    "title": "Edukora Professor - Générer par IA"
+  },
+  {
+    "slug": "g-rer-mon-abonnement-edukora-1",
+    "folder": "g_rer_mon_abonnement_edukora_1",
+    "title": "Edukora - Gestion de l'Abonnement"
+  },
+  {
+    "slug": "g-rer-mon-abonnement-edukora-2",
+    "folder": "g_rer_mon_abonnement_edukora_2",
+    "title": "Edukora - Gérer mon abonnement"
+  },
+  {
+    "slug": "gestion-des-bulletins-professeur",
+    "folder": "gestion_des_bulletins_professeur",
+    "title": "Edukora Professeur - Tableau de Bord"
+  },
+  {
+    "slug": "gestion-des-checs-de-pr-l-vement-admin",
+    "folder": "gestion_des_checs_de_pr_l_vement_admin",
+    "title": "Edukora Admin - Échecs de Prélèvement"
+  },
+  {
+    "slug": "gestion-des-codes-promo-administration",
+    "folder": "gestion_des_codes_promo_administration",
+    "title": "Promo Management - Edukora Admin"
+  },
+  {
+    "slug": "gestion-des-informations-personnelles",
+    "folder": "gestion_des_informations_personnelles",
+    "title": "Edukora - Informations Personnelles"
+  },
+  {
+    "slug": "gestion-des-litiges-administration",
+    "folder": "gestion_des_litiges_administration",
+    "title": "Gestion des Litiges - Edukora Admin"
+  },
+  {
+    "slug": "gestion-des-litiges-experts",
+    "folder": "gestion_des_litiges_experts",
+    "title": "Edukora Professor - Gestion des Litiges"
+  },
+  {
+    "slug": "gestion-des-ressources-professeur",
+    "folder": "gestion_des_ressources_professeur",
+    "title": "Edukora Professeur - Gestionnaire de Ressources Live"
+  },
+  {
+    "slug": "gestion-des-tarifs-administration",
+    "folder": "gestion_des_tarifs_administration",
+    "title": "Edukora | Gestion des Tarifs"
+  },
+  {
+    "slug": "gestion-des-utilisateurs-admin",
+    "folder": "gestion_des_utilisateurs_admin",
+    "title": "Edukora Admin - Gestion des Utilisateurs"
+  },
+  {
+    "slug": "h-ros-de-la-commune-cocody",
+    "folder": "h_ros_de_la_commune_cocody",
+    "title": "Héros de la Commune - Edukora"
+  },
+  {
+    "slug": "h-ros-de-la-commune-edukora",
+    "folder": "h_ros_de_la_commune_edukora",
+    "title": "Héros de la Commune - Edukora"
+  },
+  {
+    "slug": "historique-de-concentration-pomodoro",
+    "folder": "historique_de_concentration_pomodoro",
+    "title": "Edukora - Historique Pomodoro"
+  },
+  {
+    "slug": "inscription-1-2-edukora",
+    "folder": "inscription_1_2_edukora",
+    "title": "Edukora - Inscription"
+  },
+  {
+    "slug": "inscription-2-2-d-tails-acad-miques",
+    "folder": "inscription_2_2_d_tails_acad_miques",
+    "title": "Edukora - Finalisation de l'inscription"
+  },
+  {
+    "slug": "inscription-2-2-toutes-les-s-ries",
+    "folder": "inscription_2_2_toutes_les_s_ries",
+    "title": "Edukora - Finalisation de l'inscription"
+  },
+  {
+    "slug": "inscription-expert-1-3-infos-personnelles",
+    "folder": "inscription_expert_1_3_infos_personnelles",
+    "title": "Edukora - Teacher Onboarding"
+  },
+  {
+    "slug": "inscription-expert-2-3-titres-acad-miques",
+    "folder": "inscription_expert_2_3_titres_acad_miques",
+    "title": "Edukora - Inscription Enseignant (Étape 2)"
+  },
+  {
+    "slug": "inscription-expert-3-3-soumission-r-ussie",
+    "folder": "inscription_expert_3_3_soumission_r_ussie",
+    "title": "Edukora | Verification Status"
+  },
+  {
+    "slug": "inscription-parent-edukora",
+    "folder": "inscription_parent_edukora",
+    "title": "Créer un compte Parent - Edukora"
+  },
+  {
+    "slug": "introduction-v-rification-d-identit",
+    "folder": "introduction_v_rification_d_identit",
+    "title": "Vérification d'Identité - Edukora"
+  },
+  {
+    "slug": "invitation-envoy-e-edukora",
+    "folder": "invitation_envoy_e_edukora",
+    "title": "Invitation Réussie - Edukora"
+  },
+  {
+    "slug": "journal-d-audit-des-fraudes-1",
+    "folder": "journal_d_audit_des_fraudes_1",
+    "title": "Edukora Admin - Audit Log"
+  },
+  {
+    "slug": "journal-d-audit-des-fraudes-2",
+    "folder": "journal_d_audit_des_fraudes_2",
+    "title": "Edukora Admin - Journal d'Audit"
+  },
+  {
+    "slug": "jumelage-parent-enfant-edukora",
+    "folder": "jumelage_parent_enfant_edukora",
+    "title": "Edukora - Jumelage Parent-Enfant"
+  },
+  {
+    "slug": "justifier-le-refus-administration",
+    "folder": "justifier_le_refus_administration",
+    "title": "Justifier le refus - Edukora Admin"
+  },
+  {
+    "slug": "landing-page-edukora-marketing",
+    "folder": "landing_page_edukora_marketing",
+    "title": "Edukora | Réussis ton BAC & BEPC en Côte d'Ivoire"
+  },
+  {
+    "slug": "ligues-acad-miques-aper-u",
+    "folder": "ligues_acad_miques_aper_u",
+    "title": "Edukora - Ligues Académiques"
+  },
+  {
+    "slug": "ma-biblioth-que-edukora",
+    "folder": "ma_biblioth_que_edukora",
+    "title": "Bibliothèque - Edukora"
+  },
+  {
+    "slug": "ma-biblioth-que-mode-hors-ligne",
+    "folder": "ma_biblioth_que_mode_hors_ligne",
+    "title": "Edukora - Bibliothèque Hors-ligne"
+  },
+  {
+    "slug": "ma-biblioth-que-tat-vide",
+    "folder": "ma_biblioth_que_tat_vide",
+    "title": "Ma Bibliothèque - Edukora"
+  },
+  {
+    "slug": "mati-res-edukora",
+    "folder": "mati_res_edukora",
+    "title": "Edukora - Catalogue des Cours"
+  },
+  {
+    "slug": "mati-res-toutes-fili-res",
+    "folder": "mati_res_toutes_fili_res",
+    "title": "Edukora - Catalogue des Cours"
+  },
+  {
+    "slug": "mes-badges-edukora",
+    "folder": "mes_badges_edukora",
+    "title": "Mes Badges - BAC Edukora"
+  },
+  {
+    "slug": "mes-classes-professeur",
+    "folder": "mes_classes_professeur",
+    "title": "Edukora - Tableau de Bord Professeur"
+  },
+  {
+    "slug": "mes-dipl-mes-overview",
+    "folder": "mes_dipl_mes_overview",
+    "title": "Mes Diplômes - Edukora"
+  },
+  {
+    "slug": "mes-factures-edukora",
+    "folder": "mes_factures_edukora",
+    "title": "Edukora - Gestion de l'Abonnement"
+  },
+  {
+    "slug": "mes-filleuls-suivi-parrainage",
+    "folder": "mes_filleuls_suivi_parrainage",
+    "title": "Mes Filleuls - Edukora"
+  },
+  {
+    "slug": "mes-statistiques",
+    "folder": "mes_statistiques",
+    "title": "Mes Statistiques - Edukora"
+  },
+  {
+    "slug": "messagerie-de-groupe-cocody",
+    "folder": "messagerie_de_groupe_cocody",
+    "title": "Chat de Groupe - Commune de Cocody"
+  },
+  {
+    "slug": "messagerie-entre-experts-edukora",
+    "folder": "messagerie_entre_experts_edukora",
+    "title": "Edukora Professor - Messagerie Sécurisée"
+  },
+  {
+    "slug": "messagerie-liste-des-conversations",
+    "folder": "messagerie_liste_des_conversations",
+    "title": "Edukora - Messages Parents"
+  },
+  {
+    "slug": "minuteur-pomodoro-tude-focus",
+    "folder": "minuteur_pomodoro_tude_focus",
+    "title": "Edukora - Minuteur Pomodoro"
+  },
+  {
+    "slug": "mod-ration-du-chat-live-professeur",
+    "folder": "mod_ration_du_chat_live_professeur",
+    "title": "Edukora Professeur - Modération Chat"
+  },
+  {
+    "slug": "mode-liseuse-edukora",
+    "folder": "mode_liseuse_edukora",
+    "title": "Edukora - Lecteur Immersif"
+  },
+  {
+    "slug": "mon-plan-de-r-vision-personnalis",
+    "folder": "mon_plan_de_r_vision_personnalis",
+    "title": "Edukora Academic - Votre Planning Personnalisé"
+  },
+  {
+    "slug": "mon-portfolio-de-r-ussite",
+    "folder": "mon_portfolio_de_r_ussite",
+    "title": "Portfolio de Réussite - Edukora"
+  },
+  {
+    "slug": "mot-de-passe-oubli-edukora",
+    "folder": "mot_de_passe_oubli_edukora",
+    "title": "Edukora Professor Dashboard - Mot de passe oublié"
+  },
+  {
+    "slug": "mot-de-passe-oubli-experts-edukora",
+    "folder": "mot_de_passe_oubli_experts_edukora",
+    "title": "Edukora Experts - Récupération de compte"
+  },
+  {
+    "slug": "mur-de-gloire-cocody",
+    "folder": "mur_de_gloire_cocody",
+    "title": "Mur de Gloire - Cocody"
+  },
+  {
+    "slug": "mur-des-troph-es-l-ve",
+    "folder": "mur_des_troph_es_l_ve",
+    "title": "Mur des Trophées - Edukora"
+  },
+  {
+    "slug": "objectifs-de-s-rie-avec-logo-edukora",
+    "folder": "objectifs_de_s_rie_avec_logo_edukora",
+    "title": "Edukora - Tableau de Bord"
+  },
+  {
+    "slug": "onboarding-communaut",
+    "folder": "onboarding_communaut",
+    "title": "Edukora - Réussir ensemble"
+  },
+  {
+    "slug": "onboarding-plan-ia",
+    "folder": "onboarding_plan_ia",
+    "title": "onboarding_plan_ia"
+  },
+  {
+    "slug": "onboarding-tuteur-kora",
+    "folder": "onboarding_tuteur_kora",
+    "title": "Edukora - Kora ton tuteur personnel"
+  },
+  {
+    "slug": "paiement-r-ussi-edukora-premium",
+    "folder": "paiement_r_ussi_edukora_premium",
+    "title": "Paiement Réussi - Edukora Premium"
+  },
+  {
+    "slug": "paiement-r-ussi-edukora-premium-geniuspay",
+    "folder": "paiement_r_ussi_edukora_premium_geniuspay",
+    "title": "Paiement Confirmé - Edukora"
+  },
+  {
+    "slug": "param-tres-de-confidentialit-edukora",
+    "folder": "param_tres_de_confidentialit_edukora",
+    "title": "Paramètres de Confidentialité - Edukora"
+  },
+  {
+    "slug": "param-tres-de-s-curit-edukora",
+    "folder": "param_tres_de_s_curit_edukora",
+    "title": "Sécurité - Edukora"
+  },
+  {
+    "slug": "param-tres-de-stockage-pwa",
+    "folder": "param_tres_de_stockage_pwa",
+    "title": "Edukora - Paramètres & Stockage"
+  },
+  {
+    "slug": "param-tres-des-notifications-parent",
+    "folder": "param_tres_des_notifications_parent",
+    "title": "Edukora Parent - Réglages Notifications"
+  },
+  {
+    "slug": "param-tres-des-rappels-edukora",
+    "folder": "param_tres_des_rappels_edukora",
+    "title": "Edukora - Rappels de Révision"
+  },
+  {
+    "slug": "param-tres-du-profil-edukora",
+    "folder": "param_tres_du_profil_edukora",
+    "title": "Edukora - Paramètres du Profil"
+  },
+  {
+    "slug": "param-tres-expert-edukora",
+    "folder": "param_tres_expert_edukora",
+    "title": "Paramètres Standards Académiques - Edukora Professor"
+  },
+  {
+    "slug": "param-tres-syst-me-admin",
+    "folder": "param_tres_syst_me_admin",
+    "title": "Edukora Admin - Paramètres Système"
+  },
+  {
+    "slug": "parrainage-de-coll-gues-experts",
+    "folder": "parrainage_de_coll_gues_experts",
+    "title": "Edukora Professor - Refer Colleagues"
+  },
+  {
+    "slug": "personnalisation-invitation-e-mail",
+    "folder": "personnalisation_invitation_e_mail",
+    "title": "Edukora Expert - Invitation E-mail"
+  },
+  {
+    "slug": "personnalisation-invitation-whatsapp",
+    "folder": "personnalisation_invitation_whatsapp",
+    "title": "Edukora Expert - Invitation WhatsApp"
+  },
+  {
+    "slug": "planification-de-session-live-expert",
+    "folder": "planification_de_session_live_expert",
+    "title": "Programmer un Live | Edukora Pro"
+  },
+  {
+    "slug": "planification-et-publication-du-test-blanc",
+    "folder": "planification_et_publication_du_test_blanc",
+    "title": "Edukora Pro - Programmer le Test Blanc"
+  },
+  {
+    "slug": "planifier-une-session-de-groupe",
+    "folder": "planifier_une_session_de_groupe",
+    "title": "Planifier une session d'étude - Edukora"
+  },
+  {
+    "slug": "planning-de-r-vision-automatique",
+    "folder": "planning_de_r_vision_automatique",
+    "title": "Edukora - Mon Planning de Révision"
+  },
+  {
+    "slug": "plans-d-abonnement-edukora-1",
+    "folder": "plans_d_abonnement_edukora_1",
+    "title": "Abonnement - Edukora"
+  },
+  {
+    "slug": "plans-d-abonnement-edukora-2",
+    "folder": "plans_d_abonnement_edukora_2",
+    "title": "Edukora - Choisissez votre Plan"
+  },
+  {
+    "slug": "politique-de-confidentialit",
+    "folder": "politique_de_confidentialit",
+    "title": "Politique de Confidentialité - Edukora"
+  },
+  {
+    "slug": "portail-de-ressources-documentaires-professeur",
+    "folder": "portail_de_ressources_documentaires_professeur",
+    "title": "Edukora Pro - Portail Documentaire"
+  },
+  {
+    "slug": "pr-f-rences-de-cookies-et-donn-es",
+    "folder": "pr_f_rences_de_cookies_et_donn_es",
+    "title": "Confidentialité - Edukora"
+  },
+  {
+    "slug": "pr-paration-aux-oraux-dashboard",
+    "folder": "pr_paration_aux_oraux_dashboard",
+    "title": "Edukora - Préparation aux Oraux"
+  },
+  {
+    "slug": "pr-t-pour-la-r-ussite-r-ussir",
+    "folder": "pr_t_pour_la_r_ussite_r_ussir",
+    "title": "Edukora - Rejoins la Communauté"
+  },
+  {
+    "slug": "pr-visualisation-quiz-r-sultats-simul-s",
+    "folder": "pr_visualisation_quiz_r_sultats_simul_s",
+    "title": "Edukora - Résultats du Test"
+  },
+  {
+    "slug": "pr-visualisation-quiz-test-en-cours",
+    "folder": "pr_visualisation_quiz_test_en_cours",
+    "title": "Edukora - Prévisualisation Quiz"
+  },
+  {
+    "slug": "profil-avec-d-fis-edukora",
+    "folder": "profil_avec_d_fis_edukora",
+    "title": "Edukora - Profil Etudiant"
+  },
+  {
+    "slug": "profil-avec-nouveaux-paliers-de-s-rie-edukora",
+    "folder": "profil_avec_nouveaux_paliers_de_s_rie_edukora",
+    "title": "Edukora - Profil Etudiant"
+  },
+  {
+    "slug": "profil-avec-objectifs-personnalis-s-edukora",
+    "folder": "profil_avec_objectifs_personnalis_s_edukora",
+    "title": "Edukora - Profil Etudiant"
+  },
+  {
+    "slug": "profil-avec-r-compenses-de-s-rie-edukora",
+    "folder": "profil_avec_r_compenses_de_s_rie_edukora",
+    "title": "Edukora - Profil Etudiant"
+  },
+  {
+    "slug": "profil-avec-s-ries-edukora",
+    "folder": "profil_avec_s_ries_edukora",
+    "title": "Edukora - Profil Etudiant"
+  },
+  {
+    "slug": "profil-avec-temps-premium-gagn-edukora",
+    "folder": "profil_avec_temps_premium_gagn_edukora",
+    "title": "Edukora - Profil Etudiant"
+  },
+  {
+    "slug": "profil-complet-edukora-1",
+    "folder": "profil_complet_edukora_1",
+    "title": "Edukora - Profil Etudiant"
+  },
+  {
+    "slug": "profil-complet-edukora-2",
+    "folder": "profil_complet_edukora_2",
+    "title": "Edukora - Profil Etudiant"
+  },
+  {
+    "slug": "profil-edukora",
+    "folder": "profil_edukora",
+    "title": "Edukora - Profil Etudiant"
+  },
+  {
+    "slug": "profil-edukora-avec-rappels",
+    "folder": "profil_edukora_avec_rappels",
+    "title": "Edukora - Profil Etudiant"
+  },
+  {
+    "slug": "profil-mis-jour-edukora",
+    "folder": "profil_mis_jour_edukora",
+    "title": "Edukora - Profil Etudiant"
+  },
+  {
+    "slug": "profil-mise-jour-des-s-ries",
+    "folder": "profil_mise_jour_des_s_ries",
+    "title": "Edukora - Profil Etudiant"
+  },
+  {
+    "slug": "profil-parent-edukora",
+    "folder": "profil_parent_edukora",
+    "title": "Profil Parent - Edukora"
+  },
+  {
+    "slug": "promotion-de-ligue-c-l-bration",
+    "folder": "promotion_de_ligue_c_l_bration",
+    "title": "Edukora - Promotion Ligue Or"
+  },
+  {
+    "slug": "questions-sauvegard-es-edukora",
+    "folder": "questions_sauvegard_es_edukora",
+    "title": "Edukora - Questions Sauvegardées"
+  },
+  {
+    "slug": "r-compense-dipl-me-d-honneur",
+    "folder": "r_compense_dipl_me_d_honneur",
+    "title": "Félicitations - Edukora Professeur"
+  },
+  {
+    "slug": "r-compense-major-de-commune-edukora",
+    "folder": "r_compense_major_de_commune_edukora",
+    "title": "EduIvoir - Major de Commune"
+  },
+  {
+    "slug": "r-compenses-avec-d-blocage-de-badge",
+    "folder": "r_compenses_avec_d_blocage_de_badge",
+    "title": "Edukora - Session Terminée"
+  },
+  {
+    "slug": "r-compenses-de-parrainage-catalogue",
+    "folder": "r_compenses_de_parrainage_catalogue",
+    "title": "Edukora - Catalogue des Récompenses"
+  },
+  {
+    "slug": "r-compenses-de-parrainage-edukora",
+    "folder": "r_compenses_de_parrainage_edukora",
+    "title": "Edukora - Programme de Parrainage"
+  },
+  {
+    "slug": "r-sultats-bac",
+    "folder": "r_sultats_bac",
+    "title": "EduKora BAC - Résultats"
+  },
+  {
+    "slug": "r-ussite-c-l-bration-edukora",
+    "folder": "r_ussite_c_l_bration_edukora",
+    "title": "Réussite & Célébration - Edukora"
+  },
+  {
+    "slug": "r-vision-des-questions-ia",
+    "folder": "r_vision_des_questions_ia",
+    "title": "Edukora Professor - Review Questions"
+  },
+  {
+    "slug": "rapport-d-analyse-de-fraude-d-tail",
+    "folder": "rapport_d_analyse_de_fraude_d_tail",
+    "title": "Rapport d'Analyse de Fraude - Détail | Edukora"
+  },
+  {
+    "slug": "rapport-d-assiduit-parent",
+    "folder": "rapport_d_assiduit_parent",
+    "title": "Edukora Parent - Rapport d'Assiduité"
+  },
+  {
+    "slug": "rapport-de-r-vision-personnalis",
+    "folder": "rapport_de_r_vision_personnalis",
+    "title": "Rapport de Révision - Edukora"
+  },
+  {
+    "slug": "rapports-financiers-administration",
+    "folder": "rapports_financiers_administration",
+    "title": "Edukora Admin - Rapports Financiers"
+  },
+  {
+    "slug": "re-u-de-paiement-edukora-premium",
+    "folder": "re_u_de_paiement_edukora_premium",
+    "title": "Edukora - Reçu de Paiement"
+  },
+  {
+    "slug": "relance-de-paiement-personnalis-e-admin",
+    "folder": "relance_de_paiement_personnalis_e_admin",
+    "title": "Edukora Admin - Relancer le paiement"
+  },
+  {
+    "slug": "replay-ressources-live",
+    "folder": "replay_ressources_live",
+    "title": "Edukora - Live Replay & Ressources"
+  },
+  {
+    "slug": "replays-et-archives-sessions-live",
+    "folder": "replays_et_archives_sessions_live",
+    "title": "Edukora - Replays & Archives"
+  },
+  {
+    "slug": "revue-des-r-ponses-ouvertes-professeur",
+    "folder": "revue_des_r_ponses_ouvertes_professeur",
+    "title": "Edukora Pro - Revue des Réponses"
+  },
+  {
+    "slug": "s-curit-audit-admin-1",
+    "folder": "s_curit_audit_admin_1",
+    "title": "Edukora Admin - Sécurité & Audit"
+  },
+  {
+    "slug": "s-curit-audit-admin-2",
+    "folder": "s_curit_audit_admin_2",
+    "title": "Edukora Admin - Sécurité & Audit"
+  },
+  {
+    "slug": "s-lection-d-preuve-bac",
+    "folder": "s_lection_d_preuve_bac",
+    "title": "EduKora BAC - Sélection de l'épreuve"
+  },
+  {
+    "slug": "s-lection-du-paiement-edukora-premium-1",
+    "folder": "s_lection_du_paiement_edukora_premium_1",
+    "title": "Edukora - Choisissez votre Plan"
+  },
+  {
+    "slug": "s-lection-du-paiement-edukora-premium-2",
+    "folder": "s_lection_du_paiement_edukora_premium_2",
+    "title": "Paiement Sécurisé - Edukora"
+  },
+  {
+    "slug": "s-lection-du-paiement-via-geniuspay",
+    "folder": "s_lection_du_paiement_via_geniuspay",
+    "title": "Paiement Sécurisé - Edukora"
+  },
+  {
+    "slug": "session-de-r-vision-maths",
+    "folder": "session_de_r_vision_maths",
+    "title": "Edukora - Session Express"
+  },
+  {
+    "slug": "session-live-en-direct-1",
+    "folder": "session_live_en_direct_1",
+    "title": "Edukora - Session Live"
+  },
+  {
+    "slug": "session-live-en-direct-2",
+    "folder": "session_live_en_direct_2",
+    "title": "Edukora - Session en Direct"
+  },
+  {
+    "slug": "session-live-math-matiques",
+    "folder": "session_live_math_matiques",
+    "title": "Edukora Live - Session en cours"
+  },
+  {
+    "slug": "sessions-de-groupe-edukora",
+    "folder": "sessions_de_groupe_edukora",
+    "title": "Sessions de Groupe - Edukora"
+  },
+  {
+    "slug": "shader",
+    "folder": "shader",
+    "title": "shader"
+  },
+  {
+    "slug": "signalement-de-fiche-action-l-ve",
+    "folder": "signalement_de_fiche_action_l_ve",
+    "title": "Edukora - Signalement de Fiche"
+  },
+  {
+    "slug": "signature-num-rique-certificats",
+    "folder": "signature_num_rique_certificats",
+    "title": "Edukora Professor Dashboard - Signature du Certificat"
+  },
+  {
+    "slug": "simulateur-bepc-options",
+    "folder": "simulateur_bepc_options",
+    "title": "EduKora - Sélection de l'épreuve (BEPC & BAC)"
+  },
+  {
+    "slug": "simulateur-d-examen-bac-bepc",
+    "folder": "simulateur_d_examen_bac_bepc",
+    "title": "Edukora - Onboarding Exam Simulator"
+  },
+  {
+    "slug": "simulateur-s-lection-bepc-bac-par-s-rie",
+    "folder": "simulateur_s_lection_bepc_bac_par_s_rie",
+    "title": "EduKora - Sélection de l'épreuve (BEPC & BAC)"
+  },
+  {
+    "slug": "simulateur-s-lection-toutes-s-ries",
+    "folder": "simulateur_s_lection_toutes_s_ries",
+    "title": "EduKora BAC - Sélection de l'épreuve"
+  },
+  {
+    "slug": "sons-d-ambiance-pomodoro",
+    "folder": "sons_d_ambiance_pomodoro",
+    "title": "Sons d'Ambiance - Edukora"
+  },
+  {
+    "slug": "soumettre-une-id-e-ou-un-bug",
+    "folder": "soumettre_une_id_e_ou_un_bug",
+    "title": "Edukora Support - Report & Suggest"
+  },
+  {
+    "slug": "statistiques-d-impact-professeur",
+    "folder": "statistiques_d_impact_professeur",
+    "title": "Statistiques d'Impact - Professeur"
+  },
+  {
+    "slug": "statistiques-d-taill-es-edukora",
+    "folder": "statistiques_d_taill_es_edukora",
+    "title": "Edukora - Statistiques BAC"
+  },
+  {
+    "slug": "statistiques-de-parrainage-experts",
+    "folder": "statistiques_de_parrainage_experts",
+    "title": "Statistiques de Parrainage - Edukora"
+  },
+  {
+    "slug": "statistiques-de-validation-edukora",
+    "folder": "statistiques_de_validation_edukora",
+    "title": "Edukora Professeur - Impact Statistique"
+  },
+  {
+    "slug": "statistiques-globales-admin-1",
+    "folder": "statistiques_globales_admin_1",
+    "title": "Edukora Admin - Global Statistics"
+  },
+  {
+    "slug": "statistiques-globales-admin-2",
+    "folder": "statistiques_globales_admin_2",
+    "title": "Edukora Admin - Statistiques Globales"
+  },
+  {
+    "slug": "statut-de-la-v-rification",
+    "folder": "statut_de_la_v_rification",
+    "title": "Edukora Professor Dashboard - Vérification"
+  },
+  {
+    "slug": "suivi-des-certifications-l-ve",
+    "folder": "suivi_des_certifications_l_ve",
+    "title": "Suivi des Certifications | Edukora"
+  },
+  {
+    "slug": "suivi-des-corrections-l-ve",
+    "folder": "suivi_des_corrections_l_ve",
+    "title": "EduKora BAC - Suivi des Corrections"
+  },
+  {
+    "slug": "suivi-des-examens-blancs-parent",
+    "folder": "suivi_des_examens_blancs_parent",
+    "title": "Edukora Parent - Suivi des Examens"
+  },
+  {
+    "slug": "supervision-du-proctoring-direct",
+    "folder": "supervision_du_proctoring_direct",
+    "title": "Edukora Proctor - Supervision en Direct"
+  },
+  {
+    "slug": "synth-se-des-r-sultats-classe",
+    "folder": "synth_se_des_r_sultats_classe",
+    "title": "Edukora - Résultats Terminale C1"
+  },
+  {
+    "slug": "syst-me-de-parrainage-edukora",
+    "folder": "syst_me_de_parrainage_edukora",
+    "title": "syst_me_de_parrainage_edukora"
+  },
+  {
+    "slug": "syst-me-de-parrainage-premium-edukora",
+    "folder": "syst_me_de_parrainage_premium_edukora",
+    "title": "Edukora - Système de Parrainage Premium"
+  },
+  {
+    "slug": "t-l-chargement-pi-ce-d-identit",
+    "folder": "t_l_chargement_pi_ce_d_identit",
+    "title": "Edukora Professor Dashboard - Identity Verification"
+  },
+  {
+    "slug": "tableau-de-bord-administrateur-edukora",
+    "folder": "tableau_de_bord_administrateur_edukora",
+    "title": "Edukora Admin Console - Vue d'ensemble"
+  },
+  {
+    "slug": "tableau-de-bord-administratif-professeur",
+    "folder": "tableau_de_bord_administratif_professeur",
+    "title": "Edukora Professor Dashboard"
+  },
+  {
+    "slug": "tableau-de-bord-animateur-live",
+    "folder": "tableau_de_bord_animateur_live",
+    "title": "Edukora Live - Tableau de Bord Expert"
+  },
+  {
+    "slug": "tableau-de-bord-de-correction-professeur",
+    "folder": "tableau_de_bord_de_correction_professeur",
+    "title": "Edukora Grading - Correction des Épreuves"
+  },
+  {
+    "slug": "tableau-de-bord-de-fraude-1",
+    "folder": "tableau_de_bord_de_fraude_1",
+    "title": "Edukora Admin | Surveillance de la Fraude"
+  },
+  {
+    "slug": "tableau-de-bord-de-fraude-2",
+    "folder": "tableau_de_bord_de_fraude_2",
+    "title": "Edukora Admin | Fraud Monitoring"
+  },
+  {
+    "slug": "tableau-de-bord-de-fraude-professeur",
+    "folder": "tableau_de_bord_de_fraude_professeur",
+    "title": "Edukora - Tableau de bord de Fraude"
+  },
+  {
+    "slug": "tableau-de-bord-de-parrainage-l-ve",
+    "folder": "tableau_de_bord_de_parrainage_l_ve",
+    "title": "Edukora - Parrainage"
+  },
+  {
+    "slug": "tableau-de-bord-des-quiz-professeur",
+    "folder": "tableau_de_bord_des_quiz_professeur",
+    "title": "Edukora Pro - Gestion des Quiz"
+  },
+  {
+    "slug": "tableau-de-bord-des-tests-blancs-professeur",
+    "folder": "tableau_de_bord_des_tests_blancs_professeur",
+    "title": "Edukora Pro - Gestion des Tests Blancs"
+  },
+  {
+    "slug": "tableau-de-bord-parent-edukora",
+    "folder": "tableau_de_bord_parent_edukora",
+    "title": "Edukora Parent - Dashboard"
+  },
+  {
+    "slug": "tableau-de-bord-professeur-edukora-1",
+    "folder": "tableau_de_bord_professeur_edukora_1",
+    "title": "Edukora Professeur - Dashboard"
+  },
+  {
+    "slug": "tableau-de-bord-professeur-edukora-2",
+    "folder": "tableau_de_bord_professeur_edukora_2",
+    "title": "Edukora Professeur - Tableau de Bord"
+  },
+  {
+    "slug": "tableau-de-bord-support-edukora-1",
+    "folder": "tableau_de_bord_support_edukora_1",
+    "title": "Console de Support Edukora"
+  },
+  {
+    "slug": "tableau-de-bord-support-edukora-2",
+    "folder": "tableau_de_bord_support_edukora_2",
+    "title": "Edukora Support Console"
+  },
+  {
+    "slug": "test-de-diagnostic-maths",
+    "folder": "test_de_diagnostic_maths",
+    "title": "Edukora Academic - Diagnostic Quiz"
+  },
+  {
+    "slug": "ton-tuteur-ia-kora",
+    "folder": "ton_tuteur_ia_kora",
+    "title": "Edukora Onboarding - Kora AI Tutor"
+  },
+  {
+    "slug": "tuteur-ia-edukora",
+    "folder": "tuteur_ia_edukora",
+    "title": "Edukora - Tuteur AI"
+  },
+  {
+    "slug": "tuteur-ia-suggestions-de-questions",
+    "folder": "tuteur_ia_suggestions_de_questions",
+    "title": "Edukora - Tuteur AI"
+  },
+  {
+    "slug": "v-rification-biom-trique",
+    "folder": "v_rification_biom_trique",
+    "title": "Edukora Professor Dashboard - Vérification Biométrique"
+  },
+  {
+    "slug": "v-rification-de-s-curit-l-ve",
+    "folder": "v_rification_de_s_curit_l_ve",
+    "title": "Edukora Proctor - Vérification de Sécurité"
+  },
+  {
+    "slug": "v-rification-du-paiement-1",
+    "folder": "v_rification_du_paiement_1",
+    "title": "Console de Support Edukora | Vérification de Paiement"
+  },
+  {
+    "slug": "v-rification-du-paiement-2",
+    "folder": "v_rification_du_paiement_2",
+    "title": "Edukora Support Console | Payment Verification"
+  },
+  {
+    "slug": "validation-des-fiches-edukora",
+    "folder": "validation_des_fiches_edukora",
+    "title": "Edukora Professeur - File de Validation"
+  },
+  {
+    "slug": "validation-ussd-geniuspay",
+    "folder": "validation_ussd_geniuspay",
+    "title": "Edukora - Validation de Paiement"
+  }
+]
