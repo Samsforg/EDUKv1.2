@@ -5,6 +5,7 @@ const PUBLIC_ROUTES = [
   "/fonctionnalites",
   "/resultats",
   "/tarifs",
+  "/landing-page-edukora-marketing",
   "/connexion-edukora",
   "/inscription-1-2-edukora",
   "/mot-de-passe-oubli-edukora",
