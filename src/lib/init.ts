@@ -93,14 +93,32 @@ function ensureAdminDemo() {
   const existing = queryOne<{ id: number }>(
     "SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1",
   );
-  if (existing) return;
+
+  const envEmail = process.env.ADMIN_EMAIL?.trim();
+  const envPassword = process.env.ADMIN_PASSWORD;
+
+  if (existing) {
+    // Bootstrap de production : si ADMIN_EMAIL/ADMIN_PASSWORD sont définis,
+    // on force les identifiants admin (email + mot de passe) à chaque démarrage.
+    if (envEmail || envPassword) {
+      if (envEmail) run("UPDATE users SET email = ? WHERE id = ?", envEmail, existing.id);
+      if (envPassword) {
+        run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(envPassword), existing.id);
+        run("DELETE FROM sessions WHERE user_id = ?", existing.id);
+      }
+    }
+    return;
+  }
+
+  const email = envEmail || "admin@test.ci";
+  const password = envPassword || "admin123";
 
   run(
     `INSERT INTO users (role, email, password_hash, first_name, last_name, class_level, referral_code)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
     "admin",
-    "admin@test.ci",
-    hashPassword("admin123"),
+    email,
+    hashPassword(password),
     "Awa",
     "Koné",
     null,

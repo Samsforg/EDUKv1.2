@@ -38,7 +38,7 @@ export default async function Page() {
           </h3>
           <p className="text-sm text-on-surface-variant mt-1">Super Admin • Edukora</p>
           <div className="w-full mt-6">
-            <LogoutButton />
+            <LogoutButton redirectTo="/connexion-administrateur-edukora" />
           </div>
         </section>
 

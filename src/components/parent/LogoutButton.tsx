@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 
-export function LogoutButton() {
+export function LogoutButton({ redirectTo = "/connexion-edukora" }: { redirectTo?: string }) {
   const [loading, setLoading] = useState(false);
   return (
     <button
       onClick={async () => {
         setLoading(true);
         await fetch("/api/auth/logout", { method: "POST" });
-        location.href = "/connexion-edukora";
+        location.href = redirectTo;
       }}
       disabled={loading}
       className="w-full bg-error-container text-on-error-container font-headline font-bold py-4 rounded-xl flex items-center justify-center gap-3 shadow-md hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-60"

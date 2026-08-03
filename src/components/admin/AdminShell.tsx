@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { getCurrentUser } from "@/lib/session";
+import { LogoutButton } from "@/components/parent/LogoutButton";
 
 type ActiveTab =
   | "overview"
@@ -28,7 +30,10 @@ const TABS: { key: ActiveTab; href: string; icon: string; label: string; mobileL
   { key: "profile", href: "/espace-admin/profil", icon: "person", label: "Profil", mobileLabel: "Profil" },
 ];
 
-export function AdminShell({ active, children }: { active: ActiveTab; children: ReactNode }) {
+export async function AdminShell({ active, children }: { active: ActiveTab; children: ReactNode }) {
+  const user = await getCurrentUser();
+  const initials = user ? `${user.first_name[0] ?? ""}${user.last_name[0] ?? ""}`.toUpperCase() : "AD";
+
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col">
       <aside className="fixed left-0 top-0 h-full flex-col z-40 bg-surface dark:bg-inverse-surface w-64 border-r border-outline-variant hidden md:flex">
@@ -65,12 +70,17 @@ export function AdminShell({ active, children }: { active: ActiveTab; children: 
         <div className="p-4 border-t border-outline-variant">
           <div className="flex items-center gap-3 p-2">
             <div className="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-bold">
-              AD
+              {initials}
             </div>
-            <div>
-              <p className="font-label text-label-sm font-semibold">Utilisateur admin</p>
+            <div className="flex-1 min-w-0">
+              <p className="font-label text-label-sm font-semibold truncate">
+                {user ? `${user.first_name} ${user.last_name}` : "Utilisateur admin"}
+              </p>
               <p className="font-label text-label-xs text-on-surface-variant">Super Admin</p>
             </div>
+          </div>
+          <div className="mt-2">
+            <LogoutButton redirectTo="/connexion-administrateur-edukora" />
           </div>
         </div>
       </aside>

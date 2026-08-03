@@ -211,6 +211,13 @@ function ConnexionPage() {
               S'inscrire
             </Link>
           </p>
+          <Link
+            href="/connexion-administrateur-edukora"
+            className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-on-surface-variant hover:text-primary transition-colors"
+          >
+            <span className="material-symbols-outlined text-[14px]">shield_person</span>
+            Portail administrateur
+          </Link>
         </div>
       </main>
     </div>
