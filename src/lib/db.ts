@@ -436,7 +436,7 @@ CREATE TABLE IF NOT EXISTS user_progress (
   PRIMARY KEY (user_id, lesson_id)
 );
 
-CREATE TABLE IF NOT EXISTS push_subscriptions (
+ CREATE TABLE IF NOT EXISTS push_subscriptions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   endpoint TEXT NOT NULL,
@@ -444,6 +444,31 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   auth TEXT NOT NULL,
   created_at TEXT DEFAULT (datetime('now')),
   UNIQUE(user_id, endpoint)
+);
+
+CREATE TABLE IF NOT EXISTS subscription_plans (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  interval TEXT NOT NULL CHECK (interval IN ('month','quarter','year')),
+  price_cents INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'XOF',
+  features TEXT,
+  stripe_price_id TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  plan_id INTEGER NOT NULL REFERENCES subscription_plans(id),
+  stripe_subscription_id TEXT,
+  stripe_customer_id TEXT,
+  status TEXT NOT NULL CHECK (status IN ('incomplete','incomplete_expired','trial','active','past_due','cancelled','unpaid','no_default_provided','deleted')),
+  started_at TEXT,
+  end_at TEXT,
+  cancel_at_period_end INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
 );
 `;
 

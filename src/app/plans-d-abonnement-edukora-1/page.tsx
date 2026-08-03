@@ -99,9 +99,13 @@ export default function Page() {
 <span className="font-medium">Mode Hors-ligne complet</span>
 </li>
 </ul>
-<button className="w-full py-4 px-4 rounded-lg bg-secondary-container text-on-secondary-container font-extrabold text-lg shadow-lg transition-all active:scale-95 hover:brightness-110">
-                    S'abonner maintenant
-                </button>
+<button
+  id="subscribe-btn"
+  type="button"
+  className="w-full py-4 px-4 rounded-lg bg-secondary-container text-on-secondary-container font-extrabold text-lg shadow-lg transition-all active:scale-95 hover:brightness-110"
+>
+  S&apos;abonner maintenant
+</button>
 <p className="mt-4 text-[10px] text-center opacity-60">Sans engagement. Annulez à tout moment.</p>
 </div>
 </div>
@@ -193,6 +197,29 @@ export default function Page() {
             pricePeriod.innerText = '/ trimestre';
             savingsBadge.classList.remove('hidden');
         &#125;);
+    </script>
+
+    <script>
+        (function() &#123;
+          var btn = document.getElementById('subscribe-btn');
+          if (!btn) return;
+          btn.addEventListener('click', function() &#123;
+            btn.disabled = true;
+            btn.innerHTML = 'Redirection vers le paiement...';
+            fetch('/api/premium/checkout', &#123;
+              method: 'POST',
+              headers: &#123; 'Content-Type': 'application/json' &#125;,
+              credentials: 'same-origin',
+              body: JSON.stringify(&#123; plan_id: 1 &#125;)
+            &#125;)
+              .then(function(r) &#123; return r.json(); &#125;)
+              .then(function(d) &#123;
+                if (d.url) window.location.href = d.url;
+                else &#123; btn.disabled = false; btn.innerHTML = d.error || 'Erreur'; &#125;
+              &#125;)
+              .catch(function() &#123; btn.disabled = false; btn.innerHTML = 'Erreur réseau'; &#125;);
+          &#125;);
+        &#125;)();
     </script>
 
     </div>

@@ -80,6 +80,7 @@ export function ensureReady() {
   safe("seedLive", seedLive);
   safe("seedLigueChallenges", seedLigueChallenges);
   safe("seedMENAET", seedMENAET);
+  safe("seedSubscriptionPlans", seedSubscriptionPlans);
 }
 
 function fixMojibake() {
@@ -1005,4 +1006,26 @@ function seedMENAET() {
   }
 
   console.log("MENAET seed completed: grades, subjects, chapters inserted");
+}
+
+function seedSubscriptionPlans() {
+  const count = queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM subscription_plans");
+  if (count && count.c > 0) return;
+
+  const plans: [string, string, number, string][] = [
+    ["Pass Premium Mensuel", "month", 1000, "Accès illimité au contenu premium, tuteur IA 24/7, exercices interactifs"],
+    ["Pass Premium Trimestriel", "quarter", 2500, "Tout le premium + 500 FCFA d'économie, engagement 3 mois"],
+  ];
+  plans.forEach(([name, interval, price, features], i) => {
+    run(
+      "INSERT INTO subscription_plans (name, interval, price_cents, currency, features, sort_order) VALUES (?, ?, ?, ?, ?, ?)",
+      name,
+      interval,
+      price,
+      "XOF",
+      features,
+      i,
+    );
+  });
+  console.log("Subscription plans seeded: 2 plans (month 1000 FCFA, quarter 2500 FCFA)");
 }
