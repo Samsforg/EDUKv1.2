@@ -1,6 +1,5 @@
-import type { Config } from "jest";
-
-const config: Config = {
+/** @type {import('jest').Config} */
+module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
   roots: ["<rootDir>/tests"],
@@ -16,5 +15,3 @@ const config: Config = {
     "src/lib/validation.ts",
   ],
 };
-
-export default config;
