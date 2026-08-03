@@ -8,7 +8,10 @@ export const metadata: Metadata = {
   description:
     "L'allié n°1 pour réussir le BAC et le BEPC en Côte d'Ivoire. Fiches certifiées, tuteur IA et simulateur d'examen.",
   manifest: "/manifest.webmanifest",
-  icons: [{ rel: "apple-touch-icon", url: "/icons/launcher-192.png" }],
+  icons: [
+    { rel: "icon", url: "/favicon.png", type: "image/png" },
+    { rel: "apple-touch-icon", url: "/icons/apple-touch-icon.png" },
+  ],
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

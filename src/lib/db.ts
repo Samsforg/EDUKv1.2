@@ -3,13 +3,17 @@ import path from "node:path";
 import fs from "node:fs";
 import { ensureReady } from "./init";
 
+const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
 const isVercel = !!process.env.VERCEL;
-const dataDir = isVercel
-  ? path.join("/tmp", "edukora-data")
-  : path.join(process.cwd(), "data");
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-
-const db = new DatabaseSync(path.join(dataDir, "edukora.db"));
+const db = isBuildPhase
+  ? new DatabaseSync(":memory:")
+  : (() => {
+      const dataDir = isVercel
+        ? path.join("/tmp", "edukora-data")
+        : path.join(process.cwd(), "data");
+      if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+      return new DatabaseSync(path.join(dataDir, "edukora.db"));
+    })();
 db.exec("PRAGMA journal_mode = WAL;");
 db.exec("PRAGMA foreign_keys = ON;");
 db.exec("PRAGMA busy_timeout = 10000;");
