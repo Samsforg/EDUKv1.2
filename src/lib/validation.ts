@@ -13,7 +13,7 @@ export const RegisterSchema = z.object({
   phone: z.string().min(8).max(20).optional().or(z.literal("")).nullable(),
   password: z.string().min(6).max(128),
   referral_code: z.string().optional(),
-  role: z.enum(["student", "teacher"]).optional().default("student"),
+  role: z.enum(["student", "teacher", "parent"]).optional().default("student"),
   serie_id: z.number().int().positive().nullable().optional(),
 }).refine((d) => d.email || d.phone, { message: "Email ou téléphone requis" });
 

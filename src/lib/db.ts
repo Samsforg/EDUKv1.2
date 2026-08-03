@@ -446,6 +446,12 @@ CREATE TABLE IF NOT EXISTS user_progress (
   UNIQUE(user_id, endpoint)
 );
 
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key TEXT PRIMARY KEY,
+  count INTEGER NOT NULL DEFAULT 1,
+  reset_at INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS subscription_plans (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,

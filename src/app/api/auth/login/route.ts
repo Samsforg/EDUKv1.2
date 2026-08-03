@@ -43,7 +43,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const token = await createSession(user.id);
+  let token: string;
+  try {
+    token = await createSession(user.id);
+  } catch (err: any) {
+    console.error("[login] création de session impossible:", err.message);
+    return NextResponse.json(
+      { error: "Configuration serveur incomplète (SESSION_SECRET). Contactez l'administrateur." },
+      { status: 503 },
+    );
+  }
   const res = NextResponse.json({
     ok: true,
     user: { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, role: user.role },

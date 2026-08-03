@@ -99,7 +99,16 @@ export async function POST(req: NextRequest) {
     logAudit(referredBy, "inscription", `${first_name} ${last_name} (#${userId}) inscrit via le code ${(referral_code ?? "").trim().toUpperCase()}`);
   }
 
-  const token = await createSession(userId);
+  let token: string;
+  try {
+    token = await createSession(userId);
+  } catch (err: any) {
+    console.error("[register] création de session impossible:", err.message);
+    return NextResponse.json(
+      { error: "Compte créé. Configuration serveur incomplète (SESSION_SECRET), connectez-vous plus tard." },
+      { status: 503 },
+    );
+  }
   const res = NextResponse.json(
     { ok: true, user: { id: userId, first_name, last_name, email, role } },
     { status: 201 },

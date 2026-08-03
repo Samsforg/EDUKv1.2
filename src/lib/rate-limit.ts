@@ -1,4 +1,4 @@
-const hits = new Map<string, { count: number; resetAt: number }>();
+import { queryOne, run } from "./db";
 
 export interface RateLimitConfig {
   windowMs: number;
@@ -15,21 +15,48 @@ const PRESETS: Record<string, RateLimitConfig> = {
   push_subscribe: { windowMs: 60 * 60 * 1000, max: 10 },
 };
 
+let cleanupCounter = 0;
+
 export function rateLimit(key: string, preset?: string): { allowed: boolean; remaining: number; resetAt: number } {
   const config = preset ? PRESETS[preset] ?? PRESETS.api_general : PRESETS.api_general;
   const now = Date.now();
-  const entry = hits.get(key);
 
-  if (!entry || now > entry.resetAt) {
-    hits.set(key, { count: 1, resetAt: now + config.windowMs });
-    return { allowed: true, remaining: config.max - 1, resetAt: now + config.windowMs };
-  }
+  try {
+    const row = queryOne<{ count: number; reset_at: number }>(
+      "SELECT count, reset_at FROM rate_limits WHERE key = ?",
+      key,
+    );
 
-  entry.count++;
-  if (entry.count > config.max) {
-    return { allowed: false, remaining: 0, resetAt: entry.resetAt };
+    if (!row || now > row.reset_at) {
+      run(
+        "INSERT INTO rate_limits (key, count, reset_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = 1, reset_at = ?",
+        key,
+        now + config.windowMs,
+        now + config.windowMs,
+      );
+      return { allowed: true, remaining: config.max - 1, resetAt: now + config.windowMs };
+    }
+
+    const nextCount = row.count + 1;
+    run("UPDATE rate_limits SET count = ? WHERE key = ?", nextCount, key);
+    if (nextCount > config.max) {
+      return { allowed: false, remaining: 0, resetAt: row.reset_at };
+    }
+    return { allowed: true, remaining: config.max - nextCount, resetAt: row.reset_at };
+  } catch (err) {
+    // Si la table n'existe pas encore (premier boot), on autorise la requête.
+    console.error("[rate-limit] erreur (requête autorisée):", err);
+    return { allowed: true, remaining: config.max, resetAt: now + config.windowMs };
+  } finally {
+    cleanupCounter++;
+    if (cleanupCounter % 100 === 0) {
+      try {
+        run("DELETE FROM rate_limits WHERE reset_at < ?", Date.now());
+      } catch {
+        // ignoré
+      }
+    }
   }
-  return { allowed: true, remaining: config.max - entry.count, resetAt: entry.resetAt };
 }
 
 export function rateLimitResponse(resetAt: number): Response {
@@ -44,14 +71,4 @@ export function getClientIp(req: Request): string {
   const xff = req.headers.get("x-forwarded-for");
   if (xff) return xff.split(",")[0].trim();
   return req.headers.get("x-real-ip") ?? "unknown";
-}
-
-// Cleanup every 10 minutes
-if (typeof setInterval !== "undefined" && process.env.NODE_ENV !== "test") {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [k, v] of hits) {
-      if (now > v.resetAt) hits.delete(k);
-    }
-  }, 10 * 60 * 1000);
 }

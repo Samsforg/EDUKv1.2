@@ -12,13 +12,22 @@ const TOKEN_VERSION = "v1";
 // Sessions sans état : token signé HMAC vérifiable sur TOUTES les instances
 // (Vercel : chaque fonction a sa propre base SQLite /tmp — une session stockée
 // en base ne serait pas lisible par les pages rendues par d'autres instances).
-// Définir SESSION_SECRET en variable d'environnement en production.
-function sessionSecret(): string {
-  return process.env.SESSION_SECRET || "edukora-session-secret-v1-demo";
+// SESSION_SECRET est OBLIGATOIRE en production : sans lui, les sessions sont
+// refusées (fail-closed). Le fallback "demo" ne fonctionne qu'en développement.
+function sessionSecret(): string | null {
+  const secret = process.env.SESSION_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV !== "production") return "edukora-session-secret-v1-demo";
+  console.error(
+    "[session] SESSION_SECRET non défini en production — toutes les sessions sont refusées par sécurité. Définissez SESSION_SECRET (longue chaîne aléatoire) sur Vercel.",
+  );
+  return null;
 }
 
 function signSessionToken(payload: string): string {
-  return createHmac("sha256", sessionSecret()).update(payload).digest("base64url");
+  const secret = sessionSecret();
+  if (!secret) throw new Error("SESSION_SECRET manquant en production");
+  return createHmac("sha256", secret).update(payload).digest("base64url");
 }
 
 function signPayload(userId: number, exp: number): string {
@@ -27,6 +36,8 @@ function signPayload(userId: number, exp: number): string {
 }
 
 function verifySessionToken(token: string): { uid: number; exp: number } | null {
+  const secret = sessionSecret();
+  if (!secret) return null;
   const parts = token.split(".");
   if (parts.length !== 3 || parts[0] !== TOKEN_VERSION) return null;
   const [, payload, sig] = parts;

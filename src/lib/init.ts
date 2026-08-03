@@ -158,8 +158,8 @@ function seedDemoUsers() {
   for (const [email, first, last, role, password] of demo) {
     const exists = queryOne<{ id: number }>("SELECT id FROM users WHERE email = ?", email);
     if (exists) {
-      // Les comptes démo @test.ci sont déterministes : mot de passe forcé à chaque démarrage.
-      run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(password), exists.id);
+      // Ne JAMAIS réécrire le mot de passe d'un compte existant :
+      // un utilisateur réel qui aurait pris cet email garderait le sien.
       continue;
     }
     run(
