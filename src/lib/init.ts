@@ -7,6 +7,7 @@ let ready = false;
 
 export function ensureReady() {
   if (ready) return;
+  if (process.env.NEXT_PHASE === "phase-production-build") return;
   ready = true;
   initDb();
   seedIfEmpty();

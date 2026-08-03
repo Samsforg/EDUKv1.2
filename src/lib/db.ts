@@ -9,6 +9,7 @@ if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 const db = new DatabaseSync(path.join(dataDir, "edukora.db"));
 db.exec("PRAGMA journal_mode = WAL;");
 db.exec("PRAGMA foreign_keys = ON;");
+db.exec("PRAGMA busy_timeout = 10000;");
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS series (
