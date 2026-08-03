@@ -5,68 +5,81 @@ import { hashPassword } from "./auth";
 
 let ready = false;
 
+function safe(name: string, fn: () => void) {
+  try {
+    fn();
+  } catch (err) {
+    console.error(`[init] ${name} a échoué (ignoré) :`, err);
+  }
+}
+
 export function ensureReady() {
   if (ready) return;
   if (process.env.NEXT_PHASE === "phase-production-build") return;
   ready = true;
   initDb();
-  seedIfEmpty();
-  migrate("tutor_messages", "chat_id");
-  migrate("quizzes", "created_by");
-  migrate("exam_papers", "created_by");
-  migrate("lessons", "content", "TEXT");
-  migrate("quizzes", "status", "TEXT");
-  migrate("exam_papers", "status", "TEXT");
-  migrate("quizzes", "created_at", "TEXT");
-  migrate("exam_papers", "created_at", "TEXT");
-  migrate("users", "blocked", "INTEGER");
-  migrate("users", "commune");
-  migrate("challenge_contributions", "side", "TEXT");
-  migrate("live_sessions", "created_by", "INTEGER");
-  migrate("live_sessions", "chat_paused", "INTEGER");
-  migrate("live_messages", "role", "TEXT");
-  migrate("live_questions", "pinned", "INTEGER");
-  migrate("chapters", "position", "INTEGER");
-  migrate("chapters", "grade_id", "INTEGER");
-  migrate("chapters", "code", "TEXT");
-  migrate("chapters", "description", "TEXT");
-  migrate("chapters", "officiel_ref", "TEXT");
-  migrate("lessons", "summary", "TEXT");
-  migrate("lessons", "position", "INTEGER");
-  migrate("lessons", "content_md", "TEXT");
-  migrate("lessons", "content_html", "TEXT");
-  migrate("lessons", "video_url", "TEXT");
-  migrate("lessons", "duration_min", "INTEGER");
-  migrate("lessons", "difficulty", "INTEGER");
-  migrate("lessons", "prerequisites", "TEXT");
-  migrate("lessons", "is_premium", "INTEGER");
-  migrate("lessons", "created_by", "INTEGER");
-  migrate("lessons", "created_at", "TEXT");
-  migrate("subjects", "coefficient_json", "TEXT");
-  migrate("users", "grade_id", "INTEGER");
-  migrate("push_subscriptions", "user_id", "INTEGER");
-  migrate("push_subscriptions", "endpoint", "TEXT");
-  migrate("push_subscriptions", "p256dh", "TEXT");
-  migrate("push_subscriptions", "auth", "TEXT");
-  migrate("push_subscriptions", "created_at", "TEXT");
-  normalizeDefaults();
-  fixMojibake();
-  seedForum();
-  ensureBadges();
-  ensureReminderTable();
-  ensureParentTables();
-  ensureParentDemo();
-  ensureAdminDemo();
-  seedReferrals();
-  seedPromoCodes();
-  seedDisputes();
-  seedAuditLogs();
-  seedProctoring();
-  seedRankings();
-  seedChallenges();
-  seedLive();
-  seedLigueChallenges();
-  seedMENAET();
+  safe("seedIfEmpty", seedIfEmpty);
+  safe("migrations", () => {
+    migrate("tutor_messages", "chat_id");
+    migrate("quizzes", "created_by");
+    migrate("exam_papers", "created_by");
+    migrate("lessons", "content", "TEXT");
+    migrate("quizzes", "status", "TEXT");
+    migrate("exam_papers", "status", "TEXT");
+    migrate("quizzes", "created_at", "TEXT");
+    migrate("exam_papers", "created_at", "TEXT");
+    migrate("users", "blocked", "INTEGER");
+    migrate("users", "commune");
+    migrate("challenge_contributions", "side", "TEXT");
+    migrate("live_sessions", "created_by", "INTEGER");
+    migrate("live_sessions", "chat_paused", "INTEGER");
+    migrate("live_messages", "role", "TEXT");
+    migrate("live_questions", "pinned", "INTEGER");
+    migrate("chapters", "position", "INTEGER");
+    migrate("chapters", "grade_id", "INTEGER");
+    migrate("chapters", "code", "TEXT");
+    migrate("chapters", "description", "TEXT");
+    migrate("chapters", "officiel_ref", "TEXT");
+    migrate("lessons", "summary", "TEXT");
+    migrate("lessons", "position", "INTEGER");
+    migrate("lessons", "content_md", "TEXT");
+    migrate("lessons", "content_html", "TEXT");
+    migrate("lessons", "video_url", "TEXT");
+    migrate("lessons", "duration_min", "INTEGER");
+    migrate("lessons", "difficulty", "INTEGER");
+    migrate("lessons", "prerequisites", "TEXT");
+    migrate("lessons", "is_premium", "INTEGER");
+    migrate("lessons", "created_by", "INTEGER");
+    migrate("lessons", "created_at", "TEXT");
+    migrate("subjects", "coefficient_json", "TEXT");
+    migrate("users", "grade_id", "INTEGER");
+    migrate("push_subscriptions", "user_id", "INTEGER");
+    migrate("push_subscriptions", "endpoint", "TEXT");
+    migrate("push_subscriptions", "p256dh", "TEXT");
+    migrate("push_subscriptions", "auth", "TEXT");
+    migrate("push_subscriptions", "created_at", "TEXT");
+  });
+  safe("normalizeDefaults", normalizeDefaults);
+  safe("fixMojibake", fixMojibake);
+  // Le compte admin est créé EN PREMIER : même si un seed échoue,
+  // l'administrateur existe toujours sur une base fraîche.
+  safe("ensureAdminDemo", ensureAdminDemo);
+  safe("seedDemoUsers", seedDemoUsers);
+  safe("seedForum", seedForum);
+  safe("ensureBadges", ensureBadges);
+  safe("ensureReminderTable", ensureReminderTable);
+  safe("ensureParentTables", ensureParentTables);
+  safe("ensureParentDemo", ensureParentDemo);
+  safe("seedReferrals", seedReferrals);
+  safe("seedPromoCodes", seedPromoCodes);
+  safe("seedDisputes", seedDisputes);
+  safe("seedAuditLogs", seedAuditLogs);
+  safe("seedProctoring", seedProctoring);
+  safe("seedRankings", seedRankings);
+  safe("seedChallenges", seedChallenges);
+  safe("seedLive", seedLive);
+  safe("seedLigueChallenges", seedLigueChallenges);
+  safe("seedMENAET", seedMENAET);
 }
 
 function fixMojibake() {
@@ -124,6 +137,39 @@ function ensureAdminDemo() {
     null,
     `EDK-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
   );
+}
+
+function seedDemoUsers() {
+  const demo: [string, string, string, string, string][] = [
+    ["yao@test.ci", "Yao", "Kouassi", "student", "test123"],
+    ["nadia@test.ci", "Nadia", "Diabaté", "student", "test123"],
+    ["ines@test.ci", "Inès", "Kouamé", "student", "test123"],
+    ["mariam@test.ci", "Mariam", "Cissé", "student", "test123"],
+    ["kofi8@test.ci", "Kofi", "Brou", "student", "test123"],
+    ["aya8@test.ci", "Aya", "N'Guessan", "student", "test123"],
+    ["luc@test.ci", "Luc", "Tanoh", "student", "test123"],
+    ["awa@test.ci", "Awa", "Traoré", "student", "test123"],
+    ["prof@test.ci", "Jean", "Koffi", "teacher", "prof123"],
+  ];
+  for (const [email, first, last, role, password] of demo) {
+    const exists = queryOne<{ id: number }>("SELECT id FROM users WHERE email = ?", email);
+    if (exists) {
+      // Les comptes démo @test.ci sont déterministes : mot de passe forcé à chaque démarrage.
+      run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(password), exists.id);
+      continue;
+    }
+    run(
+      `INSERT INTO users (role, email, password_hash, first_name, last_name, class_level, referral_code)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      role,
+      email,
+      hashPassword(password),
+      first,
+      last,
+      role === "student" ? "Terminale" : null,
+      `EDK-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+    );
+  }
 }
 
 function ensureReminderTable() {
