@@ -8,6 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./edukora-app
     environment:
       name: production
       url: ${{ steps.deploy.outputs.url }}
@@ -21,7 +24,7 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: "--prod"
-          working-directory: ./
+          working-directory: ./edukora-app
 
       - name: Summary
         run: echo "Deployed to ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
