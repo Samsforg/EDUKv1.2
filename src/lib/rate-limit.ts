@@ -47,9 +47,11 @@ export function getClientIp(req: Request): string {
 }
 
 // Cleanup every 10 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [k, v] of hits) {
-    if (now > v.resetAt) hits.delete(k);
-  }
-}, 10 * 60 * 1000);
+if (typeof setInterval !== "undefined" && process.env.NODE_ENV !== "test") {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [k, v] of hits) {
+      if (now > v.resetAt) hits.delete(k);
+    }
+  }, 10 * 60 * 1000);
+}
