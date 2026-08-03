@@ -11,6 +11,10 @@ function verifySignature(raw: string, sigHeader: string | null): boolean {
   return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(provided));
 }
 
+export async function GET() {
+  return NextResponse.json({ ok: true, service: "geniuspay-webhook", message: "Endpoint de webhook opérationnel" });
+}
+
 export async function POST(req: Request) {
   const raw = await (req as any).text().catch(() => null);
   if (!raw) return NextResponse.json({ error: "Corps vide" }, { status: 400 });
