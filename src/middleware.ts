@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 const PUBLIC_ROUTES = [
   "/",
+  "/fonctionnalites",
+  "/resultats",
+  "/tarifs",
   "/connexion-edukora",
   "/inscription-1-2-edukora",
   "/mot-de-passe-oubli-edukora",
