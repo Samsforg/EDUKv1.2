@@ -58,6 +58,9 @@ export function ensureReady() {
     migrate("push_subscriptions", "p256dh", "TEXT");
     migrate("push_subscriptions", "auth", "TEXT");
     migrate("push_subscriptions", "created_at", "TEXT");
+    migrate("subscriptions", "provider", "TEXT");
+    migrate("subscriptions", "provider_subscription_id", "TEXT");
+    migrate("subscriptions", "provider_customer_id", "TEXT");
   });
   safe("normalizeDefaults", normalizeDefaults);
   safe("fixMojibake", fixMojibake);

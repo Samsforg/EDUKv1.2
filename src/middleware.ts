@@ -17,6 +17,7 @@ const PUBLIC_ROUTES = [
   "/api/auth",
   "/api/health",
   "/api/series",
+  "/api/premium/webhook",
   "/manifest.webmanifest",
 ];
 

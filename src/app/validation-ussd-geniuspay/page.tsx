@@ -1,14 +1,77 @@
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = { title: "Edukora - Validation de Paiement" };
+import React from "react";
 
 export default function Page() {
+  return <GeniusPayValidation />;
+}
+
+function GeniusPayValidation() {
+  const [ref, setRef] = React.useState<string | null>(null);
+  const [amount, setAmount] = React.useState<number | null>(null);
+  const [planName, setPlanName] = React.useState<string>("");
+  const [error, setError] = React.useState<string>("");
+  const [timeLeft, setTimeLeft] = React.useState(180);
+  const [checking, setChecking] = React.useState(false);
+  const [done, setDone] = React.useState(false);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const r = params.get("ref");
+    if (!r) {
+      setError("Aucune référence de paiement. Revenez à la page des plans et réessayez.");
+      return;
+    }
+    setRef(r);
+    fetch(`/api/premium/status?ref=${encodeURIComponent(r)}`, { credentials: "same-origin" })
+      .then((res) => res.json())
+      .then((d) => {
+        if (d.error) throw new Error(d.error);
+        setAmount(d.amount);
+        setPlanName(d.plan_name);
+        if (d.is_active) {
+          setDone(true);
+          setTimeout(() => { window.location.href = "/paiement-reussi-edukora-premium-geniuspay"; }, 800);
+        }
+      })
+      .catch((e) => setError(e.message || "Erreur de chargement"));
+  }, []);
+
+  React.useEffect(() => {
+    if (done || timeLeft <= 0) return;
+    const t = setInterval(() => setTimeLeft((s) => s - 1), 1000);
+    return () => clearInterval(t);
+  }, [done, timeLeft]);
+
+  React.useEffect(() => {
+    if (done || !ref || !checking) return;
+    const iv = setInterval(() => {
+      fetch(`/api/premium/status?ref=${encodeURIComponent(ref)}`, { credentials: "same-origin" })
+        .then((res) => res.json())
+        .then((d) => {
+          if (d.is_active) {
+            setDone(true);
+            setTimeout(() => { window.location.href = "/paiement-reussi-edukora-premium-geniuspay"; }, 800);
+          } else if (d.status === "failed" || d.status === "cancelled") {
+            setError("Le paiement a échoué ou a été annulé. Réessayez depuis la page des plans.");
+            setChecking(false);
+          }
+        })
+        .catch(() => {});
+    }, 3000);
+    return () => clearInterval(iv);
+  }, [ref, checking, done]);
+
+  const mins = Math.floor(Math.max(timeLeft, 0) / 60);
+  const secs = Math.max(timeLeft % 60, 0);
+  const timer = `0${mins}:${secs < 10 ? "0" : ""}${secs}`;
+
   return (
     <div className="bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container" style={{ minHeight: "max(884px, 100dvh)" }}>
 
 <header className="fixed top-0 w-full flex items-center justify-between px-4 h-16 w-full z-50 bg-surface border-b border-outline-variant">
 <div className="flex items-center gap-4">
-<button className="w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-200 active:scale-95 hover:bg-surface-container-low">
+<button onClick={() => { window.location.href = "/plans-d-abonnement-edukora-1"; }} className="w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-200 active:scale-95 hover:bg-surface-container-low">
 <span className="material-symbols-outlined text-primary">arrow_back</span>
 </button>
 <h1 className="font-headline text-xl font-semibold text-primary">Paiement Sécurisé</h1>
@@ -22,15 +85,30 @@ export default function Page() {
 </header>
 <main className="pt-24 pb-12 px-4 max-w-md mx-auto min-h-screen flex flex-col items-center">
 
+{done ? (
+  <div className="flex flex-col items-center text-center mt-10">
+    <div className="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center mb-6">
+      <span className="material-symbols-outlined text-on-secondary-container text-3xl" style={{"fontVariationSettings":"'FILL' 1"}}>check_circle</span>
+    </div>
+    <h2 className="font-headline text-2xl font-bold text-on-surface mb-2">Paiement confirmé !</h2>
+    <p className="text-on-surface-variant text-md">Votre pass premium est activé. Redirection en cours...</p>
+  </div>
+) : (
+  <>
 <div className="flex flex-col items-center mb-10 text-center">
 <div className="loading-ring mb-8 flex items-center justify-center">
 <span className="material-symbols-outlined text-on-primary z-10 text-3xl" style={{"fontVariationSettings":"'FILL' 1"}}>tap_and_play</span>
 </div>
 <h2 className="font-headline text-2xl font-bold text-on-surface mb-2">Validation en cours</h2>
 <p className="text-on-surface-variant text-md">Geniuspay établit une connexion sécurisée avec votre opérateur. Veuillez autoriser la transaction sur votre téléphone mobile.</p>
-<div className="mt-4 px-4 py-1.5 bg-primary-container text-on-primary-container rounded-full text-sm font-semibold tracking-wide" id="countdown">
-                Expire dans <span id="timer">03:00</span>
-</div>
+{!error && !done && (
+  <div className="mt-4 px-4 py-1.5 bg-primary-container text-on-primary-container rounded-full text-sm font-semibold tracking-wide" id="countdown">
+    Expire dans <span id="timer">{timer}</span>
+  </div>
+)}
+{error && (
+  <div className="mt-4 px-4 py-3 bg-error-container text-on-error-container rounded-xl text-sm font-semibold w-full text-center" id="error-box">{error}</div>
+)}
 </div>
 
 <div className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm mb-8">
@@ -57,24 +135,32 @@ export default function Page() {
 <div className="w-full px-4 mb-10">
 <div className="flex justify-between items-center py-2 border-b border-dashed border-outline-variant">
 <span className="text-on-surface-variant text-sm">Montant à payer</span>
-<span className="font-bold text-on-surface">15 000 FCFA</span>
+<span className="font-bold text-on-surface">{amount != null ? `${amount.toLocaleString("fr-FR")} FCFA` : "..."} <span className="text-on-surface-variant text-sm font-normal">({planName})</span></span>
 </div>
 <div className="flex justify-between items-center py-2">
 <span className="text-on-surface-variant text-sm">Référence</span>
-<span className="text-on-surface-variant text-sm font-mono uppercase">EDU-9283-XK</span>
+<span className="text-on-surface-variant text-sm font-mono uppercase">{ref ? ref.replace(/^sub_/, "").slice(0, 12) : "..."}</span>
 </div>
 </div>
 
 <div className="w-full space-y-4">
-<button className="w-full h-14 bg-secondary-container text-on-secondary-container font-bold rounded-lg shadow-md hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-<span className="material-symbols-outlined">check_circle</span>
-                J'ai validé le paiement
-            </button>
+<button
+  onClick={() => { if (!checking) setChecking(true); }}
+  className="w-full h-14 bg-secondary-container text-on-secondary-container font-bold rounded-lg shadow-md hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+>
+  {checking ? (
+    <><span className="material-symbols-outlined animate-spin">sync</span> Vérification...</>
+  ) : (
+    <><span className="material-symbols-outlined">check_circle</span> J'ai validé le paiement</>
+  )}
+</button>
 <a className="w-full py-3 flex items-center justify-center text-primary font-semibold hover:underline gap-2" href="#">
 <span className="material-symbols-outlined text-sm">help</span>
                 Besoin d'aide ?
             </a>
 </div>
+</>
+)}
 
 <div className="mt-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
 <div className="flex items-center gap-2">
@@ -84,35 +170,6 @@ export default function Page() {
 </div>
 </div>
 </main>
-<script>
-        // Simple Countdown Timer
-        let time = 180; // 3 minutes
-        const timerElement = document.getElementById('timer');
-        
-        const countdown = setInterval(() =&gt; &#123;
-            const minutes = Math.floor(time / 60);
-            let seconds = time % 60;
-            seconds = seconds &lt; 10 ? '0' + seconds : seconds;
-            timerElement.textContent = `0$&#123;minutes&#125;:$&#123;seconds&#125;`;
-            time--;
-            
-            if (time &lt; 0) &#123;
-                clearInterval(countdown);
-                timerElement.textContent = "00:00";
-            &#125;
-        &#125;, 1000);
-
-        // Interaction for "J'ai validé"
-        const mainBtn = document.querySelector('button.bg-secondary-container');
-        mainBtn.addEventListener('click', () =&gt; &#123;
-            mainBtn.innerHTML = '&lt;span class="material-symbols-outlined animate-spin"&gt;sync&lt;/span&gt; Vérification...';
-            setTimeout(() =&gt; &#123;
-                // In a real app, this would check backend status
-                alert('Vérification du paiement en cours. Un message de confirmation vous sera envoyé.');
-                mainBtn.innerHTML = '&lt;span class="material-symbols-outlined"&gt;check_circle&lt;/span&gt; J\'ai validé le paiement';
-            &#125;, 2000);
-        &#125;);
-    </script>
 
     </div>
   );

@@ -453,7 +453,6 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
   price_cents INTEGER NOT NULL,
   currency TEXT NOT NULL DEFAULT 'XOF',
   features TEXT,
-  stripe_price_id TEXT,
   sort_order INTEGER NOT NULL DEFAULT 0
 );
 
@@ -461,8 +460,9 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   plan_id INTEGER NOT NULL REFERENCES subscription_plans(id),
-  stripe_subscription_id TEXT,
-  stripe_customer_id TEXT,
+  provider TEXT NOT NULL DEFAULT 'geniuspay',
+  provider_subscription_id TEXT,
+  provider_customer_id TEXT,
   status TEXT NOT NULL CHECK (status IN ('incomplete','incomplete_expired','trial','active','past_due','cancelled','unpaid','no_default_provided','deleted')),
   started_at TEXT,
   end_at TEXT,
