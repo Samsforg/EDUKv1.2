@@ -4,11 +4,17 @@ import { queryOne, run } from "@/lib/db";
 import webPush from "web-push";
 import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
 
-webPush.setVapidDetails(
-  "mailto:admin@edukora.ci",
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
+let vapidConfigured = false;
+
+function ensureVapid() {
+  if (vapidConfigured) return;
+  const pub = process.env.VAPID_PUBLIC_KEY;
+  const priv = process.env.VAPID_PRIVATE_KEY;
+  if (pub && priv) {
+    webPush.setVapidDetails("mailto:admin@edukora.ci", pub, priv);
+    vapidConfigured = true;
+  }
+}
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
@@ -22,6 +28,8 @@ export async function POST(req: NextRequest) {
   if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
     return NextResponse.json({ error: "Subscription invalide" }, { status: 400 });
   }
+
+  ensureVapid();
 
   const existing = queryOne<{ id: number }>(
     "SELECT id FROM push_subscriptions WHERE user_id = ? AND endpoint = ?",
