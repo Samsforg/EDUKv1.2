@@ -18,10 +18,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: edukora-app/package-lock.json
 
       - run: npm ci
+        working-directory: ./edukora-app
 
       - name: Typecheck
         run: npm run typecheck
@@ -41,8 +40,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: edukora-app/package-lock.json
 
       - run: npm ci
 
