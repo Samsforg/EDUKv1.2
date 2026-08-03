@@ -9,11 +9,14 @@ import { DisputeButton } from "@/components/DisputeButton";
 
 interface ProfileData {
   user: {
+    id: number;
     first_name: string;
     last_name: string;
     email: string;
     phone: string | null;
     serie: { code: string; name: string } | null;
+    serie_id: number | null;
+    class_level: string | null;
     xp: number;
     streak: number;
   };
@@ -31,16 +34,119 @@ interface ProfileData {
 
 const NEXT_XP = 500;
 
+const SERIES = [
+  { id: 1, code: "C", name: "Sciences" },
+  { id: 2, code: "D", name: "Sciences Exp." },
+  { id: 3, code: "A", name: "Littéraire" },
+  { id: 4, code: "B", name: "Économique" },
+];
+
 export default function ProfilePage() {
   const [data, setData] = useState<ProfileData | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", serie_id: "", class_level: "" as string });
+  const [pw, setPw] = useState({ current_password: "", new_password: "", confirm: "" });
 
   useEffect(() => {
     fetch("/api/me/profile")
       .then((r) => r.json())
       .then((d) => {
-        if (d.user) setData(d);
+        if (d.user) {
+          setData(d);
+          setForm({
+            first_name: d.user.first_name,
+            last_name: d.user.last_name,
+            email: d.user.email,
+            phone: d.user.phone ?? "",
+            serie_id: d.user.serie_id ? String(d.user.serie_id) : "",
+            class_level: d.user.class_level ?? "",
+          });
+        }
       });
   }, []);
+
+  const saveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch("/api/me/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error ?? "Erreur lors de la mise à jour.");
+      } else {
+        setSuccess("Profil mis à jour avec succès.");
+        setEditing(false);
+        if (json.user) {
+          setData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  user: {
+                    ...prev.user,
+                    first_name: json.user.first_name,
+                    last_name: json.user.last_name,
+                    email: json.user.email,
+                    phone: json.user.phone,
+                    serie_id: json.user.serie_id,
+                    class_level: json.user.class_level,
+                  },
+                }
+              : prev,
+          );
+        }
+      }
+    } catch {
+      setError("Erreur réseau. Réessayez.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const savePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    if (pw.new_password !== pw.confirm) {
+      setError("La confirmation du nouveau mot de passe ne correspond pas.");
+      setSaving(false);
+      return;
+    }
+    if (pw.new_password.length < 6) {
+      setError("Le nouveau mot de passe doit contenir au moins 6 caractères.");
+      setSaving(false);
+      return;
+    }
+    try {
+      const res = await fetch("/api/me/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          current_password: pw.current_password,
+          new_password: pw.new_password,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) setError(json.error ?? "Erreur lors du changement de mot de passe.");
+      else {
+        setSuccess("Mot de passe mis à jour.");
+        setPw({ current_password: "", new_password: "", confirm: "" });
+      }
+    } catch {
+      setError("Erreur réseau. Réessayez.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (!data) {
     return (
@@ -96,6 +202,186 @@ export default function ProfilePage() {
               </span>
             )}
           </div>
+        </section>
+
+        <section className="bg-surface border border-outline-variant rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-headline-md text-headline-md text-on-surface">Informations personnelles</h2>
+            {!editing && (
+              <button
+                onClick={() => { setEditing(true); setError(null); setSuccess(null); }}
+                className="text-primary hover:bg-primary-container/10 rounded-xl px-3 py-1.5 text-sm font-semibold flex items-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-[16px]">edit</span>
+                Modifier
+              </button>
+            )}
+          </div>
+
+          {editing ? (
+            <form onSubmit={saveProfile} className="flex flex-col gap-4">
+              {error && (
+                <div className="bg-error-container/20 text-error p-3 rounded-lg text-sm font-medium flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]">error</span>
+                  <span>{error}</span>
+                </div>
+              )}
+              {success && (
+                <div className="bg-tertiary-container/20 text-tertiary p-3 rounded-lg text-sm font-medium flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                  <span>{success}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-on-surface">Prénom</label>
+                  <input
+                    type="text"
+                    value={form.first_name}
+                    onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-on-surface">Nom</label>
+                  <input
+                    type="text"
+                    value={form.last_name}
+                    onChange={(e) => setForm({ ...form, last_name: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+                <div className="sm:col-span-2 space-y-1">
+                  <label className="block text-sm font-medium text-on-surface">Email</label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+                <div className="sm:col-span-2 space-y-1">
+                  <label className="block text-sm font-medium text-on-surface">Téléphone</label>
+                  <input
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Optionnel"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-on-surface">Série</label>
+                  <select
+                    value={form.serie_id}
+                    onChange={(e) => setForm({ ...form, serie_id: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm"
+                  >
+                    <option value="">Non renseignée</option>
+                    {SERIES.map((s) => (
+                      <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-on-surface">Niveau</label>
+                  <input
+                    type="text"
+                    value={form.class_level}
+                    onChange={(e) => setForm({ ...form, class_level: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="ex: Terminale C"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 bg-primary text-on-primary py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {saving ? <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span> : <span className="material-symbols-outlined text-sm">save</span>}
+                  {saving ? "Enregistrement..." : "Enregistrer"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  className="flex-1 bg-surface-container-low text-on-surface-variant py-2.5 rounded-lg font-semibold"
+                >
+                  Annuler
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="space-y-2 text-sm">
+              <p className="text-on-surface-variant">Prénom : <span className="text-on-surface font-medium">{user.first_name}</span></p>
+              <p className="text-on-surface-variant">Nom : <span className="text-on-surface font-medium">{user.last_name}</span></p>
+              <p className="text-on-surface-variant">Email : <span className="text-on-surface font-medium">{user.email}</span></p>
+              <p className="text-on-surface-variant">Téléphone : <span className="text-on-surface font-medium">{user.phone ?? "—"}</span></p>
+              <p className="text-on-surface-variant">Série : <span className="text-on-surface font-medium">{user.serie ? `${user.serie.code} — ${user.serie.name}` : "—"}</span></p>
+              <p className="text-on-surface-variant">Niveau : <span className="text-on-surface font-medium">{user.class_level ?? "—"}</span></p>
+            </div>
+          )}
+        </section>
+
+        <section className="bg-surface border border-outline-variant rounded-xl p-5">
+          <h2 className="font-headline-md text-headline-md text-on-surface mb-4">Changer le mot de passe</h2>
+          <form onSubmit={savePassword} className="flex flex-col gap-4">
+            {error && (
+              <div className="bg-error-container/20 text-error p-3 rounded-lg text-sm font-medium flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">error</span>
+                <span>{error}</span>
+              </div>
+            )}
+            {success && (
+              <div className="bg-tertiary-container/20 text-tertiary p-3 rounded-lg text-sm font-medium flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                <span>{success}</span>
+              </div>
+            )}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-on-surface">Mot de passe actuel</label>
+              <input
+                type="password"
+                value={pw.current_password}
+                onChange={(e) => setPw({ ...pw, current_password: e.target.value })}
+                required
+                className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-on-surface">Nouveau mot de passe</label>
+              <input
+                type="password"
+                value={pw.new_password}
+                onChange={(e) => setPw({ ...pw, new_password: e.target.value })}
+                required
+                minLength={6}
+                className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-on-surface">Confirmer</label>
+              <input
+                type="password"
+                value={pw.confirm}
+                onChange={(e) => setPw({ ...pw, confirm: e.target.value })}
+                required
+                minLength={6}
+                className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={saving}
+              className="bg-primary text-on-primary py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {saving ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : <span className="material-symbols-outlined">lock</span>}
+              Changer le mot de passe
+            </button>
+          </form>
         </section>
 
         <section className="grid grid-cols-2 gap-3">

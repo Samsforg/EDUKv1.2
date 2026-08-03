@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { query, queryOne } from "@/lib/db";
+import { query, queryOne, run } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
+import { hashPassword, verifyPassword } from "@/lib/auth";
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -80,13 +81,15 @@ export async function GET() {
       email: user.email,
       phone: user.phone,
       serie: serie ?? null,
+      serie_id: user.serie_id,
+      class_level: user.class_level,
       xp: user.xp,
       streak: user.streak,
     },
     stats: {
       global_score: globalScore,
       quizzes_done: quizzesDone,
-      exams_done: examStats?.count ?? 0,
+      exams: examStats?.count ?? 0,
       best_exam: examStats?.best ?? null,
       badges_earned: allBadges.filter((b) => b.earned_at !== null).length,
     },
@@ -94,4 +97,44 @@ export async function GET() {
     quiz_history: quizHistory,
     exam_history: examHistory,
   });
+}
+
+export async function PATCH(req: Request) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
+
+  const body = await req.json().catch(() => ({}));
+  const { first_name, last_name, email, phone, serie_id, class_level, current_password, new_password } = body;
+
+  if (new_password) {
+    if (!current_password) return NextResponse.json({ error: "Mot de passe actuel requis" }, { status: 400 });
+    const stored = queryOne<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = ?", user.id);
+    if (!stored || !verifyPassword(current_password, stored.password_hash)) return NextResponse.json({ error: "Mot de passe actuel incorrect" }, { status: 400 });
+    if (new_password.length < 6) return NextResponse.json({ error: "Le nouveau mot de passe doit contenir au moins 6 caractères" }, { status: 400 });
+    run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(new_password), user.id);
+  }
+
+  if (email !== undefined && email !== user.email) {
+    const exists = queryOne<{ id: number }>("SELECT id FROM users WHERE email = ? AND id != ?", email, user.id);
+    if (exists) return NextResponse.json({ error: "Cet email est déjà utilisé" }, { status: 409 });
+    run("UPDATE users SET email = ? WHERE id = ?", email, user.id);
+  }
+
+  if (phone !== undefined && phone !== user.phone) {
+    const exists = queryOne<{ id: number }>("SELECT id FROM users WHERE phone = ? AND id != ?", phone, user.id);
+    if (exists) return NextResponse.json({ error: "Ce numéro est déjà utilisé" }, { status: 409 });
+    run("UPDATE users SET phone = ? WHERE id = ?", phone ?? null, user.id);
+  }
+
+  if (first_name !== undefined) run("UPDATE users SET first_name = ? WHERE id = ?", first_name, user.id);
+  if (last_name !== undefined) run("UPDATE users SET last_name = ? WHERE id = ?", last_name, user.id);
+  if (serie_id !== undefined) run("UPDATE users SET serie_id = ? WHERE id = ?", serie_id ?? null, user.id);
+  if (class_level !== undefined) run("UPDATE users SET class_level = ? WHERE id = ?", class_level, user.id);
+
+  const updated = queryOne<{ id: number; first_name: string; last_name: string; email: string | null; phone: string | null; serie_id: number | null; class_level: string | null }>(
+    "SELECT id, first_name, last_name, email, phone, serie_id, class_level FROM users WHERE id = ?",
+    user.id,
+  );
+
+  return NextResponse.json({ ok: true, user: updated });
 }

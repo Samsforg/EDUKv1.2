@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getUserDetail, changeUserRole, setUserBlocked, deleteUser } from "@/lib/admin";
+import { getUserDetail, changeUserRole, setUserBlocked, deleteUser, updateUser } from "@/lib/admin";
 import { requireAdmin } from "@/lib/admin-guard";
 import { getCurrentUser } from "@/lib/session";
 
@@ -32,6 +32,20 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const res = setUserBlocked(userId, Boolean(body.blocked), actor!.id);
     if ("error" in res) return NextResponse.json(res, { status: 400 });
   }
+
+  // Champs additionnels modifiables par l'admin
+  const updateFields: Record<string, unknown> = {};
+  if (body.first_name !== undefined) updateFields.first_name = body.first_name;
+  if (body.last_name !== undefined) updateFields.last_name = body.last_name;
+  if (body.email !== undefined) updateFields.email = body.email;
+  if (body.phone !== undefined) updateFields.phone = body.phone;
+  if (body.serie_id !== undefined) updateFields.serie_id = body.serie_id;
+  if (body.class_level !== undefined) updateFields.class_level = body.class_level;
+  if (Object.keys(updateFields).length > 0) {
+    const res = updateUser(userId, updateFields, actor!.id);
+    if ("error" in res) return NextResponse.json(res, { status: 400 });
+  }
+
   return NextResponse.json({ ok: true });
 }
 

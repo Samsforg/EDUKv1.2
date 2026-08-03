@@ -332,6 +332,44 @@ export function changeUserRole(targetId: number, role: string, actorId: number):
   return { ok: true };
 }
 
+export function updateUser(
+  targetId: number,
+  fields: Record<string, unknown>,
+  actorId: number,
+): { ok: true } | { error: string } {
+  if (targetId === actorId) return { error: "Vous ne pouvez pas modifier votre propre compte via cette route" };
+
+  const allowed = ["first_name", "last_name", "email", "phone", "serie_id", "class_level"] as const;
+  const updates: string[] = [];
+  const params: (string | number | null)[] = [];
+
+  for (const [key, value] of Object.entries(fields)) {
+    if (!allowed.includes(key as (typeof allowed)[number])) continue;
+    if (key === "email" && value) {
+      const exists = queryOne<{ id: number }>("SELECT id FROM users WHERE email = ? AND id != ?", String(value), targetId);
+      if (exists) return { error: "Cet email est déjà utilisé" };
+    }
+    if (key === "phone" && value) {
+      const exists = queryOne<{ id: number }>("SELECT id FROM users WHERE phone = ? AND id != ?", String(value), targetId);
+      if (exists) return { error: "Ce numéro est déjà utilisé" };
+    }
+    updates.push(`${key} = ?`);
+    params.push(value as string | number | null);
+  }
+
+  if (updates.length === 0) return { error: "Aucun champ valide à mettre à jour" };
+
+  params.push(targetId);
+  run(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`, ...params);
+
+  logAudit(
+    actorId,
+    "profile",
+    `Profil de l'utilisateur #${targetId} mis à jour : ${Object.keys(fields).join(", ")}`,
+  );
+  return { ok: true };
+}
+
 export interface ContentSubject {
   subject_id: number;
   name: string;
