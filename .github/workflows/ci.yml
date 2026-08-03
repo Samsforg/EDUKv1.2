@@ -9,9 +9,6 @@ on:
 jobs:
   lint-typecheck-test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./edukora-app
     steps:
       - uses: actions/checkout@v4
 
@@ -20,7 +17,6 @@ jobs:
           node-version: 20
 
       - run: npm ci
-        working-directory: ./edukora-app
 
       - name: Typecheck
         run: npm run typecheck
@@ -31,9 +27,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: lint-typecheck-test
-    defaults:
-      run:
-        working-directory: ./edukora-app
     steps:
       - uses: actions/checkout@v4
 
