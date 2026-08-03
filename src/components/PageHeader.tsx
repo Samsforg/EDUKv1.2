@@ -4,7 +4,7 @@ import Link from "next/link";
 
 interface PageHeaderProps {
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   backHref?: string;
   right?: React.ReactNode;
   backLabel?: string;

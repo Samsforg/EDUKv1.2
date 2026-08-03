@@ -45,7 +45,7 @@ export default function ForumPage() {
   }, []);
 
   return (
-    <div className="bg-background text-on-background font-body-md min-h-screen pb-24 font-['Hanken_Grotesk']">
+    <div className="bg-background text-on-background font-body-md min-h-screen pb-16 font-['Hanken_Grotesk']">
       <PageHeader title="Communauté" subtitle="Entraide entre élèves de Côte d'Ivoire" />
 
       <main className="px-margin-mobile pt-4 space-y-5">

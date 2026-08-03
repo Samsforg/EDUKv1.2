@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageHeader from "@/components/PageHeader";
 import { useParams } from "next/navigation";
 import SimpleMarkdown from "@/components/SimpleMarkdown";
 
@@ -59,22 +60,20 @@ export default function LessonReader() {
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen pb-16 font-['Hanken_Grotesk']">
-      <header className="sticky top-0 z-40 bg-surface border-b border-outline-variant flex items-center gap-2 px-margin-mobile h-16">
-        <Link href="/fiches" className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100">
-          <span className="material-symbols-outlined">arrow_back</span>
-        </Link>
-        <div className="flex-1 min-w-0">
-          <p className="font-label-xs text-on-surface-variant truncate">{lesson ? `${lesson.subject} · ${lesson.chapter}` : " "}</p>
-          <h1 className="font-title-sm text-title-sm text-on-surface truncate">{lesson?.title ?? ""}</h1>
-        </div>
-        <button
-          onClick={toggleSave}
-          aria-label="Sauvegarder hors-ligne"
-          className={`w-10 h-10 flex items-center justify-center rounded-full active:scale-95 duration-100 ${lesson?.saved ? "text-primary" : "text-on-surface-variant"}`}
-        >
-          <span className="material-symbols-outlined">{lesson?.saved ? "bookmark" : "bookmark_border"}</span>
-        </button>
-      </header>
+      <PageHeader
+        title={lesson?.title ?? ""}
+        subtitle={lesson ? `${lesson.subject} · ${lesson.chapter}` : " "}
+        backHref="/fiches"
+        right={
+          <button
+            onClick={toggleSave}
+            aria-label="Sauvegarder hors-ligne"
+            className={`w-10 h-10 flex items-center justify-center rounded-full active:scale-95 duration-100 ${lesson?.saved ? "text-primary" : "text-on-surface-variant"}`}
+          >
+            <span className="material-symbols-outlined">{lesson?.saved ? "bookmark" : "bookmark_border"}</span>
+          </button>
+        }
+      />
 
       <main className="px-margin-mobile pt-5 max-w-2xl mx-auto">
         {loading && (

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import PageHeader from "@/components/PageHeader";
 
 interface Msg {
   id: number;
@@ -59,22 +60,19 @@ export default function TutorPage() {
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col font-['Hanken_Grotesk']">
-      <header className="sticky top-0 z-40 bg-surface border-b border-outline-variant flex items-center gap-3 px-margin-mobile h-16">
-        <Link href="/accueil-edukora" className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100">
-          <span className="material-symbols-outlined">arrow_back</span>
-        </Link>
-        <div className="flex-1 flex items-center gap-3">
+      <PageHeader
+        title="Kora, ton tuteur IA"
+        subtitle={
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-[#1b873b]"></span> en ligne
+          </span>
+        }
+        right={
           <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
             <span className="material-symbols-outlined text-on-primary text-xl">smart_toy</span>
           </div>
-          <div>
-            <h1 className="font-title-md text-title-md text-on-surface leading-tight">Kora, ton tuteur IA</h1>
-            <p className="font-label-xs text-label-xs text-on-surface-variant flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[#1b873b]"></span> en ligne
-            </p>
-          </div>
-        </div>
-      </header>
+        }
+      />
 
       <main className="flex-1 w-full max-w-lg mx-auto px-4 pt-4 pb-28 space-y-3">
         {messages.length === 0 && (

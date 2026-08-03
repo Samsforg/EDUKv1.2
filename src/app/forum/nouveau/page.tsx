@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import PageHeader from "@/components/PageHeader";
 
 interface Category {
   id: number;
@@ -53,15 +54,7 @@ export default function NewPostPage() {
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen pb-16 font-['Hanken_Grotesk']">
-      <header className="sticky top-0 z-40 bg-surface border-b border-outline-variant flex items-center gap-3 px-margin-mobile h-16">
-        <Link href="/forum" className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100">
-          <span className="material-symbols-outlined">arrow_back</span>
-        </Link>
-        <div className="flex-1">
-          <h1 className="font-title-md text-title-md text-on-surface">Nouveau sujet</h1>
-          <p className="font-label-xs text-label-xs text-on-surface-variant">Partage ta question ou ton astuce</p>
-        </div>
-      </header>
+      <PageHeader title="Nouveau sujet" subtitle="Partage ta question ou ton astuce" backHref="/forum" />
 
       <main className="px-margin-mobile pt-6 space-y-5">
         <section className="space-y-2">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageHeader from "@/components/PageHeader";
 
 interface Contributor {
   rank: number;
@@ -119,17 +120,15 @@ export default function DefiDetailPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="bg-background text-on-background font-['Hanken_Grotesk'] min-h-screen pb-40">
-      <header className="bg-surface border-b border-outline-variant sticky top-0 z-50 flex items-center justify-between px-margin-mobile h-16">
-        <div className="flex items-center gap-3">
-          <Link href="/defis" className="p-2 -ml-2 rounded-full text-primary hover:bg-surface-container-low active:scale-95 duration-100">
-            <span className="material-symbols-outlined">arrow_back</span>
-          </Link>
-          <h1 className="font-title-md text-title-md font-bold text-primary truncate">{data.commune_a} vs {data.commune_b}</h1>
-        </div>
-        <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center border-2 border-primary text-primary font-bold text-sm">
-          {(data.me.commune ?? "?").slice(0, 1).toUpperCase()}
-        </div>
-      </header>
+      <PageHeader
+        title={`${data.commune_a} vs ${data.commune_b}`}
+        backHref="/defis"
+        right={
+          <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center border-2 border-primary text-primary font-bold text-sm">
+            {(data.me.commune ?? "?").slice(0, 1).toUpperCase()}
+          </div>
+        }
+      />
 
       <main className="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop pb-16 pt-stack-md space-y-6">
         <section className="relative rounded-xl bg-surface-container shadow-sm border border-outline-variant p-6">

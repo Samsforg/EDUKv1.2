@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageHeader from "@/components/PageHeader";
 
 interface LigueChallenge {
   id: number;
@@ -147,21 +148,19 @@ export default function DefisLigue() {
 
   return (
     <div className="bg-background text-on-background font-['Hanken_Grotesk'] min-h-screen pb-28">
-      <header className="bg-surface border-b border-outline-variant sticky top-0 z-50 flex items-center justify-between px-margin-mobile h-16">
-        <div className="flex items-center gap-3">
-          <Link href="/defis" className="p-2 -ml-2 rounded-full text-primary hover:bg-surface-container-low active:scale-95 duration-100">
-            <span className="material-symbols-outlined">arrow_back</span>
+      <PageHeader
+        title="Défis de la Ligue"
+        backHref="/defis"
+        right={
+          <Link href="/ligues" className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center border-2 border-primary text-primary font-bold text-sm">
+            {me?.ligue?.icon ? (
+              <span className="material-symbols-outlined text-lg">{me.ligue.icon}</span>
+            ) : (
+              "?"
+            )}
           </Link>
-          <h1 className="font-title-md text-title-md font-bold text-primary">Défis de la Ligue</h1>
-        </div>
-        <Link href="/ligues" className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center border-2 border-primary text-primary font-bold text-sm">
-          {me?.ligue?.icon ? (
-            <span className="material-symbols-outlined text-lg">{me.ligue.icon}</span>
-          ) : (
-            "?"
-          )}
-        </Link>
-      </header>
+        }
+      />
 
       <main className="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg space-y-10">
         {me && (

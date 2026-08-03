@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageHeader from "@/components/PageHeader";
 import { useRouter } from "next/navigation";
 
 interface Subject {
@@ -106,12 +107,7 @@ export default function CreatePaperPage() {
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen pb-28 font-['Hanken_Grotesk']">
-      <header className="sticky top-0 z-40 bg-surface border-b border-outline-variant flex items-center gap-3 px-4 h-16">
-        <Link href="/espace-prof" className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100">
-          <span className="material-symbols-outlined">arrow_back</span>
-        </Link>
-        <h1 className="font-title-md text-title-md text-on-surface flex-1">Nouveau sujet d&apos;examen</h1>
-      </header>
+      <PageHeader title="Nouveau sujet d'examen" backHref="/espace-prof" />
 
       <main className="px-4 pt-6 max-w-2xl mx-auto space-y-6">
         {error && <p className="bg-error-container/20 text-error font-label-sm px-4 py-3 rounded-xl">{error}</p>}

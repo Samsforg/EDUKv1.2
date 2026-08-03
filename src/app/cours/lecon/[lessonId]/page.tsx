@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import PageHeader from "@/components/PageHeader";
 
 interface Lesson {
   id: number;
@@ -70,20 +71,18 @@ export default function LessonPage({ params }: LessonPageProps) {
 
   return (
     <div className="bg-background text-on-background font-['Hanken_Grotesk'] min-h-screen pb-24">
-      <header className="bg-surface border-b border-outline-variant sticky top-0 z-50 flex items-center justify-between px-margin-mobile h-16">
-        <div className="flex items-center gap-3">
-          <Link href="/cours" className="p-2 -ml-2 rounded-full text-primary hover:bg-surface-container-low active:scale-95 duration-100">
-            <span className="material-symbols-outlined">arrow_back</span>
-          </Link>
-          <h1 className="font-title-md text-title-md font-bold text-primary truncate">{lesson.title}</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className={`px-2 py-1 rounded-full text-xs font-bold ${DIFFICULTY_COLORS[lesson.difficulty as 1|2|3]}`}>
-            {DIFFICULTY_LABELS[lesson.difficulty as 1|2|3]}
-          </span>
-          <span className="text-xs text-on-surface-variant">{lesson.duration_min} min</span>
-        </div>
-      </header>
+      <PageHeader
+        title={lesson.title}
+        backHref="/cours"
+        right={
+          <div className="flex items-center gap-2">
+            <span className={`px-2 py-1 rounded-full text-xs font-bold ${DIFFICULTY_COLORS[lesson.difficulty as 1|2|3]}`}>
+              {DIFFICULTY_LABELS[lesson.difficulty as 1|2|3]}
+            </span>
+            <span className="text-xs text-on-surface-variant">{lesson.duration_min} min</span>
+          </div>
+        }
+      />
 
       <main className="max-w-3xl mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg space-y-6">
         {lesson.video_url && (

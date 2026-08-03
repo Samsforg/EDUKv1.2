@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageHeader from "@/components/PageHeader";
 
 interface ReplayDetail {
   id: number;
@@ -76,19 +77,17 @@ export default function ReplayDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="bg-background text-on-background font-['Hanken_Grotesk'] min-h-screen pb-16">
-      <header className="bg-surface border-b border-outline-variant sticky top-0 z-50 flex items-center justify-between px-margin-mobile h-16">
-        <div className="flex items-center gap-3">
-          <Link href="/replays" className="p-2 -ml-2 rounded-full text-primary hover:bg-surface-container-low active:scale-95 duration-100">
-            <span className="material-symbols-outlined">arrow_back</span>
-          </Link>
-          <h1 className="font-title-md text-title-md font-bold text-primary">Replay de session</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-bold text-xs">
-            {data.animator_name.slice(0, 1)}
-          </button>
-        </div>
-      </header>
+      <PageHeader
+        title="Replay de session"
+        backHref="/replays"
+        right={
+          <div className="flex items-center gap-2">
+            <button className="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-bold text-xs">
+              {data.animator_name.slice(0, 1)}
+            </button>
+          </div>
+        }
+      />
 
       <main className="max-w-[1200px] mx-auto pb-8 lg:grid lg:grid-cols-12 lg:gap-8 lg:p-6">
         <section className="lg:col-span-8">

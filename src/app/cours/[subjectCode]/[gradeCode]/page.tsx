@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import PageHeader from "@/components/PageHeader";
 
 interface Chapter {
   id: number;
@@ -55,17 +56,11 @@ export default function ChapitrePage({ params }: { params: Promise<{ subjectCode
 
   return (
     <div className="bg-background text-on-background font-['Hanken_Grotesk'] min-h-screen pb-24">
-      <header className="bg-surface border-b border-outline-variant sticky top-0 z-50 flex items-center justify-between px-margin-mobile h-16">
-        <div className="flex items-center gap-3">
-          <Link href="/cours" className="p-2 -ml-2 rounded-full text-primary hover:bg-surface-container-low active:scale-95 duration-100">
-            <span className="material-symbols-outlined">arrow_back</span>
-          </Link>
-          <div className="min-w-0">
-            <p className="font-label-sm text-on-surface-variant truncate">{data.chapter.grade_code?.toUpperCase()} / {data.chapter.subject_code}</p>
-            <h1 className="font-title-md text-title-md font-bold text-primary truncate">{data.chapter.title}</h1>
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        title={data.chapter.title}
+        subtitle={`${data.chapter.grade_code?.toUpperCase()} / ${data.chapter.subject_code}`}
+        backHref="/cours"
+      />
 
       <main className="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
         <section className="bg-surface border border-outline-variant rounded-xl p-6 mb-6">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import PageHeader from "@/components/PageHeader";
 
 interface Chapter {
   id: number;
@@ -59,20 +60,18 @@ export default function SubjectPage() {
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen pb-16 font-['Hanken_Grotesk']">
-      <header className="sticky top-0 z-40 bg-surface border-b border-outline-variant flex items-center gap-3 px-margin-mobile h-16">
-        <Link href="/matieres" className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100">
-          <span className="material-symbols-outlined">arrow_back</span>
-        </Link>
-        <div className="flex-1 min-w-0">
-          <h1 className="font-title-md text-title-md text-on-surface truncate">{subject?.name ?? "Matière"}</h1>
-          <p className="font-label-xs text-label-xs text-on-surface-variant">Progression par chapitre</p>
-        </div>
-        {subject && (
-          <Link href="/quiz" className="w-10 h-10 flex items-center justify-center rounded-full text-primary hover:bg-primary-container/15 active:scale-95 duration-100" aria-label="Faire un quiz">
-            <span className="material-symbols-outlined">quiz</span>
-          </Link>
-        )}
-      </header>
+      <PageHeader
+        title={subject?.name ?? "Matière"}
+        subtitle="Progression par chapitre"
+        backHref="/matieres"
+        right={
+          subject && (
+            <Link href="/quiz" className="w-10 h-10 flex items-center justify-center rounded-full text-primary hover:bg-primary-container/15 active:scale-95 duration-100" aria-label="Faire un quiz">
+              <span className="material-symbols-outlined">quiz</span>
+            </Link>
+          )
+        }
+      />
 
       <main className="px-margin-mobile pt-4 space-y-4">
         {loading && (
