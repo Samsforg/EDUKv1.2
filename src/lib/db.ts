@@ -2,9 +2,89 @@ import { DatabaseSync } from "node:sqlite";
 import path from "node:path";
 import fs from "node:fs";
 import { ensureReady } from "./init";
+import { Pool } from "pg";
 
-const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
-const isVercel = !!process.env.VERCEL;
+export const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+export const isVercel = !!process.env.VERCEL;
+export const IS_PG = !!process.env.DATABASE_URL && !isBuildPhase;
+
+const NO_ID_TABLES = new Set([
+  "league_challenge_progress",
+  "live_registrations",
+  "live_blocked_users",
+  "user_badges",
+  "favorites",
+  "forum_votes",
+  "saved_lessons",
+  "lesson_reads",
+  "challenge_contributions",
+  "parent_child",
+  "pairing_codes",
+]);
+
+const UNIT_MAP: Record<string, string> = {
+  year: "years",
+  month: "months",
+  day: "days",
+  hour: "hours",
+  minute: "minutes",
+  second: "seconds",
+  week: "weeks",
+};
+
+const DATE_CONCAT_COL_RE = /datetime\(\s*([^,]+?)\s*,\s*'(-|\+)'.*\)/g;
+const DATETIME_NOW_RE = /datetime\(\s*'now'[^)]*\)/g;
+const DATE_ONLY_RE = /date\(\s*'now'\s*\)/g;
+
+export function toPgDatetime(value: string): string {
+  if (!value.includes("datetime('now") && !value.includes("date('now")) {
+    return value;
+  }
+  let out = value;
+  out = out.replace(DATE_CONCAT_COL_RE, (_m, col, sign, expr, unit) => {
+    const u = unit.trim().replace(/^'+|'+$/g, "");
+    const pgUnit = UNIT_MAP[u] || u;
+    const s = sign === "-" ? "-" : "+";
+    return `(${col}${s}(${expr}) * interval '1 ${pgUnit}')`;
+  });
+  out = out.replace(DATETIME_NOW_RE, (m) => {
+    const args = m
+      .slice("datetime('now'".length, -1)
+      .split(",")
+      .map((s) => s.trim());
+    let result = "now()";
+    for (const arg of args) {
+      if (!arg) continue;
+      const match = arg.match(/^'([+-]\d+)\s*(\w+)'$/);
+      if (match) {
+        const sign = match[1].startsWith("-") ? "-" : "+";
+        const amount = Math.abs(parseInt(match[1], 10));
+        const unit = UNIT_MAP[match[2]] || match[2];
+        result += `${sign} interval '${amount} ${unit}'`;
+      }
+    }
+    return result;
+  });
+  out = out.replace(DATE_ONLY_RE, "to_char(now(), 'YYYY-MM-DD')");
+  return out;
+}
+
+let pool: Pool | null = null;
+function getPool(): Pool {
+  if (!IS_PG) throw new Error("pg mode disabled");
+  if (!pool) {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: 10,
+      ssl: { rejectUnauthorized: false },
+    });
+    pool.on("error", (err) => {
+      if (process.env.NODE_ENV !== "test") console.error("pg pool error:", err);
+    });
+  }
+  return pool;
+}
+
 const db = isBuildPhase
   ? new DatabaseSync(":memory:")
   : (() => {
@@ -14,9 +94,11 @@ const db = isBuildPhase
       if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
       return new DatabaseSync(path.join(dataDir, "edukora.db"));
     })();
-db.exec("PRAGMA journal_mode = WAL;");
-db.exec("PRAGMA foreign_keys = ON;");
-db.exec("PRAGMA busy_timeout = 10000;");
+if (!IS_PG) {
+  db.exec("PRAGMA journal_mode = WAL;");
+  db.exec("PRAGMA foreign_keys = ON;");
+  db.exec("PRAGMA busy_timeout = 10000;");
+}
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS series (
@@ -478,26 +560,123 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 );
 `;
 
-export function initDb() {
-  db.exec(SCHEMA);
-  return db;
-}
-
 export function getDb() {
   return db;
 }
 
-export function query<T = unknown>(sql: string, ...params: (string | number | null | bigint | Uint8Array)[]): T[] {
-  ensureReady();
-  return db.prepare(sql).all(...params) as T[];
+export type SqlParam = string | number | null | bigint | Uint8Array;
+
+export function toPgPlaceholders(sql: string): string {
+  let out = "";
+  let i = 0;
+  let j = 1;
+  const n = sql.length;
+  while (i < n) {
+    const c = sql[i];
+    if (c === "'") {
+        out += "''";
+        i += 2;
+        continue;
+      }
+      out += c;
+      i++;
+      while (i < n) {
+        if (sql[i] === "\\") {
+          out += sql[i] + sql[i + 1];
+          i += 2;
+          continue;
+        }
+        if (sql[i] === "'") {
+          if (sql[i + 1] === "'") {
+            out += "''";
+            i += 2;
+            continue;
+          }
+          out += sql[i];
+          i++;
+          break;
+        }
+        out += sql[i];
+        i++;
+      }
+      continue;
+    }
+    if (c === "?") {
+      out += "$" + j;
+      j++;
+    } else {
+      out += c;
+    }
+    i++;
+  }
+  return out;
 }
 
-export function queryOne<T = unknown>(sql: string, ...params: (string | number | null | bigint | Uint8Array)[]): T | undefined {
-  ensureReady();
-  return db.prepare(sql).get(...params) as T | undefined;
+export function toPgSchema(schema: string): string {
+  return schema
+    .replace(/\bINTEGER PRIMARY KEY AUTOINCREMENT\b/g, "SERIAL PRIMARY KEY")
+    .replace(/\bAUTOINCREMENT\b/g, "SERIAL")
+    .replace(/DEFAULT \(datetime\('now'\)\)/g, "DEFAULT (now())")
+    .replace(/datetime\('now'[^)]*\)/g, (m) => toPgDatetime(m));
 }
 
-export function run(sql: string, ...params: (string | number | null | bigint | Uint8Array)[]) {
-  ensureReady();
-  return db.prepare(sql).run(...params);
+export async function initDb() {
+  await ensureReady();
+  if (IS_PG) {
+    const pool = getPool();
+    const schema = toPgSchema(SCHEMA);
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      for (const stmt of schema.split(";")) {
+        const trimmed = stmt.trim();
+        if (trimmed) await client.query(trimmed);
+      }
+      await client.query("COMMIT");
+    } catch (e) {
+      await client.query("ROLLBACK");
+      throw e;
+    } finally {
+      client.release();
+    }
+    return;
+  }
+  db.exec(SCHEMA);
 }
+
+export async function query<T = unknown>(sql: string, ...params: SqlParam[]): Promise<T[]> {
+  await ensureReady();
+  if (IS_PG) {
+    const pool = getPool();
+    const r = await pool.query(toPgPlaceholders(sql), params as any);
+    return r.rows as T[];
+  }
+  return db.prepare(sql).all(...(params as any[])) as T[];
+}
+
+export async function queryOne<T = unknown>(sql: string, ...params: SqlParam[]): Promise<T | undefined> {
+  await ensureReady();
+  if (IS_PG) {
+    const pool = getPool();
+    const r = await pool.query(toPgPlaceholders(sql), params as any);
+    return r.rowCount ? (r.rows[0] as T) : undefined;
+  }
+  return db.prepare(sql).get(...(params as any[])) as T | undefined;
+}
+
+export async function run(sql: string, ...params: SqlParam[]): Promise<{ lastInsertRowid: number | null; changes: number }> {
+  await ensureReady();
+  if (IS_PG) {
+    const pool = getPool();
+    const r = await pool.query(toPgPlaceholders(sql), params as any);
+    const row = r.rows?.[0] || {};
+    return {
+      lastInsertRowid: row.last_insert_rowid ?? row.inserted_id ?? null,
+      changes: r.rowCount ?? 0,
+    };
+  }
+  const res = db.prepare(sql).run(...(params as any[]));
+  return { lastInsertRowid: res.lastInsertRowid as number | null, changes: res.changes };
+}
+
+export { db, IS_PG, NO_ID_TABLES, toPgDatetime, toPgPlaceholders, toPgSchema };
