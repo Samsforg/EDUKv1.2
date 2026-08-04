@@ -1,7 +1,23 @@
 import type { Metadata, Viewport } from "next";
+import { Hanken_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
 import RegisterSW from "@/components/RegisterSW";
 import Plausible from "@/components/Plausible";
+import MaterialSymbols from "@/components/MaterialSymbols";
+
+const hanken = Hanken_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-hanken",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Edukora - Réussir son BAC & BEPC",
@@ -28,7 +44,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className="light">
+    <html lang="fr" className={`light ${hanken.variable} ${inter.variable}`}>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -37,33 +53,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap"
-          rel="stylesheet"
-          media="print"
-          {...{ onload: "this.media='all'" }}
-        />
-        <noscript>
-          <link
-            href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap"
-            rel="stylesheet"
-          />
-        </noscript>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-          rel="stylesheet"
-          media="print"
-          {...{ onload: "this.media='all'" }}
-        />
-        <noscript>
-          <link
-            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-            rel="stylesheet"
-          />
-        </noscript>
       </head>
       <body className="bg-background text-on-background">
         {children}
+        <MaterialSymbols />
         <RegisterSW />
         <Plausible />
       </body>
