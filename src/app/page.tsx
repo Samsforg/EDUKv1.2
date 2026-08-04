@@ -4,21 +4,21 @@ import MarketingFooter from "@/components/MarketingFooter";
 
 const testimonials = [
   {
-    img: "/images/landing-7.png",
+    img: "/images/landing-t-7.webp",
     name: "Mariam K.",
     role: "Admise au BAC D (Mention Bien)",
     quote:
       "Kora m'a aidé à comprendre les intégrales en une soirée alors que je luttais depuis des semaines. Sans Edukora, je n'aurais jamais eu cette mention !",
   },
   {
-    img: "/images/landing-8.png",
+    img: "/images/landing-t-8.webp",
     name: "Jean-Philippe A.",
     role: "Admis au BEPC",
     quote:
       "Les simulateurs d'examen sont incroyables. Le jour J, j'avais l'impression de faire un simple exercice sur l'appli. Je n'avais aucun stress.",
   },
   {
-    img: "/images/landing-9.png",
+    img: "/images/landing-t-9.webp",
     name: "Awa D.",
     role: "Parent d'élève (Abidjan)",
     quote:
@@ -65,9 +65,9 @@ export default function Page() {
               </div>
               <div className="mt-8 flex items-center gap-4 text-label-sm text-on-surface-variant">
                 <div className="flex -space-x-2">
-                  {["/images/landing-2.png", "/images/landing-3.png", "/images/landing-4.png"].map((img) => (
+                  {["/images/landing-avatar-2.webp", "/images/landing-avatar-3.webp", "/images/landing-avatar-4.webp"].map((img) => (
                     <div key={img} className="w-8 h-8 rounded-[999px] border-2 border-background overflow-hidden bg-surface-container">
-                      <img className="w-full h-full object-cover" src={img} alt="" />
+                      <img className="w-full h-full object-cover" src={img} alt="" fetchPriority="low" />
                     </div>
                   ))}
                 </div>
@@ -79,7 +79,7 @@ export default function Page() {
               <div className="relative bg-white/80 backdrop-blur-md rounded-[32px] p-4 shadow-2xl border border-outline-variant/40 lg:rotate-2 transition-transform">
                 <img
                   className="w-full h-full rounded-[24px] object-cover aspect-[4/5]"
-                  src="/images/landing-5-hd.webp"
+                  src="/images/landing-5-hero.webp"
                   alt="Application Edukora sur smartphone avec le tuteur IA Kora"
                 />
                 <div className="absolute -left-4 md:-left-6 bottom-12 bg-white p-4 rounded-[20px] shadow-xl border border-outline-variant flex items-center gap-3 max-w-[200px]">
@@ -143,7 +143,7 @@ export default function Page() {
                 <div key={t.name} className="bg-white rounded-[24px] p-8 border border-outline-variant/40 shadow-sm">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-14 h-14 rounded-[999px] overflow-hidden bg-surface-container">
-                      <img className="w-full h-full object-cover" src={t.img} alt={t.name} />
+                      <img className="w-full h-full object-cover" src={t.img} alt={t.name} fetchPriority="low" />
                     </div>
                     <div>
                       <h4 className="text-label-sm font-bold text-on-surface">{t.name}</h4>

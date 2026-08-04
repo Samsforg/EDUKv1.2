@@ -165,7 +165,7 @@ export default function Page() {
                 </p>
               </div>
               <div className="flex-1 w-full flex justify-center">
-                <img className="w-full h-48 object-cover rounded-[16px] shadow-md" src="/images/landing-6.png" alt="Étudiants ivoiriens en session de révision collaborative" />
+                <img className="w-full h-48 object-cover rounded-[16px] shadow-md" src="/images/landing-6-hd.webp" alt="Étudiants ivoiriens en session de révision collaborative" loading="lazy" />
               </div>
             </div>
 
