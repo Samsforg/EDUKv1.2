@@ -14,6 +14,7 @@ const publicRoutes = [
   { url: "/simulateur-d-examen-bac-bepc", changeFrequency: "monthly" as const, priority: 0.7 },
   { url: "/inscription-1-2-edukora", changeFrequency: "monthly" as const, priority: 0.6 },
   { url: "/inscription-parent-edukora", changeFrequency: "monthly" as const, priority: 0.5 },
+  { url: "/parrainage", changeFrequency: "monthly" as const, priority: 0.7 },
   { url: "/connexion-edukora", changeFrequency: "yearly" as const, priority: 0.3 },
   { url: "/mentions-l-gales", changeFrequency: "yearly" as const, priority: 0.2 },
   { url: "/conditions-g-n-rales-d-utilisation", changeFrequency: "yearly" as const, priority: 0.2 },

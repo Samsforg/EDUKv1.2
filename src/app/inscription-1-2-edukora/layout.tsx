@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Inscription",
+  title: "Inscription gratuite",
   description:
-    "Créez votre compte Edukora gratuitement et commencez à réviser pour le BAC et le BEPC avec des fiches certifiées.",
-  alternates: { canonical: "/inscription-1-2-edukora" },
+    "Crée ton compte gratuit Edukora en 2 minutes et accède aux fiches certifiées, au tuteur IA Kora et aux simulateurs BAC & BEPC.",
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

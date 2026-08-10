@@ -3,9 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Connexion",
   description:
-    "Connectez-vous à votre compte Edukora pour retrouver vos fiches, votre progression et votre tuteur IA Kora.",
-  alternates: { canonical: "/connexion-edukora" },
-  robots: { index: false, follow: false },
+    "Connecte-toi à ton espace Edukora pour continuer tes révisions : cours, quiz, simulateurs d'examen et suivi de progression.",
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Connexion espace parent",
+  title: "Parrainage",
   description:
-    "Accède à l'espace parent Edukora pour suivre l'assiduité, les résultats et la progression de ton enfant.",
+    "Invite tes amis et camarades à rejoindre Edukora avec ton code personnel et grimpe dans le classement Ambassadeurs.",
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

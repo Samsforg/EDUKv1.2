@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Inscription Parents",
+  title: "Espace parent",
   description:
-    "Espace parents Edukora : suivez les résultats et la progression de votre enfant, accédez aux bulletins et communiquez avec ses professeurs.",
-  alternates: { canonical: "/inscription-parent-edukora" },
+    "Inscris-toi en tant que parent et suis les progrès de ton enfant sur Edukora : résultats, assiduité et temps de révision.",
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
