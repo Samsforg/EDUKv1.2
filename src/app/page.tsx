@@ -2,6 +2,7 @@ import Link from "next/link";
 import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
 import { HomeAds } from "@/components/HomeAds";
+import { HeroCarousel } from "@/components/HeroCarousel";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -148,11 +149,9 @@ export default function Page() {
             <div className="relative">
               <div className="absolute -top-20 -right-20 w-80 h-80 bg-primary opacity-5 rounded-[999px] blur-3xl" />
               <div className="relative bg-white/80 backdrop-blur-md rounded-[32px] p-4 shadow-2xl border border-outline-variant/40 lg:rotate-2 transition-transform">
-                <img
-                  className="w-full h-full rounded-[24px] object-cover aspect-[4/5]"
-                  src="/images/landing-5-hero.webp"
-                  alt="Application Edukora sur smartphone avec le tuteur IA Kora"
-                />
+                <div className="w-full h-full rounded-[24px] aspect-[4/5]">
+                  <HeroCarousel />
+                </div>
                 <div className="absolute -left-4 md:-left-6 bottom-12 bg-white p-4 rounded-[20px] shadow-xl border border-outline-variant flex items-center gap-3 max-w-[200px]">
                   <div className="w-10 h-10 bg-tertiary-container rounded-full flex items-center justify-center">
                     <span className="material-symbols-outlined text-on-tertiary-container">trending_up</span>
