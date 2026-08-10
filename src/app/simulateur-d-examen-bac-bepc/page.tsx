@@ -1,6 +1,12 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Edukora - Onboarding Exam Simulator" };
+export const metadata: Metadata = {
+  title: "Simulateur d'examen BAC et BEPC",
+  description:
+    "Entraînez-vous en conditions réelles au simulateur d'examen Edukora : épreuves chronométrées des 10 dernières années, correction notée sur 20 et analyse de niveau par IA.",
+  alternates: { canonical: "/simulateur-d-examen-bac-bepc" },
+};
 
 export default function Page() {
   return (
@@ -8,10 +14,22 @@ export default function Page() {
 
 <header className="w-full max-w-md mx-auto sticky top-0 bg-surface z-40 flex justify-between items-center px-4 py-4">
 <div className="flex items-center gap-2">
+<Link
+href="/"
+aria-label="Retour à l'accueil"
+className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors active:scale-95 duration-100"
+>
+<span className="material-symbols-outlined">arrow_back</span>
+</Link>
 <span className="material-symbols-outlined text-primary text-[28px]" data-icon="school">school</span>
 <span className="font-headline text-[20px] font-bold text-primary tracking-tight">Edukora</span>
 </div>
-<button className="text-on-surface-variant font-label text-label-sm font-semibold hover:opacity-80 transition-opacity">Passer</button>
+<Link
+href="/simulateur"
+className="text-on-surface-variant font-label text-label-sm font-semibold hover:opacity-80 transition-opacity"
+>
+Passer
+</Link>
 </header>
 <main className="flex-1 w-full max-w-md mx-auto flex flex-col px-6 pb-20 mt-4">
 
@@ -104,21 +122,18 @@ export default function Page() {
 <div className="h-1.5 step-inactive rounded-full"></div>
 </div>
 
-<button className="bg-secondary-container hover:bg-secondary text-white font-label text-label-sm font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-secondary-container/20 transition-all flex items-center gap-2 btn-hover">
+<Link
+href="/simulateur"
+className="bg-secondary-container hover:bg-secondary text-white font-label text-label-sm font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-secondary-container/20 transition-all flex items-center gap-2 btn-hover active:scale-95"
+>
                 Suivant
                 <span className="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
-</button>
+</Link>
 </div>
 </footer>
 
 <script>
         document.addEventListener('DOMContentLoaded', () =&gt; &#123;
-            const btn = document.querySelector('.btn-hover');
-            btn.addEventListener('click', () =&gt; &#123;
-                // Future transition logic could go here
-                console.log('Transitioning to the next onboarding screen...');
-            &#125;);
-
             // Micro-animation for the timer (visual only)
             let seconds = 59;
             const timerSpan = document.querySelector('.text-on-surface.font-bold');

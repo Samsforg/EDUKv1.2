@@ -1,8 +1,9 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { getLiveSession, getLiveMessages } from "@/lib/live";
 import { getCurrentUser } from "@/lib/session";
 
-export async function GET(
+async function GETHandler(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -10,8 +11,10 @@ export async function GET(
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
   const { id } = await params;
-  const detail = getLiveSession(Number(id), user.id);
+  const detail = await getLiveSession(Number(id), user.id);
   if (!detail) return NextResponse.json({ error: "Session introuvable" }, { status: 404 });
-  const messages = detail.status === "live" ? getLiveMessages(detail.id, 30) : [];
+  const messages = detail.status === "live" ? await getLiveMessages(detail.id, 30) : [];
   return NextResponse.json({ ...detail, messages, me: { name: `${user.first_name} ${user.last_name}` } });
 }
+
+export const GET = guardApi("GET /api/live/[id]", GETHandler);

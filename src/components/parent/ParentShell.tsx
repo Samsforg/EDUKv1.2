@@ -16,7 +16,7 @@ export function ParentShell({ active, children }: { active: ActiveTab; children:
       <header className="fixed top-0 w-full z-50 bg-primary flex items-center justify-between px-4 h-16 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-on-primary/20 bg-on-primary/10 flex items-center justify-center">
-            <img src="/images/logo-edukora.png" alt="Edukora" className="w-full h-full object-cover" />
+            <img  src="/images/logo-edukora.webp" alt="Edukora" className="w-full h-full object-cover" loading="lazy" />
           </div>
           <span className="text-on-primary font-headline text-lg font-semibold">Edukora Parent</span>
         </div>

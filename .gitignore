@@ -43,5 +43,11 @@ data/*.db-shm
 /tmp/
 *.log
 
+# google search console credentials (jamais commités)
+scripts/gsc-tokens.json
+scripts/gsc-client.json
+
 # sharp output
 public/splash/
+.vercel
+.env*

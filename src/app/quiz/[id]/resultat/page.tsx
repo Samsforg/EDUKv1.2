@@ -19,13 +19,18 @@ export default function QuizResultPage() {
   const [result, setResult] = useState<Result | null>(null);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("edukora-quiz-result");
+    const raw = sessionStorage.getItem(`edukora-quiz-result-${id}`);
     if (!raw) {
       router.replace("/quiz");
       return;
     }
-    setResult(JSON.parse(raw));
-  }, [router]);
+    const data = JSON.parse(raw);
+    if (String(data.quiz_id) !== String(id)) {
+      router.replace("/quiz");
+      return;
+    }
+    setResult(data);
+  }, [router, id]);
 
   if (!result) {
     return (

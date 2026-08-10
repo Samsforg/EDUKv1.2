@@ -1,0 +1,4 @@
+test.ts
+  function foo() {
+    const x = await query('SELECT 1');
+  }

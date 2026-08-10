@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { getContentOverview, getPendingCourses } from "@/lib/admin";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { SubjectsManager } from "@/components/admin/content/SubjectsManager";
 import Link from "next/link";
 
 export const metadata: Metadata = { title: "Edukora Admin - Contenu pédagogique" };
@@ -12,8 +13,8 @@ export default async function Page() {
   if (!user) redirect("/connexion-edukora");
   if (user.role !== "admin") redirect("/accueil-edukora");
 
-  const { subjects, totals } = getContentOverview();
-  const pending = getPendingCourses();
+  const { subjects, totals } = await getContentOverview();
+  const pending = await getPendingCourses();
 
   const kpis = [
     { icon: "menu_book", label: "Leçons", value: totals.lessons },
@@ -27,7 +28,9 @@ export default async function Page() {
     <AdminShell active="content">
       <section className="mb-6">
         <h2 className="font-display text-[28px] md:text-display-lg font-bold text-on-surface">Contenu pédagogique</h2>
-        <p className="text-on-surface-variant font-body mt-1">Inventaire des ressources disponibles sur la plateforme.</p>
+        <p className="text-on-surface-variant font-body mt-1">
+          Inventaire, création et correction de tout le contenu de la plateforme.
+        </p>
       </section>
 
       <section className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
@@ -58,41 +61,7 @@ export default async function Page() {
         </Link>
       )}
 
-      <section className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-surface-container-high/60 text-label-xs uppercase tracking-wider text-on-surface-variant">
-              <tr>
-                <th className="px-6 py-3">Matière</th>
-                <th className="px-6 py-3">Chapitres</th>
-                <th className="px-6 py-3">Leçons</th>
-                <th className="px-6 py-3">Quiz</th>
-                <th className="px-6 py-3">Sujets BAC/BEPC</th>
-                <th className="px-6 py-3">Questions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-outline-variant">
-              {subjects.map((s) => (
-                <tr key={s.subject_id} className="hover:bg-surface-container transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 rounded-lg flex items-center justify-center material-symbols-outlined text-base" style={{ backgroundColor: `${s.color}18`, color: s.color }}>
-                        {s.icon}
-                      </span>
-                      <span className="font-semibold text-on-surface">{s.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-on-surface-variant">{s.chapters}</td>
-                  <td className="px-6 py-4 text-on-surface-variant">{s.lessons}</td>
-                  <td className="px-6 py-4 text-on-surface-variant">{s.quizzes}</td>
-                  <td className="px-6 py-4 text-on-surface-variant">{s.papers}</td>
-                  <td className="px-6 py-4 text-on-surface-variant">{s.questions}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <SubjectsManager initialSubjects={subjects} />
     </AdminShell>
   );
 }

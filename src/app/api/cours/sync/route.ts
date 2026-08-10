@@ -1,15 +1,16 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { query } from "@/lib/db";
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
-  const lessons = query<{ id: number }>(
+  const lessons = await query<{ id: number }>(
     "SELECT id FROM lessons ORDER BY id DESC LIMIT 50"
   );
-  const chapters = query<{ id: number }>(
+  const chapters = await query<{ id: number }>(
     "SELECT id FROM chapters ORDER BY id DESC LIMIT 50"
   );
 
@@ -20,3 +21,5 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ items });
 }
+
+export const GET = guardApi("GET /api/cours/sync", GETHandler);

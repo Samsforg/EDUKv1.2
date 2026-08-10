@@ -57,6 +57,7 @@ export default function Page() {
           phone: phone.trim() || undefined,
           password,
           role: "parent",
+          accept_privacy: terms,
         }),
       });
       const data = await res.json();
@@ -212,8 +213,9 @@ export default function Page() {
                       onChange={(e) => setTerms(e.target.checked)}
                     />
                     <label className="text-xs text-on-surface-variant leading-relaxed" htmlFor="terms">
-                      J&apos;accepte les <a className="text-primary font-semibold underline" href="#">Conditions Générales d&apos;Utilisation</a> et la{" "}
-                      <a className="text-primary font-semibold underline" href="#">Politique de Confidentialité</a> d&apos;Edukora.
+                      J&apos;accepte les{" "}
+                      <a className="text-primary font-semibold underline" href="/conditions-g-n-rales-d-utilisation">Conditions Générales d&apos;Utilisation</a> et la{" "}
+                      <a className="text-primary font-semibold underline" href="/politique-de-confidentialit">Politique de Confidentialité</a> d&apos;Edukora.
                     </label>
                   </div>
                   {error && <p className="text-sm text-error bg-error-container/40 rounded-lg px-4 py-3">{error}</p>}

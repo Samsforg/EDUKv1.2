@@ -1,8 +1,9 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { setLiveStatus, setChatPaused } from "@/lib/live-prof";
 
-export async function PATCH(
+async function PATCHHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -18,16 +19,18 @@ export async function PATCH(
   if (typeof body.status === "string") {
     const status = ["live", "ended", "upcoming"].includes(body.status) ? body.status : null;
     if (!status) return NextResponse.json({ error: "Statut invalide" }, { status: 400 });
-    const r = setLiveStatus(sessionId, user.id, status);
+    const r = await setLiveStatus(sessionId, user.id, status);
     if (!r) return NextResponse.json({ error: "Session introuvable ou non autorisée" }, { status: 404 });
     return NextResponse.json(r);
   }
 
   if (typeof body.chat_paused === "boolean") {
-    const r = setChatPaused(sessionId, user.id, body.chat_paused);
+    const r = await setChatPaused(sessionId, user.id, body.chat_paused);
     if (!r) return NextResponse.json({ error: "Session introuvable ou non autorisée" }, { status: 404 });
     return NextResponse.json(r);
   }
 
   return NextResponse.json({ error: "Aucune action valide" }, { status: 400 });
 }
+
+export const PATCH = guardApi("PATCH /api/prof/lives/[id]", PATCHHandler);

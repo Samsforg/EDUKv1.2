@@ -16,13 +16,33 @@ function q(
   return { q: question, options, answer, expl };
 }
 
-export function seedIfEmpty() {
-  if (queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM series")!.c > 0) return;
+export async function seedIfEmpty() {
+  if ((await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM series"))!.c > 0) return;
 
-  run("INSERT INTO series (code, name) VALUES (?, ?)", "C", "Série C (Sciences)");
-  run("INSERT INTO series (code, name) VALUES (?, ?)", "D", "Série D (Sciences Exp.)");
-  run("INSERT INTO series (code, name) VALUES (?, ?)", "A", "Série A (Littéraire)");
-  run("INSERT INTO series (code, name) VALUES (?, ?)", "B", "Série B (Économique)");
+  const gradesCount = (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM grades"))!.c;
+  if (gradesCount === 0) {
+    const grades: [string, string, string, number][] = [
+      ["6eme", "Sixième", "college", 1],
+      ["5eme", "Cinquième", "college", 2],
+      ["4eme", "Quatrième", "college", 3],
+      ["3eme", "Troisième", "college", 4],
+      ["2nde", "Seconde", "lycee", 5],
+      ["1ere_s", "Première S", "lycee", 6],
+      ["1ere_l", "Première L", "lycee", 6],
+      ["1ere_es", "Première ES", "lycee", 6],
+      ["term_s", "Terminale S", "lycee", 7],
+      ["term_l", "Terminale L", "lycee", 7],
+      ["term_es", "Terminale ES", "lycee", 7],
+    ];
+    for (const [code, name, cycle, order] of grades) {
+      await run("INSERT INTO grades (code, name, cycle, order_index) VALUES (?, ?, ?, ?)", code, name, cycle, order);
+    }
+  }
+
+  await run("INSERT INTO series (code, name) VALUES (?, ?)", "C", "Série C (Sciences)");
+  await run("INSERT INTO series (code, name) VALUES (?, ?)", "D", "Série D (Sciences Exp.)");
+  await run("INSERT INTO series (code, name) VALUES (?, ?)", "A", "Série A (Littéraire)");
+  await run("INSERT INTO series (code, name) VALUES (?, ?)", "B", "Série B (Économique)");
 
   const subjects = [
     { code: "maths", name: "Mathématiques", icon: "calculate", color: "#0047ab" },
@@ -33,7 +53,7 @@ export function seedIfEmpty() {
   ];
   const subjectIds: Record<string, number> = {};
   for (const s of subjects) {
-    const r = run(
+    const r = await run(
       "INSERT INTO subjects (code, name, icon, color) VALUES (?, ?, ?, ?)",
       s.code, s.name, s.icon, s.color,
     );
@@ -74,21 +94,21 @@ export function seedIfEmpty() {
   const chapterIds: Record<string, Record<string, number>> = {};
   for (const [subj, list] of Object.entries(chapters)) {
     chapterIds[subj] = {};
-    list.forEach(([title, lessons], i) => {
+    for (const [i, [title, lessons]] of list.entries()) {
       const code = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      const r = run(
-        "INSERT INTO chapters (subject_id, grade_id, code, title, description, order_index, position, officiel_ref) VALUES (?, 1, ?, ?, ?, ?, ?, '')",
+      const r = await run(
+        "INSERT INTO chapters (subject_id, grade_id, code, title, description, order_index, position, officiel_ref) VALUES (?, (SELECT id FROM grades ORDER BY id LIMIT 1), ?, ?, ?, ?, ?, '')",
         subjectIds[subj], code, title, "", i, i,
       );
       const cid = Number(r.lastInsertRowid);
       chapterIds[subj][title] = cid;
-      lessons.forEach((summary, j) => {
-        run(
+      for (const [j, summary] of lessons.entries()) {
+        await run(
           "INSERT INTO lessons (chapter_id, title, summary, content, position) VALUES (?, ?, ?, ?, ?)",
           cid, summary, summary, summary, j,
         );
-      });
-    });
+      }
+    }
   }
 
   // ---------------- QUIZ CONTENT ----------------
@@ -279,19 +299,19 @@ export function seedIfEmpty() {
   };
 
   for (const [subj, quizzes] of Object.entries(quizDefs)) {
-    quizzes.forEach(([title, questions], i) => {
-      const r = run(
+    for (const [i, [title, questions]] of quizzes.entries()) {
+      const r = await run(
         "INSERT INTO quizzes (subject_id, chapter_id, title, level, position) VALUES (?, ?, ?, ?, ?)",
         subjectIds[subj], null, title, "S'entraîner", i,
       );
       const qid = Number(r.lastInsertRowid);
-      questions.forEach((qq, j) => {
-        run(
+      for (const [j, qq] of questions.entries()) {
+        await run(
           "INSERT INTO questions (quiz_id, question, options, answer_index, explanation, points, position) VALUES (?, ?, ?, ?, ?, ?, ?)",
           qid, qq.q, JSON.stringify(qq.options), qq.answer, qq.expl ?? null, 1, j,
         );
-      });
-    });
+      }
+    }
   }
 
   // Quiz diagnostic initial
@@ -307,17 +327,17 @@ export function seedIfEmpty() {
     q("La photosynthèse produit de l'oxygène à partir du :", ["CO₂ et H₂O", "N₂ et O₂", "CH₄ et CO₂", "H₂ et O₂"], 0),
     q("Un cercle de rayon 5 a une aire de :", ["10π", "25π", "50π", "5π"], 1, "A = πr² = π × 25."),
   ];
-  const dr = run(
+  const dr = await run(
     "INSERT INTO quizzes (subject_id, chapter_id, title, level, position) VALUES (?, ?, ?, ?, ?)",
     subjectIds["maths"], null, "Diagnostic de démarrage", "Diagnostic", 99,
   );
   const diagId = Number(dr.lastInsertRowid);
-  diagQ.forEach((qq, j) => {
-    run(
+  for (const [j, qq] of diagQ.entries()) {
+    await run(
       "INSERT INTO questions (quiz_id, question, options, answer_index, explanation, points, position) VALUES (?, ?, ?, ?, ?, ?, ?)",
       diagId, qq.q, JSON.stringify(qq.options), qq.answer, qq.expl ?? null, 1, j,
     );
-  });
+  }
 
   // ---------------- EXAM PAPERS ----------------
   const papers: { category: "BAC" | "BEPC"; series: string | null; subject: string; year: number; duration: number; questions: SeedQuestion[] }[] = [
@@ -438,18 +458,18 @@ export function seedIfEmpty() {
   };
 
   for (const p of papers) {
-    const r = run(
+    const r = await run(
       "INSERT INTO exam_papers (category, series_id, subject_id, year, title, duration_minutes) VALUES (?, ?, ?, ?, ?, ?)",
       p.category, p.series ? seriesByCode[p.series] : null, subjectIds[p.subject], p.year,
       `${p.category} ${p.subject === "maths" ? "Mathématiques" : p.subject === "svt" ? "SVT" : p.subject === "pc" ? "Physique-Chimie" : "Français"} ${p.year}`, p.duration,
     );
     const pid = Number(r.lastInsertRowid);
-    p.questions.forEach((qq, j) => {
-      run(
+    for (const [j, qq] of p.questions.entries()) {
+      await run(
         "INSERT INTO questions (paper_id, question, options, answer_index, explanation, points, position) VALUES (?, ?, ?, ?, ?, ?, ?)",
         pid, qq.q, JSON.stringify(qq.options), qq.answer, qq.expl ?? null, 1, j,
       );
-    });
+    }
   }
 
   // ---------------- BADGES ----------------
@@ -464,6 +484,6 @@ export function seedIfEmpty() {
     ["xp_500", "Expert", "stars", "Atteins 500 XP"],
   ];
   for (const [code, name, icon, desc] of badges) {
-    run("INSERT INTO badges (code, name, icon, description) VALUES (?, ?, ?, ?)", code, name, icon, desc);
+    await run("INSERT INTO badges (code, name, icon, description) VALUES (?, ?, ?, ?)", code, name, icon, desc);
   }
 }

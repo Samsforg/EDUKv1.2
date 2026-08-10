@@ -1,6 +1,197 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Edukora - Conditions Générales d'Utilisation" };
+export const metadata: Metadata = {
+  title: "Conditions générales d'utilisation",
+  description:
+    "Conditions générales d'utilisation du service Edukora : compte, abonnement, contenu pédagogique et responsabilités.",
+  alternates: { canonical: "/conditions-g-n-rales-d-utilisation" },
+};
+
+const sections: { title: string; body: string[]; list?: string[]; extra?: string[] }[] = [
+  {
+    title: "Objet",
+    body: [
+      "Les présentes Conditions Générales d'Utilisation (« CGU ») définissent les conditions d'accès et d'utilisation de la plateforme numérique Edukora.",
+      "Edukora est une plateforme éducative destinée notamment aux apprenants, enseignants, parents et responsables légaux.",
+      "L'utilisation de la plateforme implique l'acceptation des présentes CGU.",
+    ],
+  },
+  {
+    title: "Éditeur",
+    body: [
+      "Edukora est édité par : Soma Samaké FORGO",
+      "Statut juridique : Immatriculation en cours — RCCM : En cours — IDU : En cours",
+      "Adresse : 09 BP 989 Abidjan 09, Côte d'Ivoire",
+      "Téléphone : +225 07 09 14 15 45 — E-mail : contact@edukora.net",
+      "Les informations d'immatriculation seront actualisées dès leur obtention.",
+    ],
+  },
+  {
+    title: "Services proposés",
+    body: ["Edukora peut proposer notamment :"],
+    list: [
+      "des cours numériques ;",
+      "des ressources pédagogiques ;",
+      "des exercices ;",
+      "des évaluations ;",
+      "des outils de suivi de progression ;",
+      "un espace apprenant ;",
+      "un espace enseignant ;",
+      "un espace parent ;",
+      "un Tuteur IA ;",
+      "des services complémentaires.",
+    ],
+    extra: [
+      "Certaines fonctionnalités peuvent être gratuites tandis que d'autres peuvent être payantes.",
+      "Les conditions tarifaires applicables sont présentées séparément lorsqu'un service payant est proposé.",
+    ],
+  },
+  {
+    title: "Création d'un compte",
+    body: [
+      "Certaines fonctionnalités nécessitent la création d'un compte.",
+      "L'utilisateur s'engage à fournir des informations exactes et à jour.",
+      "Il est responsable de la confidentialité de ses identifiants.",
+      "Un compte ne doit pas être utilisé pour usurper l'identité d'une autre personne.",
+    ],
+  },
+  {
+    title: "Utilisateurs mineurs",
+    body: [
+      "Lorsque l'utilisateur est mineur, l'utilisation de certaines fonctionnalités peut nécessiter l'intervention ou l'autorisation d'un parent ou représentant légal, conformément à la réglementation applicable.",
+      "Les parents ou représentants légaux sont invités à accompagner les mineurs dans leur utilisation de la plateforme.",
+    ],
+  },
+  {
+    title: "Règles d'utilisation",
+    body: ["L'utilisateur s'engage à utiliser Edukora conformément aux lois ivoiriennes et aux présentes CGU. Il est notamment interdit :"],
+    list: [
+      "de tenter d'accéder à des comptes qui ne lui appartiennent pas ;",
+      "de contourner les mécanismes de sécurité ;",
+      "de diffuser des logiciels malveillants ;",
+      "de perturber le fonctionnement du service ;",
+      "d'utiliser la plateforme à des fins frauduleuses ;",
+      "de publier des contenus illégaux ou portant atteinte aux droits d'autrui ;",
+      "d'usurper l'identité d'une autre personne ;",
+      "de copier ou redistribuer les contenus Edukora sans autorisation ;",
+      "d'utiliser le service pour harceler, menacer ou intimider d'autres utilisateurs.",
+    ],
+    extra: [
+      "Tout comportement susceptible de compromettre la sécurité ou l'intégrité de la plateforme peut entraîner une suspension ou une suppression du compte.",
+    ],
+  },
+  {
+    title: "Contenus pédagogiques",
+    body: [
+      "Les contenus proposés par Edukora sont destinés à accompagner l'apprentissage.",
+      "Ils ne constituent pas nécessairement des documents officiels de l'État ou d'un établissement scolaire.",
+      "Edukora s'efforce de proposer des contenus pertinents et actualisés mais ne garantit pas l'absence totale d'erreurs.",
+    ],
+  },
+  {
+    title: "Tuteur IA",
+    body: [
+      "Le Tuteur IA est un outil d'assistance pédagogique automatisé.",
+      "Il peut générer des réponses incorrectes, incomplètes ou inadaptées.",
+      "L'utilisateur doit conserver un esprit critique et vérifier les informations importantes.",
+      "Les réponses du Tuteur IA ne constituent pas :",
+    ],
+    list: [
+      "une note officielle ;",
+      "une décision pédagogique officielle ;",
+      "un avis professionnel ;",
+      "une garantie de réussite scolaire.",
+    ],
+  },
+  {
+    title: "Propriété intellectuelle",
+    body: [
+      "Les contenus, logiciels, interfaces, logos, marques, éléments graphiques et autres composants d'Edukora sont protégés par les règles applicables en matière de propriété intellectuelle.",
+      "Toute reproduction ou exploitation non autorisée est interdite.",
+    ],
+  },
+  {
+    title: "Disponibilité du service",
+    body: ["Edukora s'efforce de maintenir la plateforme accessible. Toutefois, l'accès peut être temporairement interrompu pour :"],
+    list: [
+      "maintenance ;",
+      "mise à jour ;",
+      "amélioration ;",
+      "incident technique ;",
+      "problème de réseau ;",
+      "événement indépendant de la volonté de l'éditeur.",
+    ],
+  },
+  {
+    title: "Services tiers",
+    body: [
+      "Edukora repose sur plusieurs prestataires techniques, notamment pour l'hébergement, le stockage et les services liés à l'infrastructure.",
+      "Ces prestataires peuvent être modifiés ou remplacés afin d'améliorer le service.",
+      "Les utilisateurs sont invités à consulter également les conditions applicables à ces services tiers lorsqu'elles les concernent.",
+    ],
+  },
+  {
+    title: "Responsabilité de l'utilisateur",
+    body: ["L'utilisateur est responsable :"],
+    list: [
+      "de son utilisation du service ;",
+      "des informations qu'il communique ;",
+      "des contenus qu'il publie ;",
+      "de la protection de ses identifiants ;",
+      "du respect des droits des autres utilisateurs.",
+    ],
+  },
+  {
+    title: "Suspension du compte",
+    body: ["Edukora peut suspendre ou supprimer un compte notamment en cas :"],
+    list: [
+      "de violation des CGU ;",
+      "d'utilisation frauduleuse ;",
+      "de tentative de piratage ;",
+      "d'atteinte à la sécurité ;",
+      "d'utilisation abusive ;",
+      "de comportement portant atteinte aux autres utilisateurs.",
+    ],
+    extra: ["Lorsque cela est possible, l'utilisateur peut être informé du motif de la suspension."],
+  },
+  {
+    title: "Suppression du compte",
+    body: [
+      "L'utilisateur peut demander la suppression de son compte en contactant : support@edukora.net",
+      "La suppression peut être soumise aux obligations légales de conservation applicables.",
+    ],
+  },
+  {
+    title: "Protection des données",
+    body: [
+      "Les données personnelles sont traitées conformément à la Politique de confidentialité d'Edukora.",
+      "La Politique de confidentialité fait partie intégrante du cadre contractuel applicable à l'utilisation de la plateforme.",
+    ],
+  },
+  {
+    title: "Modification des CGU",
+    body: [
+      "Edukora peut modifier les présentes CGU pour tenir compte de l'évolution de la plateforme, des services ou de la réglementation.",
+      "La version publiée sur le site est la version applicable.",
+    ],
+  },
+  {
+    title: "Droit applicable et règlement des différends",
+    body: [
+      "Les présentes CGU sont soumises au droit ivoirien.",
+      "En cas de différend, les parties s'efforceront de rechercher une solution amiable avant toute procédure judiciaire.",
+      "À défaut de résolution amiable, le différend pourra être soumis aux juridictions ivoiriennes compétentes, sous réserve des règles impératives applicables.",
+    ],
+  },
+  {
+    title: "Contact",
+    body: [
+      "Pour toute question concernant les présentes CGU :",
+      "Edukora - Soma Samaké FORGO — E-mail : contact@edukora.net — Support : support@edukora.net",
+      "Téléphone : +225 07 09 14 15 45 — Adresse : 09 BP 989 Abidjan 09, Côte d'Ivoire",
+    ],
+  },
+];
 
 export default function Page() {
   return (
@@ -8,9 +199,9 @@ export default function Page() {
 
 <header className="w-full sticky top-0 bg-surface dark:bg-background z-50 flex items-center justify-between px-4 py-4 border-b border-outline-variant dark:border-outline">
 <div className="flex items-center gap-4">
-<button className="active:scale-95 duration-150 p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors flex items-center justify-center text-primary dark:text-primary-fixed">
+<a href="/" aria-label="Retour à l'accueil" className="active:scale-95 duration-150 p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors flex items-center justify-center text-primary dark:text-primary-fixed">
 <span className="material-symbols-outlined">arrow_back</span>
-</button>
+</a>
 <h1 className="font-headline text-headline-md font-semibold text-primary dark:text-primary-fixed">Informations Légales</h1>
 </div>
 <div className="hidden md:flex gap-6 items-center">
@@ -25,7 +216,7 @@ export default function Page() {
 <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-on-surface mb-4 leading-tight">Nos Engagements Mutuels</h2>
 <div className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container-low rounded-full border border-outline-variant">
 <span className="material-symbols-outlined text-sm text-outline">calendar_today</span>
-<span className="text-label-sm font-medium text-on-surface-variant">Dernière mise à jour : 24 Mai 2024</span>
+<span className="text-label-sm font-medium text-on-surface-variant">Dernière mise à jour : 7 août 2026</span>
 </div>
 </div>
 
@@ -42,92 +233,32 @@ export default function Page() {
 
 <div className="space-y-12">
 
-<section className="group">
+{sections.map((s, i) => (
+<section key={s.title} className="group">
 <div className="flex items-start gap-4">
-<div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-primary text-on-primary rounded-xl font-headline text-xl font-bold shadow-md">1</div>
+<div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-primary text-on-primary rounded-xl font-headline text-xl font-bold shadow-md">{i + 1}</div>
 <div className="flex-grow">
-<h3 className="font-headline text-2xl font-bold text-primary mb-4">Objet</h3>
-<p className="text-body-lg text-on-surface-variant leading-relaxed">
-                            Les présentes Conditions Générales d’Utilisation (CGU) ont pour but de fixer les modalités d’utilisation des services proposés par la plateforme <span className="font-semibold text-primary">Edukora</span>. En accédant à nos cours et simulateurs d'examens, vous acceptez pleinement et sans réserve ces conditions. Edukora s'engage à fournir un environnement d'apprentissage premium dédié à l'excellence académique des élèves ivoiriens.
-                        </p>
-</div>
-</div>
-</section>
-
-<section className="group">
-<div className="flex items-start gap-4">
-<div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-primary text-on-primary rounded-xl font-headline text-xl font-bold shadow-md">2</div>
-<div className="flex-grow">
-<h3 className="font-headline text-2xl font-bold text-primary mb-4">Accès au service</h3>
-<p className="text-body-lg text-on-surface-variant leading-relaxed mb-4">
-                            L'accès à Edukora est ouvert à tout élève régulièrement inscrit. Le service est normalement accessible 24h/24 et 7j/7, sous réserve des périodes de maintenance technique.
-                        </p>
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-<div className="p-4 bg-surface-container rounded-lg border border-outline-variant border-dashed">
-<p className="text-label-xs font-bold text-secondary uppercase mb-2">Comptes Utilisateurs</p>
-<p className="text-body-md text-on-surface">Chaque compte est strictement personnel et ne peut être partagé entre plusieurs étudiants.</p>
-</div>
-<div className="p-4 bg-surface-container rounded-lg border border-outline-variant border-dashed">
-<p className="text-label-xs font-bold text-secondary uppercase mb-2">Périmètre</p>
-<p className="text-body-md text-on-surface">Les contenus sont optimisés pour les programmes nationaux du BEPC et du BAC.</p>
-</div>
-</div>
-</div>
-</div>
-</section>
-
-<section className="group">
-<div className="flex items-start gap-4">
-<div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-primary text-on-primary rounded-xl font-headline text-xl font-bold shadow-md">3</div>
-<div className="flex-grow">
-<h3 className="font-headline text-2xl font-bold text-primary mb-4">Propriété intellectuelle</h3>
-<p className="text-body-lg text-on-surface-variant leading-relaxed">
-                            Tous les textes, graphismes, vidéos, et codes sources présents sur Edukora sont protégés par le droit d'auteur. <span className="text-error font-medium">Toute reproduction ou diffusion non autorisée des cours et des algorithmes de notre tuteur IA constitue une contrefaçon</span> et pourra faire l'objet de poursuites judiciaires conformément aux lois ivoiriennes.
-                        </p>
-</div>
-</div>
-</section>
-
-<section className="group">
-<div className="flex items-start gap-4">
-<div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-primary text-on-primary rounded-xl font-headline text-xl font-bold shadow-md">4</div>
-<div className="flex-grow">
-<h3 className="font-headline text-2xl font-bold text-primary mb-4">Responsabilité</h3>
-<p className="text-body-lg text-on-surface-variant leading-relaxed mb-4">
-                            Edukora met tout en œuvre pour diffuser des contenus pédagogiques de haute qualité. Cependant :
-                        </p>
-<ul className="space-y-3 list-none">
-<li className="flex items-center gap-3 text-on-surface-variant">
-<span className="material-symbols-outlined text-tertiary-container">check_circle</span>
-<span>Les résultats aux examens restent sous la seule responsabilité de l'élève.</span>
+<h3 className="font-headline text-2xl font-bold text-primary mb-4">{s.title}</h3>
+{s.body.map((p) => (
+<p key={p} className="text-body-lg text-on-surface-variant leading-relaxed mb-4">{p}</p>
+))}
+{s.list && (
+<ul className="space-y-3 list-none mb-4">
+{s.list.map((li) => (
+<li key={li} className="flex items-start gap-3 text-on-surface-variant">
+<span className="material-symbols-outlined text-tertiary-container mt-1">check_circle</span>
+<span className="text-body-lg leading-relaxed">{li}</span>
 </li>
-<li className="flex items-center gap-3 text-on-surface-variant">
-<span className="material-symbols-outlined text-tertiary-container">check_circle</span>
-<span>L'entreprise n'est pas responsable des pannes de réseau tiers (3G/4G).</span>
-</li>
+))}
 </ul>
+)}
+{s.extra?.map((p) => (
+<p key={p} className="text-body-lg text-on-surface-variant leading-relaxed mb-4">{p}</p>
+))}
 </div>
 </div>
 </section>
-
-<section className="group mb-20">
-<div className="flex items-start gap-4">
-<div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-primary text-on-primary rounded-xl font-headline text-xl font-bold shadow-md">5</div>
-<div className="flex-grow">
-<h3 className="font-headline text-2xl font-bold text-primary mb-4">Protection des données</h3>
-<div className="p-6 bg-surface-container-highest/30 border border-outline-variant rounded-xl backdrop-blur-sm">
-<p className="text-body-lg text-on-surface-variant leading-relaxed mb-4">
-                                Conformément aux régulations sur la protection des données, Edukora s'engage à ne jamais vendre vos informations personnelles. Vos données sont exclusivement utilisées pour :
-                            </p>
-<div className="flex flex-wrap gap-2">
-<span className="px-3 py-1 bg-white border border-outline-variant rounded-full text-label-sm font-medium text-primary">Personnalisation de l'IA</span>
-<span className="px-3 py-1 bg-white border border-outline-variant rounded-full text-label-sm font-medium text-primary">Suivi de progression</span>
-<span className="px-3 py-1 bg-white border border-outline-variant rounded-full text-label-sm font-medium text-primary">Sécurité du compte</span>
-</div>
-</div>
-</div>
-</div>
-</section>
+))}
 </div>
 
 <div className="mt-16 p-8 bg-on-surface text-white rounded-2xl flex flex-col items-center text-center">
@@ -139,11 +270,11 @@ export default function Page() {
             </button>
 </div>
 <footer className="mt-12 text-center text-on-surface-variant text-sm pb-12">
-<p>© 2024 Edukora - Tous droits réservés.</p>
+<p>© 2026 Edukora - Tous droits réservés.</p>
 <div className="mt-4 flex justify-center gap-4 text-primary font-medium">
-<a className="hover:underline" href="#">Confidentialité</a>
+<a className="hover:underline" href="/politique-de-confidentialit">Confidentialité</a>
 <span className="text-outline-variant">|</span>
-<a className="hover:underline" href="#">Mentions légales</a>
+<a className="hover:underline" href="/mentions-l-gales">Mentions légales</a>
 </div>
 </footer>
 </main>
@@ -151,23 +282,6 @@ export default function Page() {
 <button className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all z-50">
 <span className="material-symbols-outlined">help_center</span>
 </button>
-<script>
-        // Simple Interaction for section highlight on scroll
-        window.addEventListener('scroll', () =&gt; &#123;
-            const sections = document.querySelectorAll('section');
-            const scrollPos = window.scrollY + 200;
-
-            sections.forEach(section =&gt; &#123;
-                if (scrollPos &gt; section.offsetTop &amp;&amp; scrollPos &lt; section.offsetTop + section.offsetHeight) &#123;
-                    section.classList.add('opacity-100');
-                    section.classList.remove('opacity-60');
-                &#125; else &#123;
-                    section.classList.add('opacity-60');
-                    section.classList.remove('opacity-100');
-                &#125;
-            &#125;);
-        &#125;);
-    </script>
 
     </div>
   );

@@ -1,3 +1,4 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
@@ -11,7 +12,7 @@ import {
   getAmbassadorRanking,
 } from "@/lib/rank";
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
@@ -23,19 +24,21 @@ export async function GET(req: NextRequest) {
     case "commune": {
       const commune =
         sp.get("commune") ??
-        queryOne<{ commune: string | null }>("SELECT commune FROM users WHERE id = ?", user.id)?.commune ??
+        (await queryOne<{ commune: string | null }>("SELECT commune FROM users WHERE id = ?", user.id))?.commune ??
         "";
-      return NextResponse.json(getCommuneRanking(commune, limit, user.id));
+      return NextResponse.json(await getCommuneRanking(commune, limit, user.id));
     }
     case "communes":
-      return NextResponse.json({ communes: getCommuneLeaders() });
+      return NextResponse.json({ communes: await getCommuneLeaders() });
     case "ligue":
-      return NextResponse.json(getLigueRanking(sp.get("ligue") ?? "", limit, user.id));
+      return NextResponse.json(await getLigueRanking(sp.get("ligue") ?? "", limit, user.id));
     case "ligues":
-      return NextResponse.json({ ligues: getLigueLadder(), me: getLigueStatus(user.id) });
+      return NextResponse.json({ ligues: await getLigueLadder(), me: await getLigueStatus(user.id) });
     case "ambassadeurs":
-      return NextResponse.json(getAmbassadorRanking(limit, user.id));
+      return NextResponse.json(await getAmbassadorRanking(limit, user.id));
     default:
-      return NextResponse.json(getGlobalRanking(limit, user.id));
+      return NextResponse.json(await getGlobalRanking(limit, user.id));
   }
 }
+
+export const GET = guardApi("GET /api/classement", GETHandler);

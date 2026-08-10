@@ -5,6 +5,7 @@ import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import { useParams } from "next/navigation";
 import SimpleMarkdown from "@/components/SimpleMarkdown";
+import { PremiumUpsell } from "@/components/PremiumUpsell";
 
 interface Lesson {
   id: number;
@@ -24,6 +25,20 @@ interface Sibling {
   title: string;
 }
 
+interface QuotaInfo {
+  used: number;
+  limit: number | null;
+  isPremium: boolean;
+  planName: string | null;
+}
+
+interface PlanInfo {
+  id: number;
+  name: string;
+  price_cents: number;
+  interval: string;
+}
+
 export default function LessonReader() {
   const { id } = useParams<{ id: string }>();
   const [lesson, setLesson] = useState<Lesson | null>(null);
@@ -31,12 +46,24 @@ export default function LessonReader() {
   const [next, setNext] = useState<Sibling | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [quotaMsg, setQuotaMsg] = useState<string | null>(null);
+  const [quota, setQuota] = useState<QuotaInfo | null>(null);
+  const [plan, setPlan] = useState<PlanInfo | null>(null);
+  const [decouvertePrice, setDecouvertePrice] = useState(0);
 
   useEffect(() => {
     fetch(`/api/lessons/${id}`)
       .then(async (r) => {
         if (!r.ok) {
-          setError("Fiche introuvable ou connexion perdue.");
+          const d = await r.json().catch(() => null);
+          if (d?.code === "fiche_quota_exceeded") {
+            if (d.quota) setQuota(d.quota);
+            if (d.plan) setPlan(d.plan);
+            if (typeof d.decouverte_price === "number") setDecouvertePrice(d.decouverte_price);
+            setQuotaMsg(d.error);
+          } else {
+            setError("Fiche introuvable ou connexion perdue.");
+          }
           return null;
         }
         return r.json();
@@ -92,6 +119,20 @@ export default function LessonReader() {
           </div>
         )}
 
+        {!loading && quotaMsg && !lesson && (
+          <div className="text-center py-16 space-y-3">
+            <span className="material-symbols-outlined text-4xl text-primary inline-block">workspace_premium</span>
+            <h2 className="font-headline-sm text-headline-sm font-bold text-on-surface">Limite mensuelle atteinte</h2>
+            <p className="font-body-md text-on-surface-variant max-w-xs mx-auto">{quotaMsg}</p>
+            <Link
+              href="/plans-d-abonnement-edukora-1"
+              className="inline-flex items-center gap-2 mt-2 bg-secondary-container text-on-secondary-container font-extrabold px-6 py-3 rounded-xl active:scale-95 transition-transform duration-100"
+            >
+              Passer à Réussite <span className="material-symbols-outlined">arrow_forward</span>
+            </Link>
+          </div>
+        )}
+
         {!loading && lesson && (
           <>
             <h1 className="font-headline-sm text-headline-sm text-on-surface leading-tight mb-1">{lesson.title}</h1>
@@ -123,6 +164,14 @@ export default function LessonReader() {
           </>
         )}
       </main>
+
+      <PremiumUpsell
+        open={!!quotaMsg}
+        onClose={() => setQuotaMsg(null)}
+        message={quotaMsg ?? ""}
+        plan={plan}
+        decouvertePrice={decouvertePrice}
+      />
     </div>
   );
 }

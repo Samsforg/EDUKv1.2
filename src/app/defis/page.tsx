@@ -77,7 +77,7 @@ function ChallengeCard({ c }: { c: Challenge }) {
         </div>
         <div className="flex flex-col items-center px-2">
           <span className="text-outline font-black opacity-40 italic">vs</span>
-          <span className="text-[10px] text-on-surface-variant">{c.a.participants + c.b.participants} lices</span>
+          <span className="text-[10px] text-on-surface-variant">{c.a.participants + c.b.participants} participants</span>
         </div>
         <div className="flex flex-col items-center gap-2 flex-1">
           <div className="w-12 h-12 rounded-full bg-secondary-container/20 flex items-center justify-center">
@@ -99,23 +99,60 @@ function ChallengeCard({ c }: { c: Challenge }) {
 
 export default function DefisPage() {
   const [data, setData] = useState<DefisData | null>(null);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<"unauthorized" | "network" | null>(null);
 
   useEffect(() => {
     fetch("/api/defis")
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then(async (r) => {
+        if (!r.ok) {
+          if (r.status === 401 || r.status === 403) throw new Error("unauthorized");
+          throw new Error("network");
+        }
+        return r.json();
+      })
       .then(setData)
-      .catch(() => setError(true));
+      .catch((e) => setError(e.message === "unauthorized" ? "unauthorized" : "network"));
   }, []);
 
-  if (error)
+  if (error === "unauthorized")
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center">
         <span className="material-symbols-outlined text-5xl text-outline">lock</span>
         <p className="font-bold text-on-surface">Connecte-toi pour voir les défis</p>
-        <Link href="/login" className="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl">
+        <Link href="/connexion-edukora" className="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl">
           Se connecter
         </Link>
+      </div>
+    );
+
+  if (error === "network")
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <span className="material-symbols-outlined text-5xl text-outline">wifi_off</span>
+        <p className="font-bold text-on-surface">Impossible de charger les défis</p>
+        <p className="text-on-surface-variant text-sm">Vérifie ta connexion puis réessaye.</p>
+        <button onClick={() => window.location.reload()} className="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl">
+          Réessayer
+        </button>
+      </div>
+    );
+
+  if (!data)
+    return (
+      <div className="bg-background min-h-screen pb-24 animate-pulse">
+        <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+          <div className="h-8 w-56 bg-surface-container-high rounded-lg mb-8" />
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-outline-variant p-gutter mb-4">
+              <div className="h-4 w-40 bg-surface-container-high rounded mb-6" />
+              <div className="flex justify-between mb-6">
+                <div className="w-28 h-6 bg-surface-container-high rounded" />
+                <div className="w-28 h-6 bg-surface-container-high rounded" />
+              </div>
+              <div className="h-3 w-2/3 bg-surface-container-high rounded" />
+            </div>
+          ))}
+        </div>
       </div>
     );
 

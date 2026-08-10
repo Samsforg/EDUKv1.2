@@ -97,6 +97,33 @@ export default function PlanningPage() {
               <span className="ml-auto">{data.week_start.slice(5).replace("-", "/")}</span>
             </section>
 
+            {/* À revoir — relecture espacée */}
+            {data.summary.to_revise > 0 && (
+              <section className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="font-label-sm text-on-surface-variant uppercase tracking-wider">À revoir (relecture espacée)</p>
+                  <a href="/parcours" className="text-primary font-label-xs">Voir tout</a>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {data.days.flatMap((d) => d.slots)
+                    .filter((s) => s.type === "lesson" && s.subtitle.startsWith("Relire"))
+                    .slice(0, 6)
+                    .map((s, i) => (
+                      <Link key={`${s.title}-${i}`} href={s.href} className="bg-orange/10 border border-orange/30 rounded-xl p-3 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-orange/20 text-orange">
+                          <span className="material-symbols-outlined">history</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-label-sm text-on-surface truncate">{s.title}</p>
+                          <p className="font-label-xs text-on-surface-variant truncate">{s.subtitle}</p>
+                        </div>
+                        <span className="material-symbols-outlined text-orange shrink-0">chevron_right</span>
+                      </Link>
+                    ))}
+                </div>
+              </section>
+            )}
+
             {/* Grille de la semaine */}
             <section className="overflow-x-auto -mx-margin-mobile px-margin-mobile pb-2 no-scrollbar">
               <div className="grid grid-cols-7 gap-2 min-w-[980px]">

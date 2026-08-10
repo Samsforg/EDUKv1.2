@@ -1,10 +1,11 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
-export async function GET() {
+async function GETHandler() {
   const user = await getCurrentUser();
-  const papers = query<{
+  const papers = await query<{
     id: number;
     category: string;
     year: number;
@@ -27,3 +28,5 @@ export async function GET() {
   );
   return NextResponse.json({ papers });
 }
+
+export const GET = guardApi("GET /api/simulator", GETHandler);

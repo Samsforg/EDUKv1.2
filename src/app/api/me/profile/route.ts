@@ -1,25 +1,26 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { query, queryOne, run } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 
-export async function GET() {
+async function GETHandler() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
-  const serie = queryOne<{ code: string; name: string }>(
+  const serie = await queryOne<{ code: string; name: string }>(
     "SELECT code, name FROM series WHERE id = ?",
     user.serie_id ?? 0,
   );
 
-  const quizStats = query<{ best_percent: number | null; total_attempts: number }>(
+  const quizStats = await query<{ best_percent: number | null; total_attempts: number }>(
     `SELECT MAX(a.score * 100.0 / a.max_score) AS best_percent, COUNT(a.id) AS total_attempts
      FROM quiz_attempts a WHERE a.user_id = ?`,
     user.id,
   );
   const quizzesDone = quizStats.reduce((acc, s) => acc + s.total_attempts, 0);
 
-  const examStats = queryOne<{ best: number | null; count: number }>(
+  const examStats = await queryOne<{ best: number | null; count: number }>(
     "SELECT MAX(score_over_20) AS best, COUNT(*) AS count FROM exam_attempts WHERE user_id = ?",
     user.id,
   );
@@ -33,7 +34,7 @@ export async function GET() {
           return Math.round((withScore.reduce((acc, s) => acc + (s.best_percent ?? 0), 0) / withScore.length) * 100) / 100;
         })();
 
-  const allBadges = query<{
+  const allBadges = await query<{
     code: string;
     name: string;
     icon: string;
@@ -47,7 +48,7 @@ export async function GET() {
     user.id,
   );
 
-  const quizHistory = query<{
+  const quizHistory = await query<{
     id: number;
     title: string;
     score: number;
@@ -60,7 +61,7 @@ export async function GET() {
     user.id,
   );
 
-  const examHistory = query<{
+  const examHistory = await query<{
     id: number;
     title: string;
     score_over_20: number;
@@ -99,7 +100,9 @@ export async function GET() {
   });
 }
 
-export async function PATCH(req: Request) {
+export const GET = guardApi("GET /api/me/profile", GETHandler);
+
+async function PATCHHandler(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
@@ -108,33 +111,35 @@ export async function PATCH(req: Request) {
 
   if (new_password) {
     if (!current_password) return NextResponse.json({ error: "Mot de passe actuel requis" }, { status: 400 });
-    const stored = queryOne<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = ?", user.id);
+    const stored = await queryOne<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = ?", user.id);
     if (!stored || !verifyPassword(current_password, stored.password_hash)) return NextResponse.json({ error: "Mot de passe actuel incorrect" }, { status: 400 });
     if (new_password.length < 6) return NextResponse.json({ error: "Le nouveau mot de passe doit contenir au moins 6 caractères" }, { status: 400 });
-    run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(new_password), user.id);
+    await run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(new_password), user.id);
   }
 
   if (email !== undefined && email !== user.email) {
-    const exists = queryOne<{ id: number }>("SELECT id FROM users WHERE email = ? AND id != ?", email, user.id);
+    const exists = await queryOne<{ id: number }>("SELECT id FROM users WHERE email = ? AND id != ?", email, user.id);
     if (exists) return NextResponse.json({ error: "Cet email est déjà utilisé" }, { status: 409 });
-    run("UPDATE users SET email = ? WHERE id = ?", email, user.id);
+    await run("UPDATE users SET email = ? WHERE id = ?", email, user.id);
   }
 
   if (phone !== undefined && phone !== user.phone) {
-    const exists = queryOne<{ id: number }>("SELECT id FROM users WHERE phone = ? AND id != ?", phone, user.id);
+    const exists = await queryOne<{ id: number }>("SELECT id FROM users WHERE phone = ? AND id != ?", phone, user.id);
     if (exists) return NextResponse.json({ error: "Ce numéro est déjà utilisé" }, { status: 409 });
-    run("UPDATE users SET phone = ? WHERE id = ?", phone ?? null, user.id);
+    await run("UPDATE users SET phone = ? WHERE id = ?", phone ?? null, user.id);
   }
 
-  if (first_name !== undefined) run("UPDATE users SET first_name = ? WHERE id = ?", first_name, user.id);
-  if (last_name !== undefined) run("UPDATE users SET last_name = ? WHERE id = ?", last_name, user.id);
-  if (serie_id !== undefined) run("UPDATE users SET serie_id = ? WHERE id = ?", serie_id ?? null, user.id);
-  if (class_level !== undefined) run("UPDATE users SET class_level = ? WHERE id = ?", class_level, user.id);
+  if (first_name !== undefined) await run("UPDATE users SET first_name = ? WHERE id = ?", first_name, user.id);
+  if (last_name !== undefined) await run("UPDATE users SET last_name = ? WHERE id = ?", last_name, user.id);
+  if (serie_id !== undefined) await run("UPDATE users SET serie_id = ? WHERE id = ?", serie_id ?? null, user.id);
+  if (class_level !== undefined) await run("UPDATE users SET class_level = ? WHERE id = ?", class_level, user.id);
 
-  const updated = queryOne<{ id: number; first_name: string; last_name: string; email: string | null; phone: string | null; serie_id: number | null; class_level: string | null }>(
+  const updated = await queryOne<{ id: number; first_name: string; last_name: string; email: string | null; phone: string | null; serie_id: number | null; class_level: string | null }>(
     "SELECT id, first_name, last_name, email, phone, serie_id, class_level FROM users WHERE id = ?",
     user.id,
   );
 
   return NextResponse.json({ ok: true, user: updated });
 }
+
+export const PATCH = guardApi("PATCH /api/me/profile", PATCHHandler);

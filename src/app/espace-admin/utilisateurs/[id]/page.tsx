@@ -8,6 +8,7 @@ import { RoleSelect } from "@/components/admin/RoleSelect";
 import { NotifyButton } from "@/components/admin/NotifyButton";
 import { BlockButton } from "@/components/admin/BlockButton";
 import { DeleteUserButton } from "@/components/admin/DeleteUserButton";
+import { EditUserForm } from "@/components/admin/EditUserForm";
 import { ResetPasswordButton } from "@/components/admin/ResetPasswordButton";
 
 export const metadata: Metadata = { title: "Edukora Admin - Détail utilisateur" };
@@ -95,7 +96,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   if (me.role !== "admin") redirect("/accueil-edukora");
 
   const { id } = await params;
-  const detail = getUserDetail(Number(id));
+  const detail = await getUserDetail(Number(id));
   if (!detail.user) redirect("/espace-admin/utilisateurs");
   const u = detail.user;
   const isSelf = u.id === me.id;
@@ -141,6 +142,19 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           {!isSelf && (
             <div className="flex flex-wrap items-center gap-2 md:justify-end">
               <RoleSelect userId={u.id} current={u.role} />
+              <EditUserForm
+                userId={u.id}
+                initial={{
+                  first_name: u.first_name,
+                  last_name: u.last_name,
+                  email: u.email,
+                  phone: u.phone,
+                  serie_id: u.serie_id,
+                  class_level: u.class_level,
+                  gender: u.gender,
+                  commune: u.commune,
+                }}
+              />
               <NotifyButton userId={u.id} userName={`${u.first_name} ${u.last_name}`} />
               <ResetPasswordButton userId={u.id} userName={`${u.first_name} ${u.last_name}`} />
               <BlockButton userId={u.id} blocked={!!u.blocked} />
@@ -149,7 +163,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           )}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-6">
           <div className="bg-surface-container rounded-xl p-4">
             <p className="text-xs text-on-surface-variant">XP total</p>
             <p className="text-2xl font-bold text-on-surface">{u.xp}</p>
@@ -162,6 +176,16 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             <p className="text-xs text-on-surface-variant">Classe / Série</p>
             <p className="text-lg font-bold text-on-surface">{u.class_level ?? "—"}</p>
             {u.serie_name && <p className="text-xs text-on-surface-variant">{u.serie_name}</p>}
+          </div>
+          <div className="bg-surface-container rounded-xl p-4">
+            <p className="text-xs text-on-surface-variant">Genre</p>
+            <p className="text-lg font-bold text-on-surface">
+              {u.gender === "M" ? "Masculin" : u.gender === "F" ? "Féminin" : "—"}
+            </p>
+          </div>
+          <div className="bg-surface-container rounded-xl p-4">
+            <p className="text-xs text-on-surface-variant">Commune</p>
+            <p className="text-lg font-bold text-on-surface">{u.commune ?? "—"}</p>
           </div>
           <div className="bg-surface-container rounded-xl p-4">
             <p className="text-xs text-on-surface-variant">Contact</p>

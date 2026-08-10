@@ -14,7 +14,7 @@ export default async function Page() {
   if (!user) redirect("/connexion-edukora");
   if (user.role !== "admin") redirect("/accueil-edukora");
 
-  const { totals, top, list } = getReferralStats();
+  const { totals, top, list } = await getReferralStats();
 
   return (
     <AdminShell active="referral">

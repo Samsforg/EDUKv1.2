@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Edukora | Connexion Expert" };
+export const metadata: Metadata = { title: "Edukora | Connexion Expert", robots: { index: false, follow: false } };
 
 export default function Page() {
   return (
@@ -47,7 +47,7 @@ export default function Page() {
 </div>
 
 <div className="absolute bottom-[-10%] right-[-5%] w-2/3 h-2/3 opacity-20 pointer-events-none">
-<img className="w-full h-full object-contain" src="/images/ecran-084.png" alt="A professional portrait of a confident West African educator in a modern academic setting, looking thoughtfully at a digital tablet. The background is a blurred university library with soft, warm golden hour lighting and Academic Blue architectural details. The image evokes deep trust, pedagogical authority, and national pride." />
+<img  className="w-full h-full object-contain" src="/images/ecran-084.webp" alt="A professional portrait of a confident West African educator in a modern academic setting, looking thoughtfully at a digital tablet. The background is a blurred university library with soft, warm golden hour lighting and Academic Blue architectural details. The image evokes deep trust, pedagogical authority, and national pride." loading="lazy" />
 </div>
 </div>
 

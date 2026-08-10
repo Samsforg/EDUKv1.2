@@ -47,7 +47,7 @@ export default function Page() {
 </div>
 <div className="hidden lg:block relative rounded-2xl overflow-hidden aspect-video">
 <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent z-10"></div>
-<img className="w-full h-full object-cover" src="/images/ecran-190.png" alt="A professional portrait of an Ivorian professor in a bright, modern academic setting. He is wearing a formal suit and smiling confidently, holding a digital tablet. The background is a clean university library with soft natural lighting, reflecting a high-end corporate light-mode aesthetic using shades of academic blue and national orange accents." />
+<img  className="w-full h-full object-cover" src="/images/ecran-190.webp" alt="A professional portrait of an Ivorian professor in a bright, modern academic setting. He is wearing a formal suit and smiling confidently, holding a digital tablet. The background is a clean university library with soft natural lighting, reflecting a high-end corporate light-mode aesthetic using shades of academic blue and national orange accents." loading="lazy" />
 </div>
 </div>
 

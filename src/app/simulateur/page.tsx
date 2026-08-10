@@ -138,8 +138,8 @@ export default function SimulatorListPage() {
                 ))}
               </div>
             )}
-            {bac.length > 0 && filtered.some((p) => p.category === "BAC") && renderGroup("BAC — Session 2024", "school", filtered.filter((p) => p.category === "BAC"))}
-            {bepc.length > 0 && filtered.some((p) => p.category === "BEPC") && renderGroup("BEPC — Session 2024", "menu_book", filtered.filter((p) => p.category === "BEPC"))}
+            {bac.length > 0 && filtered.some((p) => p.category === "BAC") && renderGroup(`BAC — Session ${new Date().getFullYear()}`, "school", filtered.filter((p) => p.category === "BAC"))}
+            {bepc.length > 0 && filtered.some((p) => p.category === "BEPC") && renderGroup(`BEPC — Session ${new Date().getFullYear()}`, "menu_book", filtered.filter((p) => p.category === "BEPC"))}
             {filtered.length === 0 && <p className="text-center text-on-surface-variant py-16">Aucun sujet dans cette matière.</p>}
           </>
         )}

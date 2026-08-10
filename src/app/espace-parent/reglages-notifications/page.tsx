@@ -12,7 +12,7 @@ export default async function Page() {
   if (!user) redirect("/connexion-edukora");
   if (user.role !== "parent") redirect("/accueil-edukora");
 
-  const raw = getParentSettings(user.id);
+  const raw = await getParentSettings(user.id);
   const initial = {
     academic_alerts: raw.academic_alerts === 1,
     score_drop: raw.score_drop === 1,

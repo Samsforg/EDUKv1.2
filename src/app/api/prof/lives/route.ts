@@ -1,16 +1,19 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { getProfBoard, createLiveSession } from "@/lib/live-prof";
 
-export async function GET() {
+async function GETHandler() {
   const user = await getCurrentUser();
   if (!user || (user.role !== "teacher" && user.role !== "admin"))
     return NextResponse.json({ error: "Accès réservé aux professeurs" }, { status: 403 });
 
-  return NextResponse.json(getProfBoard(user.id));
+  return NextResponse.json(await getProfBoard(user.id));
 }
 
-export async function POST(req: NextRequest) {
+export const GET = guardApi("GET /api/prof/lives", GETHandler);
+
+async function POSTHandler(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user || (user.role !== "teacher" && user.role !== "admin"))
     return NextResponse.json({ error: "Accès réservé aux professeurs" }, { status: 403 });
@@ -24,6 +27,8 @@ export async function POST(req: NextRequest) {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(starts_at))
     return NextResponse.json({ error: "Date de début invalide" }, { status: 400 });
 
-  const id = createLiveSession(user.id, { ...body, title, starts_at });
+  const id = await createLiveSession(user.id, { ...body, title, starts_at });
   return NextResponse.json({ ok: true, id }, { status: 201 });
 }
+
+export const POST = guardApi("POST /api/prof/lives", POSTHandler);

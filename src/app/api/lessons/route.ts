@@ -1,12 +1,13 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
-export async function GET() {
+async function GETHandler() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
-  const rows = query<{
+  const rows = await query<{
     subject_id: number;
     subject_name: string;
     icon: string;
@@ -65,3 +66,5 @@ export async function GET() {
     })),
   });
 }
+
+export const GET = guardApi("GET /api/lessons", GETHandler);

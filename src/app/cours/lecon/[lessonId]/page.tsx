@@ -39,21 +39,36 @@ function MarkdownRenderer({ content }: { content: string }) {
 export default function LessonPage({ params }: LessonPageProps) {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [error, setError] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   useEffect(() => {
     params.then(async (p) => {
       try {
-        const r = await fetch(`/api/cours/chapitres/${p.lessonId}/lecons`);
+        const r = await fetch(`/api/cours/lecons/${p.lessonId}`);
         if (!r.ok) throw new Error();
         const d = await r.json();
-        if (d.lessons?.length > 0) {
-          setLesson(d.lessons[0]);
-        }
+        if (d.lesson) setLesson(d.lesson);
       } catch {
         setError(true);
       }
     });
-  }, []);
+  }, [params]);
+
+  async function markComplete() {
+    if (!lesson || completing) return;
+    setCompleting(true);
+    try {
+      const r = await fetch(`/api/cours/lecons/${lesson.id}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (!r.ok) throw new Error();
+      setLesson({ ...lesson, progress: { ...lesson.progress, completed: 1 } });
+    } finally {
+      setCompleting(false);
+    }
+  }
 
   if (error)
     return (
@@ -65,7 +80,19 @@ export default function LessonPage({ params }: LessonPageProps) {
     );
 
   if (!lesson)
-    return <div className="min-h-screen bg-background" />;
+    return (
+      <div className="bg-background min-h-screen pb-24 animate-pulse">
+        <div className="h-8 w-64 bg-surface-container-high rounded-lg mx-margin-mobile md:mx-margin-desktop mt-stack-lg mb-8" />
+        <div className="max-w-3xl mx-auto px-margin-mobile md:px-margin-desktop space-y-6">
+          <div className="aspect-video rounded-xl bg-surface-container-high" />
+          <div className="rounded-xl border border-outline-variant p-6 space-y-3">
+            <div className="h-4 w-full bg-surface-container-high rounded" />
+            <div className="h-4 w-5/6 bg-surface-container-high rounded" />
+            <div className="h-4 w-2/3 bg-surface-container-high rounded" />
+          </div>
+        </div>
+      </div>
+    );
 
   const isCompleted = lesson.progress.completed === 1;
 
@@ -107,11 +134,11 @@ export default function LessonPage({ params }: LessonPageProps) {
             Teste ta compréhension avec des exercices interactifs.
           </p>
           <Link
-            href={`/exercices/lecon/${lesson.id}`}
+            href={`/quiz`}
             className="bg-primary text-on-primary px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2 active:scale-95 transition-transform"
           >
             <span className="material-symbols-outlined">quiz</span>
-            Faire les exercices
+            Faire des exercices
           </Link>
         </section>
 
@@ -123,7 +150,16 @@ export default function LessonPage({ params }: LessonPageProps) {
             </p>
           </div>
           {!isCompleted && (
-            <button className="bg-primary text-on-primary px-4 py-2 rounded-lg font-bold text-sm active:scale-95 transition-transform">
+            <button
+              onClick={markComplete}
+              disabled={completing}
+              className="bg-primary text-on-primary px-4 py-2 rounded-lg font-bold text-sm active:scale-95 transition-transform disabled:opacity-60 flex items-center gap-2"
+            >
+              {completing ? (
+                <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+              ) : (
+                <span className="material-symbols-outlined text-lg">check</span>
+              )}
               Marquer comme terminée
             </button>
           )}

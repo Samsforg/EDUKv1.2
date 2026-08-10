@@ -12,7 +12,7 @@ function GeniusPayValidation() {
   const [planName, setPlanName] = React.useState<string>("");
   const [error, setError] = React.useState<string>("");
   const [timeLeft, setTimeLeft] = React.useState(180);
-  const [checking, setChecking] = React.useState(false);
+  const [checking, setChecking] = React.useState(true);
   const [done, setDone] = React.useState(false);
 
   React.useEffect(() => {
@@ -31,7 +31,7 @@ function GeniusPayValidation() {
         setPlanName(d.plan_name);
         if (d.is_active) {
           setDone(true);
-          setTimeout(() => { window.location.href = "/paiement-reussi-edukora-premium-geniuspay"; }, 800);
+          setTimeout(() => { window.location.href = `/paiement-reussi-edukora-premium-geniuspay?ref=${encodeURIComponent(r)}`; }, 800);
         }
       })
       .catch((e) => setError(e.message || "Erreur de chargement"));
@@ -51,7 +51,7 @@ function GeniusPayValidation() {
         .then((d) => {
           if (d.is_active) {
             setDone(true);
-            setTimeout(() => { window.location.href = "/paiement-reussi-edukora-premium-geniuspay"; }, 800);
+setTimeout(() => { window.location.href = `/paiement-r-ussi-edukora-premium-geniuspay?ref=${encodeURIComponent(ref)}`; }, 800);
           } else if (d.status === "failed" || d.status === "cancelled") {
             setError("Le paiement a échoué ou a été annulé. Réessayez depuis la page des plans.");
             setChecking(false);
@@ -78,7 +78,7 @@ function GeniusPayValidation() {
 </div>
 <div className="flex items-center gap-2">
 <div className="w-8 h-8 rounded-sm overflow-hidden">
-<img alt="Geniuspay Logo" className="w-full h-full object-contain" src="/images/ecran-324.png" />
+<img  alt="Geniuspay Logo" className="w-full h-full object-contain" src="/images/ecran-324.webp" loading="lazy" />
 </div>
 <div className="font-headline font-bold text-primary">Edukora</div>
 </div>
@@ -154,9 +154,9 @@ function GeniusPayValidation() {
     <><span className="material-symbols-outlined">check_circle</span> J'ai validé le paiement</>
   )}
 </button>
-<a className="w-full py-3 flex items-center justify-center text-primary font-semibold hover:underline gap-2" href="#">
+<a className="w-full py-3 flex items-center justify-center text-primary font-semibold hover:underline gap-2" href="/accueil-edukora">
 <span className="material-symbols-outlined text-sm">help</span>
-                Besoin d'aide ?
+                Accéder à mon compte
             </a>
 </div>
 </>

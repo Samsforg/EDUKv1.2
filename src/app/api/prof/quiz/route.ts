@@ -1,3 +1,4 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne, run } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
@@ -8,12 +9,12 @@ function requireTeacher(user: { role: string } | null): NextResponse | null {
   return null;
 }
 
-export async function GET() {
+async function GETHandler() {
   const user = await getCurrentUser();
   const forbidden = requireTeacher(user);
   if (forbidden) return forbidden;
 
-  const quizzes = query<{
+  const quizzes = await query<{
     id: number;
     subject_name: string;
     icon: string;
@@ -36,7 +37,9 @@ export async function GET() {
   return NextResponse.json({ quizzes });
 }
 
-export async function POST(req: NextRequest) {
+export const GET = guardApi("GET /api/prof/quiz", GETHandler);
+
+async function POSTHandler(req: NextRequest) {
   const user = await getCurrentUser();
   const forbidden = requireTeacher(user);
   if (forbidden) return forbidden;
@@ -52,11 +55,11 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const subject = queryOne<{ id: number }>("SELECT id FROM subjects WHERE id = ?", Number(body.subject_id));
+  const subject = await queryOne<{ id: number }>("SELECT id FROM subjects WHERE id = ?", Number(body.subject_id));
   if (!subject) return NextResponse.json({ error: "Matière introuvable" }, { status: 400 });
 
-  const lastPos = queryOne<{ p: number }>("SELECT MAX(position) AS p FROM quizzes");
-  const result = run(
+  const lastPos = await queryOne<{ p: number }>("SELECT MAX(position) AS p FROM quizzes");
+  const result = await run(
     "INSERT INTO quizzes (subject_id, title, level, position, created_by, status) VALUES (?, ?, ?, ?, ?, ?)",
     subject.id,
     body.title.trim(),
@@ -67,8 +70,8 @@ export async function POST(req: NextRequest) {
   );
   const quizId = Number(result.lastInsertRowid);
 
-  body.questions.forEach((q: { question: string; options: string[]; answerIndex: number; explanation?: string; points?: number }, i: number) => {
-    run(
+  body.questions.forEach(async (q: { question: string; options: string[]; answerIndex: number; explanation?: string; points?: number }, i: number) => {
+    await run(
       "INSERT INTO questions (quiz_id, question, options, answer_index, explanation, points, position) VALUES (?, ?, ?, ?, ?, ?, ?)",
       quizId,
       q.question.trim(),
@@ -83,7 +86,9 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, quiz_id: quizId }, { status: 201 });
 }
 
-export async function DELETE(req: NextRequest) {
+export const POST = guardApi("POST /api/prof/quiz", POSTHandler);
+
+async function DELETEHandler(req: NextRequest) {
   const user = await getCurrentUser();
   const forbidden = requireTeacher(user);
   if (forbidden) return forbidden;
@@ -91,13 +96,15 @@ export async function DELETE(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body || !body.id) return NextResponse.json({ error: "ID manquant" }, { status: 400 });
 
-  const quiz = queryOne<{ id: number; created_by: number | null }>(
+  const quiz = await queryOne<{ id: number; created_by: number | null }>(
     "SELECT id, created_by FROM quizzes WHERE id = ?",
     Number(body.id),
   );
   if (!quiz) return NextResponse.json({ error: "Quiz introuvable" }, { status: 404 });
   if (quiz.created_by !== user!.id) return NextResponse.json({ error: "Pas ton quiz" }, { status: 403 });
 
-  run("DELETE FROM quizzes WHERE id = ?", quiz.id);
+  await run("DELETE FROM quizzes WHERE id = ?", quiz.id);
   return NextResponse.json({ ok: true });
 }
+
+export const DELETE = guardApi("DELETE /api/prof/quiz", DELETEHandler);

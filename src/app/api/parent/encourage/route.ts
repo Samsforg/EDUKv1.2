@@ -1,8 +1,9 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser, notify } from "@/lib/session";
 import { isChildLinked } from "@/lib/parents";
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
   if (user.role !== "parent") {
@@ -11,11 +12,11 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => null);
   const childId = Number(body?.child_id);
-  if (!childId || !isChildLinked(user.id, childId)) {
+  if (!childId || !await isChildLinked(user.id, childId)) {
     return NextResponse.json({ error: "Enfant introuvable" }, { status: 404 });
   }
 
-  notify(
+  await notify(
     childId,
     "Encouragement 💪",
     `${user.first_name} ${user.last_name} vous adresse un message d'encouragement. Continuez comme ça !`,
@@ -23,3 +24,5 @@ export async function POST(req: NextRequest) {
   );
   return NextResponse.json({ ok: true });
 }
+
+export const POST = guardApi("POST /api/parent/encourage", POSTHandler);

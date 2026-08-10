@@ -21,6 +21,7 @@ export default function MarketingFooter() {
               <li><Link href="/tarifs" className="hover:text-primary">Tarifs &amp; Abonnements</Link></li>
               <li><Link href="/simulateur-d-examen-bac-bepc" className="hover:text-primary">Simulateur d'examen</Link></li>
               <li><Link href="/tuteur-ia-edukora" className="hover:text-primary">Tuteur IA Kora</Link></li>
+              <li><Link href="/blog" className="hover:text-primary">Blog &amp; conseils</Link></li>
             </ul>
           </div>
           <div>
@@ -28,26 +29,33 @@ export default function MarketingFooter() {
             <ul className="space-y-4 text-label-sm text-on-surface-variant">
               <li><Link href="/resultats" className="hover:text-primary">Nos résultats</Link></li>
               <li><Link href="/connexion-edukora" className="hover:text-primary">Connexion</Link></li>
-              <li><Link href="/inscription-1-2-edukora" className="hover:text-primary">Créer un compte</Link></li>
+              <li><Link href="/inscription-1-2-edukora" className="hover:text-primary">Créer mon compte</Link></li>
               <li><Link href="/connexion-parent-edukora" className="hover:text-primary">Espace parent</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-bold text-primary mb-6">Suivez-nous</h4>
             <div className="flex gap-4">
-              <a className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm" href="#">
+              <a className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm" href="https://wa.me/2250709141545" target="_blank" rel="noopener noreferrer" aria-label="Nous contacter sur WhatsApp">
                 <span className="material-symbols-outlined">qr_code_2</span>
               </a>
-              <a className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm" href="#">
-                <span className="material-symbols-outlined text-[20px]">alternate_email</span>
+              <a className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm" href="https://web.facebook.com/profile.php?id=61591805488598" target="_blank" rel="noopener noreferrer" aria-label="Nous suivre sur Facebook">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.9h2.54V9.85c0-2.52 1.49-3.91 3.77-3.91 1.09 0 2.23.2 2.23.2v2.46h-1.26c-1.24 0-1.62.77-1.62 1.56v1.88h2.76l-.44 2.9h-2.32V22c4.78-.76 8.44-4.92 8.44-9.94z"/>
+                </svg>
               </a>
             </div>
-            <p className="mt-6 text-label-xs text-on-surface-variant">📍 Abidjan, Plateau, Immeuble CCIA</p>
+            <p className="mt-6 text-label-xs text-on-surface-variant">📍 09 BP 989 Abidjan 09, Côte d'Ivoire</p>
           </div>
         </div>
         <div className="pt-8 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-4 text-label-xs text-outline">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+            <Link href="/mentions-l-gales" className="hover:text-primary">Mentions légales</Link>
+            <Link href="/politique-de-confidentialit" className="hover:text-primary">Confidentialité</Link>
+            <Link href="/conditions-g-n-rales-d-utilisation" className="hover:text-primary">CGU</Link>
+            <Link href="/pr-f-rences-de-cookies-et-donn-es" className="hover:text-primary">Cookies</Link>
+          </div>
           <p>© 2026 Edukora. Tous droits réservés. Fait avec passion en Côte d'Ivoire 🇨🇮</p>
-          <p>PWA · BAC &amp; BEPC · Tuteur IA</p>
         </div>
       </div>
     </footer>

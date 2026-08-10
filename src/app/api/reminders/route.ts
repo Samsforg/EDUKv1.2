@@ -1,14 +1,15 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { getReminderSettings, saveReminderSettings } from "@/lib/reminders";
 
-export async function GET() {
+async function GETHandler() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
-  const settings = getReminderSettings(user.id);
-  const subjects = query<{ id: number; name: string; icon: string; color: string }>(
+  const settings = await getReminderSettings(user.id);
+  const subjects = await query<{ id: number; name: string; icon: string; color: string }>(
     "SELECT id, name, icon, color FROM subjects ORDER BY id",
   );
 
@@ -18,7 +19,9 @@ export async function GET() {
   });
 }
 
-export async function PUT(req: NextRequest) {
+export const GET = guardApi("GET /api/reminders", GETHandler);
+
+async function PUTHandler(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
@@ -32,6 +35,8 @@ export async function PUT(req: NextRequest) {
     ? body.subject_ids.map(Number).filter((n: number) => Number.isInteger(n) && n > 0)
     : [];
 
-  const settings = saveReminderSettings(user.id, { enabled, frequency, hour, subject_ids });
+  const settings = await saveReminderSettings(user.id, { enabled, frequency, hour, subject_ids });
   return NextResponse.json({ settings });
 }
+
+export const PUT = guardApi("PUT /api/reminders", PUTHandler);

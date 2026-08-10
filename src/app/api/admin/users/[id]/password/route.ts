@@ -1,9 +1,10 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { resetUserPassword } from "@/lib/admin";
 import { requireAdmin } from "@/lib/admin-guard";
 import { getCurrentUser } from "@/lib/session";
 
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+async function POSTHandler(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const forbidden = await requireAdmin();
   if (forbidden) return forbidden;
 
@@ -14,7 +15,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 
   const actor = await getCurrentUser();
-  const result = resetUserPassword(Number(id), body.password, actor!.id);
+  const result = await resetUserPassword(Number(id), body.password, actor!.id);
   if ("error" in result) return NextResponse.json({ error: result.error }, { status: 400 });
   return NextResponse.json({ ok: true });
 }
+
+export const POST = guardApi("POST /api/admin/users/[id]/password", POSTHandler);

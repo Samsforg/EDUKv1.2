@@ -12,9 +12,11 @@ export default async function Page() {
   if (!user) redirect("/connexion-edukora");
   if (user.role !== "admin") redirect("/accueil-edukora");
 
-  const pending = getPendingCourses();
+  const pending = await getPendingCourses();
   const quizzes = pending.filter((p) => p.kind === "quiz");
   const papers = pending.filter((p) => p.kind === "paper");
+  const chapters = pending.filter((p) => p.kind === "chapter");
+  const lessons = pending.filter((p) => p.kind === "lesson");
 
   return (
     <AdminShell active="approval">
@@ -94,6 +96,73 @@ export default async function Page() {
                       {p.question_count} question{p.question_count > 1 ? "s" : ""}
                     </span>
                     <ApproveButton kind="paper" id={p.id} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+      {chapters.length > 0 && (
+        <section className="mb-6">
+          <h3 className="font-headline text-headline-md font-semibold text-on-surface mb-3">
+            Chapitres en attente ({chapters.length})
+          </h3>
+          <div className="space-y-3">
+            {chapters.map((c) => (
+              <div key={`chapter-${c.id}`} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-10 h-10 rounded-lg flex items-center justify-center material-symbols-outlined shrink-0" style={{ backgroundColor: `${c.subject_color}18`, color: c.subject_color }}>
+                      {c.subject_icon}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-on-surface truncate">{c.title}</p>
+                      <p className="text-xs text-on-surface-variant">
+                        {c.subject_name}{c.grade_name ? ` • ${c.grade_name}` : ""} • par {c.creator} • {c.relative}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-xs text-on-surface-variant flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">menu_book</span>
+                      {c.question_count} leçon{c.question_count > 1 ? "s" : ""}
+                    </span>
+                    <ApproveButton kind="chapter" id={c.id} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {lessons.length > 0 && (
+        <section>
+          <h3 className="font-headline text-headline-md font-semibold text-on-surface mb-3">
+            Leçons en attente ({lessons.length})
+          </h3>
+          <div className="space-y-3">
+            {lessons.map((l) => (
+              <div key={`lesson-${l.id}`} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-10 h-10 rounded-lg flex items-center justify-center material-symbols-outlined shrink-0" style={{ backgroundColor: `${l.subject_color}18`, color: l.subject_color }}>
+                      {l.subject_icon}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-on-surface truncate">{l.title}</p>
+                      <p className="text-xs text-on-surface-variant">
+                        {l.subject_name}{l.grade_name ? ` • ${l.grade_name}` : ""} • par {l.creator} • {l.relative}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-xs text-on-surface-variant flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">help</span>
+                      {l.question_count} exercice{l.question_count > 1 ? "s" : ""}
+                    </span>
+                    <ApproveButton kind="lesson" id={l.id} />
                   </div>
                 </div>
               </div>

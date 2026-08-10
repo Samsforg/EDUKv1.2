@@ -40,29 +40,29 @@ export function eventMeta(type: string) {
   return EVENT_LABELS[type] ?? { label: type, color: "text-on-surface-variant", bg: "bg-surface-container-high" };
 }
 
-export function startOrResumeSession(userId: number, paperId: number): number {
-  const existing = queryOne<{ id: number }>(
+export async function startOrResumeSession(userId: number, paperId: number): Promise<number >{
+  const existing = await queryOne<{ id: number }>(
     "SELECT id FROM proctoring_sessions WHERE user_id = ? AND paper_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1",
     userId,
     paperId,
   );
   if (existing) return existing.id;
   const id = Number(
-    run(
+    (await run(
       "INSERT INTO proctoring_sessions (user_id, paper_id, status) VALUES (?, ?, 'active')",
       userId,
       paperId,
-    ).lastInsertRowid,
+    )).lastInsertRowid,
   );
-  run(
+  await run(
     "INSERT INTO proctoring_events (session_id, event_type, detail) VALUES (?, 'start', 'Session de surveillance démarrée')",
     id,
   );
   return id;
 }
 
-export function logProctoringEvent(sessionId: number, type: string, detail: string) {
-  run(
+export async function logProctoringEvent(sessionId: number, type: string, detail: string) {
+  await run(
     "INSERT INTO proctoring_events (session_id, event_type, detail) VALUES (?, ?, ?)",
     sessionId,
     type,
@@ -70,8 +70,8 @@ export function logProctoringEvent(sessionId: number, type: string, detail: stri
   );
 }
 
-export function endSession(userId: number, paperId: number, flags?: { type: string; detail: string }[]) {
-  const session = queryOne<{ id: number }>(
+export async function endSession(userId: number, paperId: number, flags?: { type: string; detail: string }[]) {
+  const session = await queryOne<{ id: number }>(
     "SELECT id FROM proctoring_sessions WHERE user_id = ? AND paper_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1",
     userId,
     paperId,
@@ -79,32 +79,40 @@ export function endSession(userId: number, paperId: number, flags?: { type: stri
   if (!session) return;
   if (Array.isArray(flags)) {
     for (const f of flags) {
-      if (f && typeof f.type === "string" && f.detail) logProctoringEvent(session.id, f.type, f.detail);
+      if (f && typeof f.type === "string" && f.detail) await logProctoringEvent(session.id, f.type, f.detail);
     }
   }
-  run(
+  await run(
     "UPDATE proctoring_sessions SET status = 'ended', ended_at = datetime('now') WHERE id = ?",
     session.id,
   );
 }
 
-function expireStaleSessions() {
-  run(
-    `UPDATE proctoring_sessions SET status = 'ended', ended_at = datetime('now')
-     WHERE status = 'active'
-       AND datetime(started_at, '+' || (SELECT p.duration_minutes FROM exam_papers p WHERE p.id = proctoring_sessions.paper_id) || ' minutes', '+15 minutes') < datetime('now')`,
+async function expireStaleSessions() {
+  const rows = await query<{ id: number; started_at: string; duration_minutes: number }>(
+    `SELECT ps.id, ps.started_at, p.duration_minutes
+     FROM proctoring_sessions ps
+     JOIN exam_papers p ON p.id = ps.paper_id
+     WHERE ps.status = 'active'`,
   );
+  const now = Date.now();
+  for (const r of rows) {
+    const started = new Date(r.started_at.replace(" ", "T") + "Z").getTime();
+    if (Number.isFinite(started) && now - started > (r.duration_minutes + 15) * 60000) {
+      await run("UPDATE proctoring_sessions SET status = 'ended', ended_at = datetime('now') WHERE id = ?", r.id);
+    }
+  }
 }
 
-export function getProctoringOverview(): {
+export async function getProctoringOverview(): Promise<{
   sessions: ProctoringSessionRow[];
   events: ProctoringEventRow[];
   stats: { active: number; today: number; warnings: number };
-} {
-  expireStaleSessions();
+}> {
+  await expireStaleSessions();
   const now = Date.now();
 
-  const sessions = query<ProctoringSessionRow>(
+  const sessions = (await query<ProctoringSessionRow>(
     `SELECT ps.id, ps.user_id, u.first_name || ' ' || u.last_name AS user_name,
             ps.paper_id, p.title AS paper_title, s.name AS subject_name, p.duration_minutes,
             ps.started_at, ps.status,
@@ -117,19 +125,19 @@ export function getProctoringOverview(): {
      JOIN subjects s ON s.id = p.subject_id
      WHERE ps.status = 'active'
      ORDER BY ps.started_at DESC`,
-  ).map((r) => ({
+  )).map((r) => ({
     ...r,
     elapsed_min: Math.max(0, Math.floor((now - new Date(r.started_at.replace(" ", "T") + "Z").getTime()) / 60000)),
   }));
 
-  const events = query<ProctoringEventRow>(
+  const events = (await query<ProctoringEventRow>(
     `SELECT e.id, e.session_id, e.event_type, e.detail, e.created_at,
             u.first_name || ' ' || u.last_name AS user_name
      FROM proctoring_events e
      JOIN proctoring_sessions ps ON ps.id = e.session_id
      JOIN users u ON u.id = ps.user_id
      ORDER BY e.id DESC LIMIT 40`,
-  ).map((r) => ({
+  )).map((r) => ({
     ...r,
     relative: (() => {
       const t = new Date(r.created_at.replace(" ", "T") + "Z").getTime();
@@ -148,24 +156,24 @@ export function getProctoringOverview(): {
     stats: {
       active: sessions.length,
       today:
-        queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM proctoring_sessions WHERE started_at >= date('now')")?.c ?? 0,
+        (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM proctoring_sessions WHERE started_at >= date('now')"))?.c ?? 0,
       warnings:
-        queryOne<{ c: number }>(
+        (await queryOne<{ c: number }>(
           "SELECT COUNT(*) AS c FROM proctoring_events WHERE event_type IN ('tab_switch','warning','violation') AND created_at >= date('now')",
-        )?.c ?? 0,
+        ))?.c ?? 0,
     },
   };
 }
 
-export function terminateSession(id: number, actorId: number): { ok: true } | { error: string } {
-  const row = queryOne<{ id: number; user_id: number; paper_id: number; status: string }>(
+export async function terminateSession(id: number, actorId: number): Promise<{ ok: true } | { error: string } >{
+  const row = await queryOne<{ id: number; user_id: number; paper_id: number; status: string }>(
     "SELECT id, user_id, paper_id, status FROM proctoring_sessions WHERE id = ?",
     id,
   );
   if (!row) return { error: "Session introuvable" };
   if (row.status !== "active") return { error: "Cette session est déjà terminée" };
-  run("UPDATE proctoring_sessions SET status = 'ended', ended_at = datetime('now') WHERE id = ?", id);
-  logProctoringEvent(id, "ended", "Session terminée par l'administration");
-  logAudit(actorId, "proctoring", `Session de surveillance #${id} terminée`);
+  await run("UPDATE proctoring_sessions SET status = 'ended', ended_at = datetime('now') WHERE id = ?", id);
+  await logProctoringEvent(id, "ended", "Session terminée par l'administration");
+  await logAudit(actorId, "proctoring", `Session de surveillance #${id} terminée`);
   return { ok: true };
 }

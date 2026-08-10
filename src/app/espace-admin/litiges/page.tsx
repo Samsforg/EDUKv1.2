@@ -12,7 +12,7 @@ export default async function Page() {
   if (!user) redirect("/connexion-edukora");
   if (user.role !== "admin") redirect("/accueil-edukora");
 
-  const disputes = getDisputes();
+  const disputes = await getDisputes();
   const open = disputes.filter((d) => d.status === "open").length;
 
   return (

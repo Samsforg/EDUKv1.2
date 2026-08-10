@@ -1,14 +1,15 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
   const limit = Math.min(50, Math.max(1, Number(new URL(req.url).searchParams.get("limit")) || 20));
 
-  const rows = query<{
+  const rows = await query<{
     id: number;
     first_name: string;
     last_name: string;
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
     is_me: r.id === user.id,
   }));
 
-  const myRank = queryOne<{ rank: number; xp: number }>(
+  const myRank = await queryOne<{ rank: number; xp: number }>(
     `SELECT rk.rank, rk.xp FROM (
        SELECT u.id, u.xp,
               ROW_NUMBER() OVER (ORDER BY u.xp DESC, u.last_active DESC, u.id ASC) AS rank
@@ -46,9 +47,9 @@ export async function GET(req: NextRequest) {
     user.id,
   );
 
-  const total = queryOne<{ c: number }>(
+  const total = (await queryOne<{ c: number }>(
     "SELECT COUNT(*) AS c FROM users WHERE role = 'student'",
-  )!.c;
+  ))!.c;
 
   const top = rows[0]?.xp ?? 0;
   const me = rows.find((r) => r.id === user.id) ?? {
@@ -72,3 +73,5 @@ export async function GET(req: NextRequest) {
     top_xp: top,
   });
 }
+
+export const GET = guardApi("GET /api/leaderboard", GETHandler);

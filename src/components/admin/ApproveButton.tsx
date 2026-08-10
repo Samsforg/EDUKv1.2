@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function ApproveButton({ kind, id }: { kind: "quiz" | "paper"; id: number }) {
+export function ApproveButton({ kind, id }: { kind: "quiz" | "paper" | "chapter" | "lesson"; id: number }) {
   const [busy, setBusy] = useState<string | null>(null);
   const router = useRouter();
 

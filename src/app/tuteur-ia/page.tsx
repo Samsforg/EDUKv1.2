@@ -3,11 +3,27 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
+import { PremiumUpsell } from "@/components/PremiumUpsell";
 
 interface Msg {
   id: number;
   role: "user" | "assistant";
   content: string;
+}
+
+interface QuotaInfo {
+  used: number;
+  limit: number | null;
+  isPremium: boolean;
+  planName: string | null;
+  windowLabel?: string | null;
+}
+
+interface PlanInfo {
+  id: number;
+  name: string;
+  price_cents: number;
+  interval: string;
 }
 
 const SUGGESTIONS = [
@@ -22,6 +38,11 @@ export default function TutorPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [chatId, setChatId] = useState<number | null>(null);
+  const [quota, setQuota] = useState<QuotaInfo | null>(null);
+  const [plan, setPlan] = useState<PlanInfo | null>(null);
+  const [decouvertePrice, setDecouvertePrice] = useState(0);
+  const [upsell, setUpsell] = useState<{ open: boolean; message: string }>({ open: false, message: "" });
+  const [sendError, setSendError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,29 +53,62 @@ export default function TutorPage() {
           setMessages(d.messages);
           if (d.messages.length > 0) setChatId(d.messages[d.messages.length - 1].id);
         }
-      });
+      })
+      .catch(() => {});
+    fetch("/api/tutor/quota")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.kora) setQuota(d.kora);
+        if (d.plan) setPlan(d.plan);
+        if (typeof d.decouverte_price === "number") setDecouvertePrice(d.decouverte_price);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
 
+  const blocked = !!quota && quota.limit !== null && quota.used >= quota.limit;
+
   async function send(text: string) {
     const message = text.trim();
     if (!message || sending) return;
+    setSendError(null);
+    if (blocked) {
+      setUpsell({
+        open: true,
+        message: quota!.isPremium
+          ? `Vous avez atteint votre quota de ${quota!.limit} questions ${quota!.windowLabel ?? "pour cette période"} sur le plan « ${quota!.planName} ». Il se réinitialisera à la prochaine période d'abonnement.`
+          : `Vous avez utilisé vos ${quota!.limit} questions gratuites du mois. Profitez de Kora bien plus longtemps avec le plan Réussite.`,
+      });
+      return;
+    }
     setInput("");
     setSending(true);
     setMessages((prev) => [...prev, { id: Date.now(), role: "user", content: message }]);
-    const res = await fetch("/api/tutor", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, chatId }),
-    });
-    const data = await res.json();
-    setSending(false);
-    if (data.reply) {
-      setChatId(data.chatId);
-      setMessages((prev) => [...prev, { id: Date.now() + 1, role: "assistant", content: data.reply }]);
+    try {
+      const res = await fetch("/api/tutor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, chatId }),
+      });
+      const data = await res.json();
+      if (data.code === "quota_exceeded") {
+        if (data.quota) setQuota(data.quota);
+        if (data.plan) setPlan(data.plan);
+        setUpsell({ open: true, message: data.error });
+      } else if (data.reply) {
+        setChatId(data.chatId);
+        setMessages((prev) => [...prev, { id: Date.now() + 1, role: "assistant", content: data.reply }]);
+        if (quota && quota.limit !== null) setQuota((q) => (q ? { ...q, used: q.used + 1 } : q));
+      } else {
+        setSendError(data.error ?? "Kora n'a pas pu répondre. Réessaye.");
+      }
+    } catch {
+      setSendError("Erreur réseau. Vérifie ta connexion puis réessaye.");
+    } finally {
+      setSending(false);
     }
   }
 
@@ -68,8 +122,41 @@ export default function TutorPage() {
           </span>
         }
         right={
-          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary text-xl">smart_toy</span>
+          <div className="flex items-center gap-2">
+            {quota && (
+              <button
+                onClick={() =>
+                  setUpsell({
+                    open: true,
+                    message: quota.isPremium
+                      ? quota.limit !== null
+                        ? `Vous êtes abonné « ${quota.planName} » : il vous reste ${Math.max(0, quota.limit - quota.used)} question${Math.max(0, quota.limit - quota.used) > 1 ? "s" : ""} ${quota.windowLabel ?? "pour cette période"}.`
+                        : `Vous êtes abonné « ${quota.planName} » : Kora illimité, bravo !`
+                      : `Vous avez encore ${Math.max(0, (quota.limit ?? 0) - quota.used)} question${
+                          Math.max(0, (quota.limit ?? 0) - quota.used) > 1 ? "s" : ""
+                        } gratuite${Math.max(0, (quota.limit ?? 0) - quota.used) > 1 ? "s" : ""} sur ${quota.limit} ${quota.windowLabel ?? "aujourd'hui"}.`,
+                  })
+                }
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all active:scale-95 ${
+                  quota.isPremium
+                    ? "bg-secondary-container text-on-secondary-container border-transparent"
+                    : blocked
+                      ? "bg-error-container text-on-error-container border-transparent"
+                      : "bg-primary-container/60 text-on-primary-container border-outline-variant"
+                }`}
+                title="Voir les limites de ton plan"
+              >
+                <span className={`material-symbols-outlined text-base ${quota.isPremium ? "fill-icon" : ""}`}>
+                  {quota.isPremium ? "workspace_premium" : "all_inclusive"}
+                </span>
+                {quota.isPremium && quota.limit === null
+                  ? "Kora illimité"
+                  : `${quota.used}/${quota.limit ?? 0} ${quota.windowLabel ?? "aujourd'hui"}`}
+              </button>
+            )}
+            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+              <span className="material-symbols-outlined text-on-primary text-xl">smart_toy</span>
+            </div>
           </div>
         }
       />
@@ -123,6 +210,15 @@ export default function TutorPage() {
             </div>
           </div>
         )}
+
+        {sendError && (
+          <div className="flex justify-start">
+            <div className="max-w-[85%] px-4 py-3 rounded-2xl rounded-bl-md bg-error-container/50 text-on-error-container font-body-sm flex items-center gap-2">
+              <span className="material-symbols-outlined text-lg">error</span>
+              <span>{sendError}</span>
+            </div>
+          </div>
+        )}
         <div ref={bottomRef} />
       </main>
 
@@ -150,6 +246,14 @@ export default function TutorPage() {
           </button>
         </div>
       </footer>
+
+      <PremiumUpsell
+        open={upsell.open}
+        onClose={() => setUpsell({ open: false, message: "" })}
+        message={upsell.message}
+        plan={plan}
+        decouvertePrice={decouvertePrice}
+      />
     </div>
   );
 }

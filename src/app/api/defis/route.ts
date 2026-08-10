@@ -1,12 +1,13 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { getChallenges } from "@/lib/defis";
 import { getCurrentUser } from "@/lib/session";
 
-export async function GET() {
+async function GETHandler() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
-  const all = getChallenges();
+  const all = await getChallenges();
   const week = all.find((c) => c.category === "Défi de la Semaine") ?? all.find((c) => c.status === "active") ?? null;
   const actifs = all.filter((c) => c.status === "active" && c.id !== week?.id);
   const upcoming = all.filter((c) => c.status === "upcoming");
@@ -17,3 +18,5 @@ export async function GET() {
 
   return NextResponse.json({ week, actifs, upcoming, ended, me: { commune } });
 }
+
+export const GET = guardApi("GET /api/defis", GETHandler);

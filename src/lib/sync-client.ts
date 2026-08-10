@@ -53,21 +53,21 @@ async function processAction(item: QueuedAction) {
 
 // Écouteur messages du SW
 if (typeof window !== "undefined") {
-  navigator.serviceWorker.addEventListener("message", (event) => {
+  navigator.serviceWorker.addEventListener("message", async (event) => {
     if (event.data?.type === "SYNC_QUEUE") {
-      handleSyncMessage();
+      await handleSyncMessage();
     }
   });
 }
 
 // Enregistrement périodique (fallback si periodic sync non supporté)
-export function registerPeriodicSync() {
+export async function registerPeriodicSync() {
   if ("serviceWorker" in navigator && "periodicSync" in (window.ServiceWorkerRegistration.prototype as unknown as Record<string, unknown>)) {
     navigator.serviceWorker.ready.then((reg) => {
       (reg as unknown as { periodicSync: { register: (tag: string, opts: { minInterval: number }) => Promise<void> } }).periodicSync.register("edukora-content-sync", { minInterval: 24 * 60 * 60 * 1000 })
         .catch(() => console.log("Periodic sync not granted"));
     });
   } else {
-    setInterval(() => registerSync(), 24 * 60 * 60 * 1000);
+    setInterval(async () => await registerSync(), 24 * 60 * 60 * 1000);
   }
 }

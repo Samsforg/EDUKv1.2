@@ -30,13 +30,13 @@ export function actionLabel(action: string): string {
   return ACTION_LABELS[action] ?? action;
 }
 
-export function logAudit(actorId: number | null, action: string, detail: string) {
-  run("INSERT INTO audit_logs (actor_id, action, detail) VALUES (?, ?, ?)", actorId, action, detail.slice(0, 500));
+export async function logAudit(actorId: number | null, action: string, detail: string) {
+  await run("INSERT INTO audit_logs (actor_id, action, detail) VALUES (?, ?, ?)", actorId, action, detail.slice(0, 500));
 }
 
-export function getAuditLogs(limit = 100, action?: string): AuditRow[] {
+export async function getAuditLogs(limit = 100, action?: string): Promise<AuditRow[] >{
   const where = action ? "WHERE a.action = ?" : "";
-  const rows = query<AuditRow>(
+  const rows = await query<AuditRow>(
     `SELECT a.id, a.actor_id, u.first_name || ' ' || u.last_name AS actor_name,
             a.action, a.detail, a.created_at
      FROM audit_logs a LEFT JOIN users u ON u.id = a.actor_id
@@ -59,16 +59,16 @@ export function getAuditLogs(limit = 100, action?: string): AuditRow[] {
   }));
 }
 
-export function getAuditActions(): { action: string; count: number }[] {
-  return query<{ action: string; count: number }>(
+export async function getAuditActions(): Promise<{ action: string; count: number }[] >{
+  return await query<{ action: string; count: number }>(
     "SELECT action, COUNT(*) AS count FROM audit_logs GROUP BY action ORDER BY count DESC",
   );
 }
 
-export function getAuditStats(): { total: number; today: number } {
+export async function getAuditStats(): Promise<{ total: number; today: number } >{
   return {
-    total: queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM audit_logs")?.c ?? 0,
+    total: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM audit_logs"))?.c ?? 0,
     today:
-      queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM audit_logs WHERE created_at >= date('now')")?.c ?? 0,
+      (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM audit_logs WHERE created_at >= date('now')"))?.c ?? 0,
   };
 }

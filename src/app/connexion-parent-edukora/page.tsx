@@ -65,7 +65,7 @@ export default function Page() {
         <div className="hidden md:flex md:col-span-5 bg-primary relative items-center justify-center p-12 overflow-hidden">
           <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "radial-gradient(#ffffff 1px, transparent 1px)", backgroundSize: "24px 24px" }}></div>
           <div className="relative z-10 text-center flex flex-col items-center">
-            <img alt="Edukora Logo" className="w-24 h-24 mb-8 rounded-xl shadow-lg ring-4 ring-on-primary/10" src="/images/logo-edukora.png" />
+            <img  alt="Edukora Logo" className="w-24 h-24 mb-8 rounded-xl shadow-lg ring-4 ring-on-primary/10" src="/images/logo-edukora.webp" loading="lazy" />
             <h1 className="text-on-primary text-4xl font-headline font-bold leading-tight mb-4 tracking-tight">
               Eduquer pour<br />l&apos;avenir.
             </h1>
@@ -77,7 +77,7 @@ export default function Page() {
 
         <div className="col-span-1 md:col-span-7 p-8 sm:p-12 lg:p-16 flex flex-col justify-center bg-surface-container-lowest">
           <div className="md:hidden flex justify-center mb-8">
-            <img alt="Edukora Logo" className="w-16 h-16 rounded-lg" src="/images/logo-edukora.png" />
+            <img  alt="Edukora Logo" className="w-16 h-16 rounded-lg" src="/images/logo-edukora.webp" loading="lazy" />
           </div>
           <div className="mb-10 text-center md:text-left">
             <h2 className="text-on-surface text-3xl font-headline font-bold mb-2">Bon retour parmi nous</h2>

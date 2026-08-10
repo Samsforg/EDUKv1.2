@@ -28,6 +28,7 @@ export default function SimulatorTakePage() {
   const [confirmQuit, setConfirmQuit] = useState(false);
   const [showNav, setShowNav] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     fetch(`/api/simulator/${id}`)
@@ -56,6 +57,7 @@ export default function SimulatorTakePage() {
   async function submit(timeout = false) {
     if (!data || submitting) return;
     setSubmitting(true);
+    setSubmitError("");
     const payload = {
       answers: data.questions.map((q) => ({ questionId: q.id, selected: answers[q.id] ?? -1 })),
       duration_seconds: data.paper.duration_minutes * 60 - (secondsLeft ?? 0),
@@ -67,8 +69,12 @@ export default function SimulatorTakePage() {
       body: JSON.stringify(payload),
     });
     const result = await res.json();
-    if (result.error) return;
-    sessionStorage.setItem("edukora-exam-result", JSON.stringify({ ...result, questions: data.questions, userAnswers: answers }));
+    if (!res.ok || result.error) {
+      setSubmitting(false);
+      setSubmitError(result.error ?? "Erreur lors de la correction. Réessaie.");
+      return;
+    }
+    sessionStorage.setItem(`edukora-exam-result-${id}`, JSON.stringify({ ...result, exam_id: id, questions: data.questions, userAnswers: answers }));
     router.push(`/simulateur/${id}/resultat`);
   }
 
@@ -257,14 +263,29 @@ export default function SimulatorTakePage() {
               >
                 {current >= total - 1 ? "Annuler" : "Continuer"}
               </button>
-              <button
-                onClick={() => submit()}
-                disabled={submitting}
-                className="flex-1 h-12 rounded-xl bg-primary text-on-primary font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100"
-              >
-                {submitting ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : current >= total - 1 ? "Terminer" : "Abandonner"}
-              </button>
+              {current >= total - 1 ? (
+                <button
+                  onClick={() => submit()}
+                  disabled={submitting}
+                  className="flex-1 h-12 rounded-xl bg-primary text-on-primary font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100"
+                >
+                  {submitting ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : "Terminer"}
+                </button>
+              ) : (
+                <button
+                  onClick={() => router.push("/simulateur")}
+                  disabled={submitting}
+                  className="flex-1 h-12 rounded-xl bg-error text-on-error font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100"
+                >
+                  Abandonner
+                </button>
+              )}
             </div>
+            {submitError && (
+              <p className="text-sm text-error bg-error-container/40 rounded-lg px-4 py-3 mt-3" role="alert">
+                {submitError}
+              </p>
+            )}
           </div>
         </div>
       )}

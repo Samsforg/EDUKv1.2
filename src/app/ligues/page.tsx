@@ -22,8 +22,8 @@ export default async function LiguesPage() {
       </div>
     );
   }
-  const ladder = getLigueLadder();
-  const me = getLigueStatus(user.id);
+  const ladder = await getLigueLadder();
+  const me = await getLigueStatus(user.id);
 
   const myKey = me.ligue.key;
   const reachedMax = LIGUE_ORDER.findIndex((k) => k === myKey) === 0;

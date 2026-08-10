@@ -16,8 +16,8 @@ export interface DisputeRow {
   relative: string;
 }
 
-export function getDisputes(): DisputeRow[] {
-  const rows = query<DisputeRow>(
+export async function getDisputes(): Promise<DisputeRow[] >{
+  const rows = await query<DisputeRow>(
     `SELECT d.id, d.user_id, u.first_name || ' ' || u.last_name AS user_name,
             d.subject, d.description, d.status, d.resolution, d.resolved_at,
             rb.first_name || ' ' || rb.last_name AS resolved_by_name, d.created_at
@@ -40,46 +40,46 @@ export function getDisputes(): DisputeRow[] {
   }));
 }
 
-export function openDispute(
+export async function openDispute(
   userId: number,
   subject: string,
   description: string,
-): { ok: true; id: number } | { error: string } {
+): Promise<{ ok: true; id: number } | { error: string } >{
   const cleanSubject = subject.trim();
   const cleanDesc = description.trim();
   if (!cleanSubject || cleanSubject.length < 3) return { error: "Objet requis (3 caractères minimum)" };
   if (!cleanDesc || cleanDesc.length < 10) return { error: "Décrivez le problème (10 caractères minimum)" };
   const id = Number(
-    run("INSERT INTO disputes (user_id, subject, description) VALUES (?, ?, ?)", userId, cleanSubject.slice(0, 120), cleanDesc.slice(0, 1000)).lastInsertRowid,
+    (await run("INSERT INTO disputes (user_id, subject, description) VALUES (?, ?, ?)", userId, cleanSubject.slice(0, 120), cleanDesc.slice(0, 1000))).lastInsertRowid,
   );
-  logAudit(userId, "litige", `Litige « ${cleanSubject.slice(0, 80)} » ouvert`);
+  await logAudit(userId, "litige", `Litige « ${cleanSubject.slice(0, 80)} » ouvert`);
   return { ok: true, id };
 }
 
-export function resolveDispute(
+export async function resolveDispute(
   id: number,
   resolution: string,
   actorId: number,
-): { ok: true } | { error: string } {
-  const row = queryOne<{ id: number; user_id: number; subject: string; status: string }>(
+): Promise<{ ok: true } | { error: string } >{
+  const row = await queryOne<{ id: number; user_id: number; subject: string; status: string }>(
     "SELECT id, user_id, subject, status FROM disputes WHERE id = ?",
     id,
   );
   if (!row) return { error: "Litige introuvable" };
   const clean = resolution.trim();
   if (clean.length < 3) return { error: "La réponse doit contenir au moins 3 caractères" };
-  run(
+  await run(
     "UPDATE disputes SET status = 'resolved', resolution = ?, resolved_by = ?, resolved_at = datetime('now') WHERE id = ?",
     clean.slice(0, 1000),
     actorId,
     id,
   );
-  notify(
+  await notify(
     row.user_id,
     "Litige résolu",
     `Votre litige « ${row.subject} » a été traité. Réponse : ${clean.slice(0, 200)}`,
     "verified",
   );
-  logAudit(actorId, "litige", `Litige « ${row.subject} » résolu`);
+  await logAudit(actorId, "litige", `Litige « ${row.subject} » résolu`);
   return { ok: true };
 }

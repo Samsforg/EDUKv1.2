@@ -20,10 +20,12 @@ export default async function Page() {
   if (!user) redirect("/connexion-edukora");
   if (user.role !== "admin") redirect("/accueil-edukora");
 
-  const stats = getAdminStats();
-  const activity = getActivityFeed(8);
-  const subjects = getSubjectStats();
-  const trends = getTrends(14);
+  const [stats, activity, subjects, trends] = await Promise.all([
+    getAdminStats(),
+    getActivityFeed(8),
+    getSubjectStats(),
+    getTrends(14),
+  ]);
 
   const kpis = [
     {

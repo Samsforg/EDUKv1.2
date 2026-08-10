@@ -1,9 +1,10 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { isChildLinked, linkChild } from "@/lib/parents";
 import { queryOne } from "@/lib/db";
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
   if (user.role !== "parent") {
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Code invalide : 6 caractères attendus" }, { status: 400 });
   }
 
-  const pc = queryOne<{ user_id: number; expires_at: string | null }>(
+  const pc = await queryOne<{ user_id: number; expires_at: string | null }>(
     "SELECT user_id, expires_at FROM pairing_codes WHERE code = ?",
     raw,
   );
@@ -27,17 +28,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Ce code a expiré" }, { status: 400 });
   }
 
-  const child = queryOne<{ id: number; first_name: string; last_name: string; class_level: string | null }>(
+  const child = await queryOne<{ id: number; first_name: string; last_name: string; class_level: string | null }>(
     "SELECT id, first_name, last_name, class_level FROM users WHERE id = ? AND role = 'student'",
     pc.user_id,
   );
   if (!child) {
     return NextResponse.json({ error: "Ce code ne correspond pas à un élève" }, { status: 400 });
   }
-  if (isChildLinked(user.id, child.id)) {
+  if (await isChildLinked(user.id, child.id)) {
     return NextResponse.json({ error: "Cet élève est déjà lié à votre compte" }, { status: 400 });
   }
 
-  linkChild(user.id, child.id);
+  await linkChild(user.id, child.id);
   return NextResponse.json({ ok: true, child });
 }
+
+export const POST = guardApi("POST /api/parent/link", POSTHandler);

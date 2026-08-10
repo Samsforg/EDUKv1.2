@@ -1,3 +1,4 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb, queryOne } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth";
@@ -5,9 +6,9 @@ import { createSession, setSessionCookie } from "@/lib/session";
 import { LoginSchema, validate } from "@/lib/validation";
 import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const ip = getClientIp(req);
-  const rl = rateLimit(`login:${ip}`, "login");
+  const rl = await rateLimit(`login:${ip}`, "login");
   if (!rl.allowed) return rateLimitResponse(rl.resetAt);
 
   const body = await req.json().catch(() => null);
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
   const { identifier, password } = v.data;
   const db = getDb();
 
-  const user = queryOne<{
+  const user = await queryOne<{
     id: number;
     password_hash: string;
     role: string;
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
       { status: 401 },
     );
   }
-  const blocked = queryOne<{ blocked: number }>("SELECT blocked FROM users WHERE id = ?", user.id);
+  const blocked = await queryOne<{ blocked: number }>("SELECT blocked FROM users WHERE id = ?", user.id);
   if (blocked && blocked.blocked) {
     return NextResponse.json(
       { error: "Votre compte est bloqué. Contactez le support Edukora." },
@@ -60,3 +61,5 @@ export async function POST(req: NextRequest) {
   setSessionCookie(res, token);
   return res;
 }
+
+export const POST = guardApi("POST /api/auth/login", POSTHandler);

@@ -1,8 +1,14 @@
 import Link from "next/link";
 import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
+import NewsletterSection from "@/components/NewsletterSection";
+import type { Metadata } from "next";
 
-const testimonials = [
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
+const testimonials: { img?: string; initials?: string; name: string; role: string; quote: string }[] = [
   {
     img: "/images/landing-t-7.webp",
     name: "Mariam K.",
@@ -24,11 +30,76 @@ const testimonials = [
     quote:
       "En tant que parent, je peux suivre les progrès de mon fils sur mon téléphone. C'est l'investissement le plus rentable pour son avenir.",
   },
+  {
+    name: "Koffi N.",
+    role: "Admis au BAC C",
+    quote:
+      "Les fiches sont claires et les quiz m'ont permis de me tester en conditions réelles. Je recommande Edukora à tous mes camarades de Terminale.",
+    initials: "KN",
+  },
+  {
+    name: "Fatou C.",
+    role: "Admise au BEPC (Mention Très Bien)",
+    quote:
+      "Grâce au plan de révision personnalisé, j'ai suivi un programme jour par jour sans me perdre. Résultat : Très Bien au BEPC !",
+    initials: "FC",
+  },
+  {
+    name: "Yao E.",
+    role: "Admis au BAC A",
+    quote:
+      "Le support des professeurs est réactif et les sessions en direct m'ont énormément aidé en philosophie. Une plateforme vraiment complète.",
+    initials: "YE",
+  },
+];
+
+const ratingBreakdown = [
+  { stars: 5, pct: 87 },
+  { stars: 4, pct: 10 },
+  { stars: 3, pct: 2 },
+  { stars: 2, pct: 1 },
+  { stars: 1, pct: 0 },
 ];
 
 export default function Page() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://edukora.net/#organization",
+        name: "Edukora",
+        url: "https://edukora.net",
+        logo: "https://edukora.net/favicon.png",
+        description:
+          "Plateforme éducative n°1 en Côte d'Ivoire pour réussir le BAC et le BEPC : fiches certifiées, tuteur IA et simulateur d'examen.",
+        sameAs: [
+          "https://web.facebook.com/profile.php?id=61591805488598",
+        ],
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Abidjan",
+          addressCountry: "CI",
+        },
+        email: "contact@edukora.net",
+        telephone: "+2250709141545",
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://edukora.net/#website",
+        url: "https://edukora.net",
+        name: "Edukora",
+        inLanguage: "fr-CI",
+        publisher: { "@id": "https://edukora.net/#organization" },
+      },
+    ],
+  };
   return (
     <div className="bg-background text-on-background min-h-screen font-body">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <MarketingHeader />
 
       <main>
@@ -138,23 +209,68 @@ export default function Page() {
               <h2 className="text-[32px] md:text-[40px] font-extrabold text-primary mb-4">Ils ont réussi avec Edukora</h2>
               <p className="text-body-md text-on-surface-variant">Parce que leur succès est notre plus grande fierté.</p>
             </div>
+
+            <div className="grid md:grid-cols-4 gap-6 mb-16 items-start">
+              <div className="bg-surface-container-low rounded-[24px] p-8 border border-outline-variant/40">
+                <div className="flex items-end gap-2 mb-2">
+                  <span className="text-[56px] font-extrabold leading-none text-primary">4,9</span>
+                  <span className="text-body-lg font-semibold text-on-surface-variant pb-1.5">/ 5</span>
+                </div>
+                <div className="flex gap-1 text-secondary-container mb-4">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <span key={i} className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                  ))}
+                </div>
+                <p className="text-label-sm text-on-surface-variant">
+                  Basé sur les retours de nos élèves et de leurs parents après obtention du BAC et du BEPC.
+                </p>
+              </div>
+              <div className="md:col-span-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {ratingBreakdown.map((r) => (
+                  <div key={r.stars} className="flex items-center gap-3">
+                    <div className="flex gap-0.5 shrink-0">
+                      {[0, 1, 2, 3, 4].map((i) => (
+                        <span
+                          key={i}
+                          className={`material-symbols-outlined text-[18px] ${i < r.stars ? "text-secondary-container" : "text-outline-variant"}`}
+                          style={{ fontVariationSettings: "'FILL' 1" }}
+                        >
+                          star
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex-1 h-2 rounded-full bg-surface-container-high overflow-hidden">
+                      <div className="h-full bg-secondary-container rounded-full" style={{ width: `${r.pct}%` }} />
+                    </div>
+                    <span className="text-label-xs text-on-surface-variant w-9 text-right">{r.pct}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="grid md:grid-cols-3 gap-8">
               {testimonials.map((t) => (
                 <div key={t.name} className="bg-white rounded-[24px] p-8 border border-outline-variant/40 shadow-sm">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-14 h-14 rounded-[999px] overflow-hidden bg-surface-container">
-                      <img className="w-full h-full object-cover" src={t.img} alt={t.name} fetchPriority="low" />
+                  <div className="flex gap-1 mb-6 text-secondary-container">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <span key={i} className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    ))}
+                  </div>
+                  <p className="text-body-md italic text-on-surface-variant leading-relaxed mb-6">"{t.quote}"</p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-[999px] overflow-hidden bg-surface-container shrink-0">
+                      {t.img ? (
+                        <img className="w-full h-full object-cover" src={t.img} alt={t.name} fetchPriority="low" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full bg-secondary-container/60 text-primary flex items-center justify-center text-label-sm font-extrabold">
+                          {t.initials}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <h4 className="text-label-sm font-bold text-on-surface">{t.name}</h4>
                       <p className="text-label-xs text-on-surface-variant">{t.role}</p>
                     </div>
-                  </div>
-                  <p className="text-body-md italic text-on-surface-variant leading-relaxed">"{t.quote}"</p>
-                  <div className="flex gap-1 mt-6 text-secondary-container">
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <span key={i} className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    ))}
                   </div>
                 </div>
               ))}
@@ -170,6 +286,8 @@ export default function Page() {
             </div>
           </div>
         </section>
+
+        <NewsletterSection source="home" />
 
         <section className="pb-24 px-4 md:px-8">
           <div className="max-w-7xl mx-auto bg-primary rounded-[32px] md:rounded-[40px] p-8 md:p-16 text-center text-white relative overflow-hidden">

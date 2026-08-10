@@ -1,5 +1,6 @@
 import { query, queryOne, run } from "@/lib/db";
 import { notify } from "@/lib/session";
+import { sendPushToUser } from "@/lib/push";
 
 export interface ReminderSettings {
   enabled: boolean;
@@ -11,8 +12,8 @@ export interface ReminderSettings {
 
 export const DEFAULT_HOUR = "18:30";
 
-export function getReminderSettings(userId: number): ReminderSettings {
-  const row = queryOne<{
+export async function getReminderSettings(userId: number): Promise<ReminderSettings >{
+  const row = await queryOne<{
     enabled: number;
     frequency: string;
     hour: string;
@@ -36,11 +37,11 @@ export function getReminderSettings(userId: number): ReminderSettings {
   };
 }
 
-export function saveReminderSettings(
+export async function saveReminderSettings(
   userId: number,
   data: { enabled: boolean; frequency: string; hour: string; subject_ids: number[] },
 ) {
-  run(
+  await run(
     `INSERT INTO reminder_settings (user_id, enabled, frequency, hour, subjects, updated_at)
      VALUES (?, ?, ?, ?, ?, datetime('now'))
      ON CONFLICT(user_id) DO UPDATE SET
@@ -55,14 +56,14 @@ export function saveReminderSettings(
     data.hour,
     data.subject_ids.join(","),
   );
-  return getReminderSettings(userId);
+  return await getReminderSettings(userId);
 }
 
-export function topReminderSubject(userId: number): { id: number; name: string; icon: string; color: string } | null {
-  const settings = getReminderSettings(userId);
+export async function topReminderSubject(userId: number): Promise<{ id: number; name: string; icon: string; color: string } | null >{
+  const settings = await getReminderSettings(userId);
   const pref = settings.subject_ids;
 
-  const stats = query<{ subject_id: number; unread: number; best: number | null; name: string; icon: string; color: string }>(
+  const stats = await query<{ subject_id: number; unread: number; best: number | null; name: string; icon: string; color: string }>(
     `SELECT s.id AS subject_id, s.name, s.icon, s.color,
             (SELECT COUNT(*) FROM lessons l JOIN chapters c ON c.id = l.chapter_id WHERE c.subject_id = s.id
               AND NOT EXISTS (SELECT 1 FROM lesson_reads r WHERE r.user_id = ? AND r.lesson_id = l.id)) AS unread,
@@ -80,8 +81,17 @@ export function topReminderSubject(userId: number): { id: number; name: string; 
   return { id: top.subject_id, name: top.name, icon: top.icon, color: top.color };
 }
 
-export function maybeSendDailyReminder(userId: number): boolean {
-  const settings = getReminderSettings(userId);
+export async function buildReminderMessage(userId: number): Promise<{ title: string; body: string }> {
+  const top = await topReminderSubject(userId);
+  const subjectName = top ? top.name : "tes matières";
+  const body = top
+    ? `C'est l'heure de ta session de ${subjectName} ! Relis tes fiches et fais un quiz pour valider tes acquis du jour.`
+    : "C'est l'heure de réviser ! Relis une fiche et fais un quiz pour valider tes acquis du jour.";
+  return { title: "Rappel de révision", body };
+}
+
+export async function maybeSendDailyReminder(userId: number, sendPush = false): Promise<boolean >{
+  const settings = await getReminderSettings(userId);
   if (!settings.enabled) return false;
 
   const today = new Date().toISOString().slice(0, 10);
@@ -91,13 +101,17 @@ export function maybeSendDailyReminder(userId: number): boolean {
   const now = new Date();
   if (now.getHours() * 60 + now.getMinutes() < h * 60 + m) return false;
 
-  const top = topReminderSubject(userId);
-  const subjectName = top ? top.name : "tes matières";
-  const body = top
-    ? `C'est l'heure de ta session de ${subjectName} ! Relis tes fiches et fais un quiz pour valider tes acquis du jour.`
-    : "C'est l'heure de réviser ! Relis une fiche et fais un quiz pour valider tes acquis du jour.";
+  const message = await buildReminderMessage(userId);
+  await notify(userId, message.title, message.body, "school");
 
-  notify(userId, "Rappel de révision", body, "school");
-  run("UPDATE reminder_settings SET last_reminder_date = ? WHERE user_id = ?", today, userId);
+  if (sendPush) {
+    try {
+      await sendPushToUser(userId, { title: message.title, body: message.body, tag: "rappel-revision" });
+    } catch (err: any) {
+      console.warn(`[reminders] push échoué (user ${userId}):`, err?.message ?? err);
+    }
+  }
+
+  await run("UPDATE reminder_settings SET last_reminder_date = ? WHERE user_id = ?", today, userId);
   return true;
 }

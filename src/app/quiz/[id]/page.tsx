@@ -23,6 +23,7 @@ export default function QuizTakePage() {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     fetch(`/api/quiz/${id}`)
@@ -40,10 +41,7 @@ export default function QuizTakePage() {
     if (!data || submitting) return;
     setSubmitting(true);
     const payload = {
-      answers: data.questions.map((question) => ({
-        questionId: question.id,
-        selected: answers[question.id] ?? -1,
-      })),
+      answers: data.questions.map((question) => answers[question.id] ?? -1),
     };
     const res = await fetch(`/api/quiz/${id}/submit`, {
       method: "POST",
@@ -51,8 +49,12 @@ export default function QuizTakePage() {
       body: JSON.stringify(payload),
     });
     const result = await res.json();
-    if (result.error) return;
-    sessionStorage.setItem("edukora-quiz-result", JSON.stringify({ ...result, questions: data.questions, userAnswers: answers }));
+    if (!res.ok || result.error) {
+      setSubmitting(false);
+      setSubmitError(result.error ?? "Erreur lors de la soumission du quiz.");
+      return;
+    }
+    sessionStorage.setItem(`edukora-quiz-result-${id}`, JSON.stringify({ ...result, quiz_id: id, questions: data.questions, userAnswers: answers }));
     router.push(`/quiz/${id}/resultat`);
   }
 
@@ -160,6 +162,11 @@ export default function QuizTakePage() {
           </div>
           {current === total - 1 && answered < total && (
             <p className="text-center font-label-xs text-on-surface-variant mt-2">{answered} / {total} questions répondues</p>
+          )}
+          {submitError && (
+            <p className="text-center text-sm text-error bg-error-container/40 rounded-lg px-4 py-2 mt-2" role="alert">
+              {submitError}
+            </p>
           )}
         </div>
       </main>

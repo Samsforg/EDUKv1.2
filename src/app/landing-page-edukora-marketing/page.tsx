@@ -9,7 +9,7 @@ export default function Page() {
 
 <header className="bg-surface sticky top-0 z-50 w-full flex justify-between items-center px-4 md:px-8 py-3 max-w-7xl mx-auto">
 <div className="flex items-center gap-3">
-<img alt="Edukora Logo" className="w-10 h-10 object-contain" src="/images/ecran-202.png" />
+<img  alt="Edukora Logo" className="w-10 h-10 object-contain" src="/images/ecran-202.png" loading="lazy" />
 <span className="font-headline text-headline-md font-bold text-primary">Edukora</span>
 </div>
 <nav className="hidden md:flex items-center gap-8 font-label text-label-sm font-semibold text-on-surface-variant">
@@ -49,13 +49,13 @@ export default function Page() {
 <div className="mt-8 flex items-center gap-4 text-label-sm text-on-surface-variant">
 <div className="flex -space-x-2">
 <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-surface-container">
-<img className="w-full h-full object-cover" src="/images/ecran-203.png" alt="A portrait of a cheerful Ivorian high school student in a blue uniform, smiling at the camera in a bright outdoor school hallway. The lighting is warm and natural, following a professional corporate photography style with a shallow depth of field." />
+<img  className="w-full h-full object-cover" src="/images/ecran-203.webp" alt="A portrait of a cheerful Ivorian high school student in a blue uniform, smiling at the camera in a bright outdoor school hallway. The lighting is warm and natural, following a professional corporate photography style with a shallow depth of field." loading="lazy" />
 </div>
 <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-surface-container">
-<img className="w-full h-full object-cover" src="/images/ecran-204.png" alt="A young West African student studying focusedly with a laptop in a modern library. Soft, clean sunlight filters through large windows, highlighting a bright academic environment. Professional photography, high-key lighting, corporate aesthetic." />
+<img  className="w-full h-full object-cover" src="/images/ecran-204.webp" alt="A young West African student studying focusedly with a laptop in a modern library. Soft, clean sunlight filters through large windows, highlighting a bright academic environment. Professional photography, high-key lighting, corporate aesthetic." loading="lazy" />
 </div>
 <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-surface-container">
-<img className="w-full h-full object-cover" src="/images/ecran-205.png" alt="Close-up of a happy student celebrating an exam success, wearing a graduation cap. The image is bright, professional, and optimistic, capturing the energy of youth in Abidjan. High quality, vibrant primary blue accents in the background." />
+<img  className="w-full h-full object-cover" src="/images/ecran-205.webp" alt="Close-up of a happy student celebrating an exam success, wearing a graduation cap. The image is bright, professional, and optimistic, capturing the energy of youth in Abidjan. High quality, vibrant primary blue accents in the background." loading="lazy" />
 </div>
 </div>
 <span>Rejoins +50,000 étudiants ivoiriens</span>
@@ -64,7 +64,7 @@ export default function Page() {
 <div className="relative">
 <div className="absolute -top-20 -right-20 w-80 h-80 bg-primary opacity-5 rounded-full blur-3xl"></div>
 <div className="relative glass-card rounded-[2rem] p-4 shadow-2xl border border-outline-variant/30 transform lg:rotate-2">
-<img className="w-full h-full rounded-2xl object-cover aspect-[4/5]" src="/images/ecran-206.png" alt="A high-tech dashboard of an educational mobile app shown on a modern smartphone screen. The interface displays course progress charts in forest green, academic blue headers, and a friendly AI avatar named Kora. The scene is set on a clean white desk with a notebook and a pen nearby. Modern, sleek, professional tech-focused photography." />
+<img  className="w-full h-full rounded-2xl object-cover aspect-[4/5]" src="/images/ecran-206.webp" alt="A high-tech dashboard of an educational mobile app shown on a modern smartphone screen. The interface displays course progress charts in forest green, academic blue headers, and a friendly AI avatar named Kora. The scene is set on a clean white desk with a notebook and a pen nearby. Modern, sleek, professional tech-focused photography." loading="lazy" />
 <div className="absolute -left-6 bottom-12 bg-white p-4 rounded-2xl shadow-xl border border-outline-variant flex items-center gap-3 max-w-[200px]">
 <div className="w-10 h-10 bg-tertiary-container rounded-full flex items-center justify-center">
 <span className="material-symbols-outlined text-on-tertiary-container">trending_up</span>
@@ -127,7 +127,7 @@ Voir nos résultats
 <div className="bg-white p-8 rounded-3xl border border-outline-variant/30 shadow-sm">
 <div className="flex items-center gap-4 mb-6">
 <div className="w-14 h-14 rounded-full overflow-hidden bg-surface-container">
-<img className="w-full h-full object-cover" src="/images/ecran-208.png" alt="Portrait of a young Ivorian woman, smiling brightly, dressed in a neat high school uniform. She has an aura of confidence and success. High-quality portrait photography, bright background, light-mode design consistency." />
+<img  className="w-full h-full object-cover" src="/images/ecran-208.webp" alt="Portrait of a young Ivorian woman, smiling brightly, dressed in a neat high school uniform. She has an aura of confidence and success. High-quality portrait photography, bright background, light-mode design consistency." loading="lazy" />
 </div>
 <div>
 <h4 className="text-label-sm font-bold text-on-surface">Mariam K.</h4>
@@ -149,7 +149,7 @@ Voir nos résultats
 <div className="bg-white p-8 rounded-3xl border border-outline-variant/30 shadow-sm">
 <div className="flex items-center gap-4 mb-6">
 <div className="w-14 h-14 rounded-full overflow-hidden bg-surface-container">
-<img className="w-full h-full object-cover" src="/images/ecran-209.png" alt="Portrait of a young Ivorian student, looking focused and proud, holding a digital tablet. Professional lighting, outdoor campus setting, corporate educational style. Focus on the success and empowerment of Ivorian youth." />
+<img  className="w-full h-full object-cover" src="/images/ecran-209.webp" alt="Portrait of a young Ivorian student, looking focused and proud, holding a digital tablet. Professional lighting, outdoor campus setting, corporate educational style. Focus on the success and empowerment of Ivorian youth." loading="lazy" />
 </div>
 <div>
 <h4 className="text-label-sm font-bold text-on-surface">Jean-Philippe A.</h4>
@@ -171,7 +171,7 @@ Voir nos résultats
 <div className="bg-white p-8 rounded-3xl border border-outline-variant/30 shadow-sm hidden lg:block">
 <div className="flex items-center gap-4 mb-6">
 <div className="w-14 h-14 rounded-full overflow-hidden bg-surface-container">
-<img className="w-full h-full object-cover" src="/images/ecran-210.png" alt="Close up of an Ivorian female student laughing with joy, wearing her school uniform. Background shows a bright classroom setting. Professional photography, vibrant colors, celebrating youth and academic success." />
+<img  className="w-full h-full object-cover" src="/images/ecran-210.webp" alt="Close up of an Ivorian female student laughing with joy, wearing her school uniform. Background shows a bright classroom setting. Professional photography, vibrant colors, celebrating youth and academic success." loading="lazy" />
 </div>
 <div>
 <h4 className="text-label-sm font-bold text-on-surface">Awa D.</h4>
@@ -218,7 +218,7 @@ Voir nos résultats
 <div className="grid md:grid-cols-4 gap-12 mb-16">
 <div className="col-span-1 md:col-span-1">
 <div className="flex items-center gap-3 mb-6">
-<img alt="Edukora Logo" className="w-8 h-8 object-contain" src="/images/ecran-211.png" />
+<img  alt="Edukora Logo" className="w-8 h-8 object-contain" src="/images/ecran-211.png" loading="lazy" />
 <span className="font-headline text-headline-md font-bold text-primary">Edukora</span>
 </div>
 <p className="text-label-sm text-on-surface-variant leading-relaxed">
@@ -239,29 +239,29 @@ Voir nos résultats
 <ul className="space-y-4 text-label-sm text-on-surface-variant">
 <li><Link className="hover:text-primary" href="/resultats">Nos résultats</Link></li>
 <li><Link className="hover:text-primary" href="/connexion-edukora">Connexion</Link></li>
-<li><Link className="hover:text-primary" href="/inscription-1-2-edukora">Devenir membre</Link></li>
+<li><Link className="hover:text-primary" href="/inscription-1-2-edukora">Créer mon compte</Link></li>
 <li><Link className="hover:text-primary" href="/connexion-parent-edukora">Espace parent</Link></li>
 </ul>
 </div>
 <div>
 <h4 className="font-bold text-primary mb-6">Suivez-nous</h4>
 <div className="flex gap-4">
-<a className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm" href="#">
+<a className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm" href="https://wa.me/2250709141545" target="_blank" rel="noopener noreferrer" aria-label="Nous contacter sur WhatsApp">
 <span className="material-symbols-outlined">qr_code_2</span>
 </a>
-<a className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm" href="#">
+<a className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm" href="mailto:contact@edukora.net" aria-label="Nous écrire par email">
 <span className="material-symbols-outlined text-[20px]">alternate_email</span>
 </a>
 </div>
-<p className="mt-6 text-label-xs text-on-surface-variant">📍 Abidjan, Plateau, Immeuble CCIA</p>
+<p className="mt-6 text-label-xs text-on-surface-variant">📍 09 BP 989 Abidjan 09, Côte d'Ivoire</p>
 </div>
 </div>
 <div className="pt-8 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-4 text-label-xs text-outline">
-<p>© 2024 Edukora. Tous droits réservés. Fait avec passion en Côte d'Ivoire 🇨🇮</p>
+<p>© {new Date().getFullYear()} Edukora. Tous droits réservés. Fait avec passion en Côte d'Ivoire 🇨🇮</p>
 <div className="flex gap-6">
-<a className="hover:text-primary" href="#">Mentions légales</a>
-<a className="hover:text-primary" href="#">Confidentialité</a>
-<a className="hover:text-primary" href="#">CGU</a>
+<Link className="hover:text-primary" href="/mentions-l-gales">Mentions légales</Link>
+<Link className="hover:text-primary" href="/politique-de-confidentialit">Confidentialité</Link>
+<Link className="hover:text-primary" href="/conditions-g-n-rales-d-utilisation">CGU</Link>
 </div>
 </div>
 </div>
@@ -269,22 +269,22 @@ Voir nos résultats
 </main>
 
 <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container-lowest shadow-sm rounded-t-xl border-t border-outline-variant">
-<div className="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-all duration-200">
+<Link href="/" className="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-all duration-200">
 <span className="material-symbols-outlined">home</span>
 <span className="font-label text-label-xs font-semibold">Accueil</span>
-</div>
-<div className="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high active:scale-90 transition-all duration-200">
+</Link>
+<Link href="/cours" className="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high active:scale-90 transition-all duration-200">
 <span className="material-symbols-outlined">menu_book</span>
 <span className="font-label text-label-xs font-semibold">Cours</span>
-</div>
-<div className="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high active:scale-90 transition-all duration-200">
+</Link>
+<Link href="/tuteur-ia-edukora" className="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high active:scale-90 transition-all duration-200">
 <span className="material-symbols-outlined">smart_toy</span>
 <span className="font-label text-label-xs font-semibold">Tuteur IA</span>
-</div>
-<div className="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high active:scale-90 transition-all duration-200">
+</Link>
+<Link href="/connexion-edukora" className="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high active:scale-90 transition-all duration-200">
 <span className="material-symbols-outlined">person</span>
 <span className="font-label text-label-xs font-semibold">Profil</span>
-</div>
+</Link>
 </nav>
 <script>
         // Smooth reveal on scroll interaction

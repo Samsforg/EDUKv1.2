@@ -1,14 +1,15 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { startOrResumeSession } from "@/lib/proctoring";
 
-export async function GET(
+async function GETHandler(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const paper = queryOne<{
+  const paper = await queryOne<{
     id: number;
     category: string;
     year: number;
@@ -22,14 +23,14 @@ export async function GET(
   );
   if (!paper) return NextResponse.json({ error: "Sujet introuvable" }, { status: 404 });
 
-  const questions = query<{ id: number; question: string; options: string; points: number; explanation: string | null }>(
+  const questions = await query<{ id: number; question: string; options: string; points: number; explanation: string | null }>(
     "SELECT id, question, options, points, explanation FROM questions WHERE paper_id = ? ORDER BY position",
     Number(id),
   );
 
   const user = await getCurrentUser();
   if (user && user.role === "student") {
-    startOrResumeSession(user.id, Number(id));
+    await startOrResumeSession(user.id, Number(id));
   }
 
   return NextResponse.json({
@@ -37,3 +38,5 @@ export async function GET(
     questions: questions.map((x) => ({ ...x, options: JSON.parse(x.options) })),
   });
 }
+
+export const GET = guardApi("GET /api/simulator/[id]", GETHandler);

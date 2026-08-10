@@ -1,10 +1,13 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { getForumPosts } from "@/lib/admin";
 import { requireAdmin } from "@/lib/admin-guard";
 
-export async function GET() {
+async function GETHandler() {
   const forbidden = await requireAdmin();
   if (forbidden) return forbidden;
 
-  return NextResponse.json({ posts: getForumPosts() });
+  return NextResponse.json({ posts: await getForumPosts() });
 }
+
+export const GET = guardApi("GET /api/admin/forum", GETHandler);

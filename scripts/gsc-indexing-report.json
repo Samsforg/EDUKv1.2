@@ -1,0 +1,251 @@
+{
+  "generatedAt": "2026-08-08T23:49:41.404Z",
+  "site": "https://edukora.net/",
+  "results": [
+    {
+      "url": "https://edukora.net/",
+      "status": "indexée",
+      "coverageState": "Submitted and indexed",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED",
+      "userCanonical": "https://edukora.net/",
+      "googleCanonical": "https://edukora.net/",
+      "lastCrawlTime": "2026-08-04T09:25:17Z",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/blog",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/fonctionnalites",
+      "status": "indexée",
+      "coverageState": "Submitted and indexed",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED",
+      "googleCanonical": "https://edukora.net/fonctionnalites",
+      "lastCrawlTime": "2026-08-06T22:13:09Z",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/resultats",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/tarifs",
+      "status": "indexée",
+      "coverageState": "Submitted and indexed",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED",
+      "googleCanonical": "https://edukora.net/tarifs",
+      "lastCrawlTime": "2026-08-06T22:15:33Z",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/plans-d-abonnement-edukora-1",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/tuteur-ia-edukora",
+      "status": "Page with redirect | fetch:SUCCESSFUL robots:ALLOWED",
+      "coverageState": "Page with redirect",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED",
+      "googleCanonical": "https://edukora.net/simulateur-d-examen-bac-bepc",
+      "lastCrawlTime": "2026-08-06T22:13:16Z",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/simulateur-d-examen-bac-bepc",
+      "status": "indexée",
+      "coverageState": "Submitted and indexed",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED",
+      "googleCanonical": "https://edukora.net/simulateur-d-examen-bac-bepc",
+      "lastCrawlTime": "2026-08-06T22:14:53Z",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/inscription-1-2-edukora",
+      "status": "indexée",
+      "coverageState": "Submitted and indexed",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED",
+      "googleCanonical": "https://edukora.net/inscription-1-2-edukora",
+      "lastCrawlTime": "2026-08-06T22:13:17Z",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/inscription-parent-edukora",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/connexion-edukora",
+      "status": "indexée",
+      "coverageState": "Submitted and indexed",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED",
+      "googleCanonical": "https://edukora.net/connexion-edukora",
+      "lastCrawlTime": "2026-08-06T22:13:14Z",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/mentions-l-gales",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/conditions-g-n-rales-d-utilisation",
+      "status": "indexée",
+      "coverageState": "Submitted and indexed",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED",
+      "userCanonical": "https://edukora.net/conditions-g-n-rales-d-utilisation",
+      "googleCanonical": "https://edukora.net/conditions-g-n-rales-d-utilisation",
+      "lastCrawlTime": "2026-08-08T21:12:06Z",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/conditions-g-n-rales-de-vente-paiements",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/politique-de-confidentialit",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/pr-f-rences-de-cookies-et-donn-es",
+      "status": "indexée",
+      "coverageState": "Submitted and indexed",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED",
+      "userCanonical": "https://edukora.net/pr-f-rences-de-cookies-et-donn-es",
+      "googleCanonical": "https://edukora.net/pr-f-rences-de-cookies-et-donn-es",
+      "lastCrawlTime": "2026-08-08T21:28:45Z",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/blog/comment-reussir-le-bac-en-cote-d-ivoire",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/blog/comment-reussir-le-bepc-methodes-et-astuces",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/blog/plan-de-revision-bac-bepc-2-mois",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/blog/le-simulateur-dexamen-pourquoi-ca-marche",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/blog/les-epreuves-du-bac-en-cote-d-ivoire-guide-complet",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/blog/reviser-les-mathematiques-pour-le-bac-methodes-et-exercices",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/blog/reussir-la-physique-chimie-au-bac-methode-complete",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/blog/svt-terminale-bac-comment-reviser-efficacement",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/blog/les-epreuves-du-bepc-en-cote-d-ivoire-guide-complet",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/blog/la-dissertation-francaise-methode-complete-pour-reussir",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/blog/comment-choisir-sa-serie-au-lycee-guide-ivoirien",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    },
+    {
+      "url": "https://edukora.net/blog/reussir-les-langues-vivantes-au-bac-methode-anglais-espagnol",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
+      "sitemap": ""
+    }
+  ]
+}

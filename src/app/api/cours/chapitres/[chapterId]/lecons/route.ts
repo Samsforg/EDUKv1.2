@@ -1,8 +1,9 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
-export async function GET(
+async function GETHandler(
   _req: Request,
   { params }: { params: Promise<{ chapterId: string }> }
 ) {
@@ -20,10 +21,11 @@ export async function GET(
     difficulty: number;
     is_premium: number;
   }>(
-    `SELECT id, title, content_md, video_url, duration_min, difficulty, is_premium
-     FROM lessons
-     WHERE chapter_id = ?
-     ORDER BY id`,
+    `SELECT l.id, l.title, l.content_md, l.video_url, l.duration_min, l.difficulty, l.is_premium
+     FROM lessons l
+     JOIN chapters c ON c.id = l.chapter_id
+     WHERE l.chapter_id = ? AND l.status = 'approved' AND c.status = 'approved'
+     ORDER BY l.id`,
     chapterId
   );
   
@@ -41,3 +43,5 @@ export async function GET(
     }))
   });
 }
+
+export const GET = guardApi("GET /api/cours/chapitres/[chapterId]/lecons", GETHandler);

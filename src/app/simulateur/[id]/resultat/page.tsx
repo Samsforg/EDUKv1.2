@@ -19,13 +19,18 @@ export default function SimulatorResultPage() {
   const [result, setResult] = useState<ExamResult | null>(null);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("edukora-exam-result");
+    const raw = sessionStorage.getItem(`edukora-exam-result-${id}`);
     if (!raw) {
       router.replace("/simulateur");
       return;
     }
-    setResult(JSON.parse(raw));
-  }, [router]);
+    const data = JSON.parse(raw);
+    if (String(data.exam_id) !== String(id)) {
+      router.replace("/simulateur");
+      return;
+    }
+    setResult(data);
+  }, [router, id]);
 
   if (!result) {
     return (

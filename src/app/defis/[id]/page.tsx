@@ -55,7 +55,7 @@ function useCountdown(endsAt: string) {
 export default function DefiDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [id, setId] = useState<string | null>(null);
   const [data, setData] = useState<ChallengeDetail | null>(null);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<"unauthorized" | "network" | null>(null);
   const [joined, setJoined] = useState(false);
 
   useEffect(() => {
@@ -65,19 +65,37 @@ export default function DefiDetailPage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     if (!id) return;
     fetch(`/api/defis/${id}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then(async (r) => {
+        if (!r.ok) {
+          if (r.status === 401 || r.status === 403) throw new Error("unauthorized");
+          throw new Error("network");
+        }
+        return r.json();
+      })
       .then(setData)
-      .catch(() => setError(true));
+      .catch((e) => setError(e.message === "unauthorized" ? "unauthorized" : "network"));
   }, [id]);
 
-  if (error)
+  if (error === "unauthorized")
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center">
         <span className="material-symbols-outlined text-5xl text-outline">lock</span>
         <p className="font-bold text-on-surface">Connecte-toi pour voir ce défi</p>
-        <Link href="/login" className="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl">
+        <Link href="/connexion-edukora" className="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl">
           Se connecter
         </Link>
+      </div>
+    );
+
+  if (error === "network")
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <span className="material-symbols-outlined text-5xl text-outline">wifi_off</span>
+        <p className="font-bold text-on-surface">Impossible de charger ce défi</p>
+        <p className="text-on-surface-variant text-sm">Vérifie ta connexion puis réessaye.</p>
+        <button onClick={() => window.location.reload()} className="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl">
+          Réessayer
+        </button>
       </div>
     );
 

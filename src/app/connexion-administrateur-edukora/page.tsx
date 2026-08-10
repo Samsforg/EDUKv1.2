@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { AdminLoginForm } from "./form";
 
-export const metadata: Metadata = { title: "Connexion Sécurisée | Edukora Admin" };
+export const metadata: Metadata = { title: "Connexion Sécurisée | Edukora Admin", robots: { index: false, follow: false } };
 
 export default async function Page() {
   const user = await getCurrentUser();
@@ -18,7 +18,7 @@ export default async function Page() {
       <main className="w-full max-w-md px-6 z-10">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-6">
-            <img alt="Edukora Logo" className="h-16 w-16 drop-shadow-sm" src="/images/ecran-082.png" />
+            <img  alt="Edukora Logo" className="h-16 w-16 drop-shadow-sm" src="/images/ecran-082.png" loading="lazy" />
           </div>
           <h1 className="font-headline text-3xl font-bold text-primary tracking-tight mb-2">Edukora Admin</h1>
           <p className="font-body text-on-surface-variant text-sm font-medium tracking-wide uppercase">Portail Administrateur</p>

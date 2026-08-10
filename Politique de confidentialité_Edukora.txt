@@ -1,0 +1,189 @@
+POLITIQUE DE CONFIDENTIALITÉ
+Edukora — https://edukora.net
+Dernière mise à jour : 8 août 2026
+1. Introduction
+La protection des données personnelles des utilisateurs constitue une priorité pour Edukora.
+La présente Politique de confidentialité explique comment Edukora collecte, utilise, conserve et protège les données personnelles des utilisateurs de sa plateforme.
+Elle s'applique au site https://edukora.net, à ses fonctionnalités et aux services numériques associés.
+Edukora applique notamment les principes prévus par la loi n°2013-450 du 19 juin 2013 relative à la protection des données à caractère personnel en Côte d'Ivoire.
+2. Responsable du traitement
+Le responsable du traitement des données personnelles collectées par Edukora est :
+Soma Samaké FORGO
+Adresse : 09 BP 989 Abidjan 09, Côte d'Ivoire
+Téléphone : +225 07 09 14 15 45
+E-mail : somasamakeforgo@edukora.net
+3. Données collectées
+Selon les fonctionnalités utilisées, Edukora peut collecter les catégories suivantes.
+3.1 Données d'identification
+* nom ;
+* prénom ;
+* adresse e-mail ;
+* numéro de téléphone ;
+* date de naissance lorsque nécessaire ;
+* photo de profil lorsqu'elle est fournie volontairement.
+3.2 Données pédagogiques
+Selon le profil de l'utilisateur :
+* classe ou niveau scolaire ;
+* matières étudiées ou enseignées ;
+* progression ;
+* résultats aux exercices ;
+* résultats aux évaluations ;
+* activités pédagogiques ;
+* préférences d'apprentissage ;
+* informations nécessaires au suivi pédagogique.
+3.3 Données de compte
+Edukora peut traiter :
+* identifiant utilisateur ;
+* adresse e-mail ;
+* informations nécessaires à l'authentification ;
+* paramètres du compte ;
+* préférences ;
+* informations relatives à l'utilisation des fonctionnalités.
+Les mots de passe sont destinés à être protégés par des mécanismes de sécurité appropriés et ne doivent pas être conservés en clair.
+3.4 Données techniques
+La plateforme peut automatiquement traiter certaines informations techniques, notamment :
+* adresse IP ;
+* type d'appareil ;
+* système d'exploitation ;
+* navigateur ;
+* date et heure de connexion ;
+* journaux techniques ;
+* données relatives aux erreurs ;
+* informations de sécurité.
+Ces données sont notamment utilisées pour assurer la sécurité, diagnostiquer les problèmes et améliorer les performances.
+3.5 Contenus fournis par l'utilisateur
+Lorsque l'utilisateur utilise les fonctionnalités correspondantes, il peut fournir :
+* questions ;
+* réponses ;
+* messages ;
+* commentaires ;
+* documents ;
+* fichiers ;
+* contenus pédagogiques ;
+* informations saisies dans le Tuteur IA.
+4. Utilisateurs mineurs
+Edukora pouvant être utilisé par des élèves mineurs, une attention particulière est accordée à la protection de leurs données personnelles.
+Edukora cherche à limiter la collecte aux données nécessaires au fonctionnement du service.
+Lorsque la réglementation applicable exige l'autorisation ou l'intervention d'un parent ou représentant légal, Edukora met en œuvre les mécanismes appropriés.
+Les données personnelles des élèves ne sont pas vendues à des tiers.
+Elles ne sont pas destinées à être utilisées pour proposer de la publicité comportementale ciblée aux élèves.
+5. Finalités
+Les données peuvent être utilisées pour :
+* créer et gérer les comptes ;
+* authentifier les utilisateurs ;
+* fournir les services pédagogiques ;
+* personnaliser l'expérience d'apprentissage ;
+* suivre la progression ;
+* proposer des exercices adaptés ;
+* permettre l'utilisation du Tuteur IA ;
+* assurer le support ;
+* communiquer avec les utilisateurs ;
+* sécuriser la plateforme ;
+* prévenir les fraudes et abus ;
+* améliorer les fonctionnalités ;
+* analyser les performances techniques ;
+* respecter les obligations légales.
+Edukora ne doit utiliser les données personnelles que pour des finalités compatibles avec celles pour lesquelles elles ont été collectées.
+6. Tuteur IA
+Lorsqu'un utilisateur utilise le Tuteur IA, les informations saisies dans la conversation peuvent être transmises aux services techniques nécessaires à la génération de la réponse.
+Ces informations peuvent notamment comprendre :
+* la question posée ;
+* le contexte pédagogique nécessaire ;
+* les réponses précédentes de la conversation ;
+* certaines informations liées au profil pédagogique lorsque cela est nécessaire à la personnalisation.
+Edukora recommande aux utilisateurs de ne pas communiquer dans leurs conversations avec l'IA des informations personnelles sensibles qui ne sont pas nécessaires à leur demande.
+Le Tuteur IA est un outil d'assistance et ne constitue pas un enseignant humain.
+7. Prestataires techniques
+Edukora utilise des prestataires techniques pour assurer le fonctionnement de sa plateforme.
+Vercel
+Vercel intervient notamment dans l'hébergement et le déploiement de l'application web. Vercel dispose de documents spécifiques relatifs à la protection des données et au traitement des données pour ses services.
+Néon
+Neon est utilisé pour l'infrastructure de base de données d'Edukora. Les données nécessaires au fonctionnement de la plateforme peuvent donc être stockées dans cette infrastructure.
+LWS
+LWS intervient dans l'enregistrement et la gestion du nom de domaine edukora.net.
+D'autres prestataires pourront être ajoutés ultérieurement lorsque cela sera nécessaire au fonctionnement des services.
+GeniusPay
+GeniusPay est une solution de paiement unifiée conçue spécifiquement pour simplifier l'encaissement des transactions pour les startups et les entreprises, particulièrement en Afrique. La plateforme sert de couche d'infrastructure technique (API) entre nos produits numériques et les différents fournisseurs de services financiers.
+8. Transfert de données
+Certains prestataires techniques utilisés par Edukora peuvent traiter ou héberger des données en dehors de la Côte d'Ivoire.
+Lorsque cela est nécessaire, Edukora prend les mesures raisonnables afin d'assurer un niveau de protection approprié conformément à la réglementation applicable.
+9. Partage des données
+Edukora peut communiquer certaines données à ses prestataires techniques lorsqu'elles sont nécessaires :
+* à l'hébergement ;
+* au stockage ;
+* à l'authentification ;
+* à la sécurité ;
+* au support ;
+* à l'envoi de communications ;
+* au fonctionnement du Tuteur IA ;
+* au traitement des paiements lorsque cette fonctionnalité sera disponible.
+Edukora ne vend pas les données personnelles de ses utilisateurs.
+10. Conservation des données
+Les données sont conservées pendant la durée nécessaire aux finalités pour lesquelles elles sont traitées.
+Les données liées à un compte peuvent être conservées pendant la durée d'utilisation du service.
+Après suppression du compte, certaines données peuvent être temporairement conservées lorsqu'elles sont nécessaires :
+* au respect d'une obligation légale ;
+* à la résolution d'un litige ;
+* à la sécurité ;
+* à la prévention de la fraude ;
+* à la conservation de preuves.
+Lorsque leur conservation n'est plus nécessaire, les données sont supprimées ou anonymisées lorsque cela est techniquement et légalement approprié.
+11. Sécurité
+Edukora met en œuvre des mesures raisonnables de sécurité afin de protéger les données personnelles.
+Ces mesures peuvent notamment comprendre :
+* chiffrement HTTPS des communications ;
+* contrôle des accès ;
+* authentification ;
+* gestion des permissions ;
+* protection des bases de données ;
+* sauvegardes ;
+* surveillance des erreurs et incidents ;
+* limitation des accès aux données.
+12. Droits des personnes
+Conformément à la réglementation ivoirienne applicable, les personnes concernées peuvent disposer notamment de droits :
+* d'information ;
+* d'accès ;
+* de rectification ;
+* d'opposition dans les conditions prévues par la réglementation ;
+* de suppression ou d'effacement lorsque les conditions légales sont réunies ;
+* de retrait du consentement lorsque le traitement repose sur celui-ci.
+13. Exercice des droits
+Pour toute demande relative aux données personnelles, l'utilisateur peut contacter :
+Soma Samaké FORGO
+E-mail : somasamakeforgo@edukora.net
+E-mail général : contact@edukora.net
+Support : support@edukora.net
+Téléphone : +225 07 09 14 15 45
+Afin d'éviter toute divulgation à une personne non autorisée, Edukora peut demander des informations permettant de vérifier l'identité du demandeur lorsque cela est nécessaire.
+14. Cookies
+Edukora peut utiliser des cookies ou technologies similaires pour :
+* maintenir la connexion ;
+* sécuriser les comptes ;
+* mémoriser certaines préférences ;
+* assurer le fonctionnement de la plateforme ;
+* mesurer les performances techniques.
+Les cookies non nécessaires sont utilisés conformément aux règles applicables.
+15. Sécurité des comptes
+L'utilisateur est responsable de la confidentialité de ses identifiants.
+Il doit choisir un mot de passe suffisamment robuste et ne pas le communiquer à une autre personne.
+Toute suspicion d'accès non autorisé doit être signalée rapidement à :
+support@edukora.net
+16. Modifications de la politique
+Edukora peut modifier la présente politique afin de tenir compte :
+* de l'évolution de la plateforme ;
+* de l'ajout de nouveaux services ;
+* de l'évolution des prestataires techniques ;
+* de l'évolution de la réglementation.
+La date de dernière mise à jour figure en haut de cette page.
+17. Contact
+Pour toute question concernant cette Politique de confidentialité :
+Soma Samaké FORGO
+09 BP 989 Abidjan 08
+Côte d'Ivoire
+Téléphone : +225 07 09 14 15 45
+E-mail : somasamakeforgo@edukora.net
+Contact général : contact@edukora.net
+Support : support@edukora.net
+
+© 2026 Edukora — Tous droits réservés.
+

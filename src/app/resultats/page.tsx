@@ -1,6 +1,14 @@
 import Link from "next/link";
 import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Résultats et réussites",
+  description:
+    "95% de réussite au BAC et au BEPC avec Edukora. Plus de 50 000 élèves, 500 épreuves types et 2 000 fiches de cours certifiées en Côte d'Ivoire.",
+  alternates: { canonical: "/resultats" },
+};
 
 const stats = [
   { value: "95%", label: "Taux de réussite" },
@@ -11,21 +19,21 @@ const stats = [
 
 const testimonials = [
   {
-    img: "/images/landing-7.png",
+    img: "/images/landing-7.webp",
     name: "Mariam K.",
     role: "Admise au BAC D (Mention Bien)",
     quote:
       "Kora m'a aidé à comprendre les intégrales en une soirée alors que je luttais depuis des semaines. Sans Edukora, je n'aurais jamais eu cette mention !",
   },
   {
-    img: "/images/landing-8.png",
+    img: "/images/landing-8.webp",
     name: "Jean-Philippe A.",
     role: "Admis au BEPC",
     quote:
       "Les simulateurs d'examen sont incroyables. Le jour J, j'avais l'impression de faire un simple exercice sur l'appli. Je n'avais aucun stress.",
   },
   {
-    img: "/images/landing-9.png",
+    img: "/images/landing-9.webp",
     name: "Awa D.",
     role: "Parent d'élève (Abidjan)",
     quote:
@@ -84,7 +92,7 @@ export default function Page() {
                 <div key={t.name} className="bg-white rounded-[24px] p-8 border border-outline-variant/40 shadow-sm">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-14 h-14 rounded-[999px] overflow-hidden bg-surface-container">
-                      <img className="w-full h-full object-cover" src={t.img} alt={t.name} />
+                      <img  className="w-full h-full object-cover" src={t.img} alt={t.name} loading="lazy" />
                     </div>
                     <div>
                       <h4 className="text-label-sm font-bold text-on-surface">{t.name}</h4>

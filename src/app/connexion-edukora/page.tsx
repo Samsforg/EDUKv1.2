@@ -16,17 +16,15 @@ function ConnexionPage() {
   const [checking, setChecking] = useState(true);
 
   function afterLogin(role?: string) {
-    if (from && !from.startsWith("/connexion") && !from.startsWith("/inscription")) {
-      router.replace(from);
-      return;
-    }
-    router.replace(
-      role === "parent"
-        ? "/espace-parent"
-        : role === "admin"
-          ? "/espace-admin"
-          : "/accueil-edukora",
-    );
+    const dest =
+      from && from.startsWith("/") && !from.startsWith("//") && !from.startsWith("/connexion") && !from.startsWith("/inscription")
+        ? from
+        : role === "parent"
+          ? "/espace-parent"
+          : role === "admin"
+            ? "/espace-admin"
+            : "/accueil-edukora";
+    window.location.assign(dest);
   }
 
   useEffect(() => {
@@ -96,7 +94,7 @@ function ConnexionPage() {
       <main className="w-full max-w-md bg-surface-container-lowest rounded-xl shadow-sm border border-surface-variant p-6 sm:p-8 flex flex-col">
         <header className="flex flex-col items-center text-center mb-8">
           <div className="w-14 h-14 mb-4 bg-surface-container-lowest rounded-2xl flex items-center justify-center p-1">
-            <img src="/images/logo-edukora.png" alt="Edukora Logo" className="w-full h-full object-contain" />
+            <img  src="/images/logo-edukora.webp" alt="Edukora Logo" className="w-full h-full object-contain" loading="lazy" />
           </div>
           <h1 className="font-headline-md text-3xl font-bold text-primary mb-2 tracking-tight">Connexion</h1>
           <p className="text-on-surface-variant text-base">Ravis de vous revoir !</p>
@@ -181,8 +179,9 @@ function ConnexionPage() {
         <div className="flex flex-col gap-3">
           <button
             type="button"
-            onClick={() => router.push("/accueil-edukora")}
-            className="w-full h-12 bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg font-medium text-base hover:bg-surface-container-low active:bg-surface-container transition-colors flex items-center justify-center gap-3"
+            disabled
+            title="Connexion Google bientôt disponible"
+            className="w-full h-12 bg-surface-container-lowest text-on-surface border border-outline-variant rounded-lg font-medium text-base disabled:opacity-50 flex items-center justify-center gap-3 cursor-not-allowed"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
@@ -194,8 +193,9 @@ function ConnexionPage() {
           </button>
           <button
             type="button"
-            onClick={() => router.push("/accueil-edukora")}
-            className="w-full h-12 bg-on-surface text-surface-container-lowest rounded-lg font-medium text-base hover:bg-inverse-surface active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+            disabled
+            title="Connexion Apple bientôt disponible"
+            className="w-full h-12 bg-on-surface text-surface-container-lowest rounded-lg font-medium text-base disabled:opacity-50 flex items-center justify-center gap-3 cursor-not-allowed"
           >
             <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M16.365 14.363c0-3.32 2.705-4.887 2.827-4.962-1.545-2.257-3.957-2.56-4.805-2.602-2.05-.206-4.004 1.205-5.045 1.205-1.042 0-2.645-1.173-4.352-1.141-2.213.033-4.254 1.285-5.385 3.245-2.298 3.978-.588 9.873 1.656 13.114 1.097 1.583 2.397 3.36 4.103 3.295 1.637-.065 2.258-1.058 4.237-1.058 1.977 0 2.536 1.058 4.238 1.025 1.765-.033 2.906-1.616 4.002-3.218 1.272-1.854 1.794-3.655 1.823-3.753-.038-.016-3.5-1.34-3.5-5.148M14.613 4.968c.895-1.082 1.5-2.585 1.336-4.093-1.298.052-2.855.864-3.784 1.947-.832.964-1.554 2.493-1.353 3.97 1.455.112 2.906-.738 3.801-1.824"></path>

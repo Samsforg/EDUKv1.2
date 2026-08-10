@@ -1,10 +1,11 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
-export async function GET() {
+async function GETHandler() {
   const user = await getCurrentUser();
-  const quizzes = query<{
+  const quizzes = await query<{
     id: number;
     subject_id: number;
     subject_name: string;
@@ -28,3 +29,5 @@ export async function GET() {
   );
   return NextResponse.json({ quizzes });
 }
+
+export const GET = guardApi("GET /api/quiz", GETHandler);

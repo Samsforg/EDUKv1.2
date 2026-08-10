@@ -2,24 +2,40 @@ import { DatabaseSync } from "node:sqlite";
 import path from "node:path";
 import fs from "node:fs";
 import { ensureReady } from "./init";
-import { Pool } from "pg";
+import { Pool, types as pgTypes } from "pg";
+
+// node-pg renvoie BIGINT (int8, dont COUNT(*)) en string par défaut,
+// ce qui cassait les comparaisons strictes en PG ("0" === 0 est false).
+pgTypes.setTypeParser(20, (v) => Number(v));
 
 export const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
 export const isVercel = !!process.env.VERCEL;
 export const IS_PG = !!process.env.DATABASE_URL && !isBuildPhase;
+
+let insideInit = false;
+export function isInsideInit(): boolean {
+  return insideInit;
+}
+export function setInsideInit(v: boolean): void {
+  insideInit = v;
+}
 
 const NO_ID_TABLES = new Set([
   "league_challenge_progress",
   "live_registrations",
   "live_blocked_users",
   "user_badges",
-  "favorites",
   "forum_votes",
   "saved_lessons",
   "lesson_reads",
-  "challenge_contributions",
-  "parent_child",
-  "pairing_codes",
+  "password_resets",
+  "sessions",
+  "user_progress",
+  "rate_limits",
+  "reminder_settings",
+  "parent_notification_settings",
+  "class_students",
+  "assignment_submissions",
 ]);
 
 const UNIT_MAP: Record<string, string> = {
@@ -32,21 +48,47 @@ const UNIT_MAP: Record<string, string> = {
   week: "weeks",
 };
 
-const DATE_CONCAT_COL_RE = /datetime\(\s*([^,]+?)\s*,\s*'(-|\+)'.*\)/g;
+const MAKE_INTERVAL_UNIT: Record<string, string> = {
+  years: "years",
+  months: "months",
+  weeks: "weeks",
+  days: "days",
+  hours: "hours",
+  minutes: "mins",
+  seconds: "secs",
+};
+
 const DATETIME_NOW_RE = /datetime\(\s*'now'[^)]*\)/g;
 const DATE_ONLY_RE = /date\(\s*'now'\s*\)/g;
+
+async function withPgRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (e: any) {
+      const transient =
+        e && (e.code === "ECONNRESET" || e.code === "ETIMEDOUT" || e.code === "ECONNREFUSED" || e.code === "57P01");
+      if (!transient || i === attempts - 1) throw e;
+      await new Promise((r) => setTimeout(r, 500 * (i + 1)));
+    }
+  }
+  throw new Error("unreachable");
+}
 
 export function toPgDatetime(value: string): string {
   if (!value.includes("datetime('now") && !value.includes("date('now")) {
     return value;
   }
   let out = value;
-  out = out.replace(DATE_CONCAT_COL_RE, (_m, col, sign, expr, unit) => {
-    const u = unit.trim().replace(/^'+|'+$/g, "");
-    const pgUnit = UNIT_MAP[u] || u;
-    const s = sign === "-" ? "-" : "+";
-    return `(${col}${s}(${expr}) * interval '1 ${pgUnit}')`;
-  });
+  // Patterns concaténés : datetime('now', '-' || $N || ' hours') -> now() - make_interval(...)
+  // (le split par virgule ci-dessous avalerait le placeholder $N du SQL).
+  out = out.replace(
+    /datetime\(\s*'now'\s*,\s*'[+-]'\s*\|\|\s*(\$\d+|\?)\s*\|\|\s*' ?(\w+)'\s*\)/g,
+    (_m, ph: string, unit: string) => {
+      const plural = MAKE_INTERVAL_UNIT[unit] || unit;
+      return `(now() - make_interval(${plural} => ${ph}))`;
+    },
+  );
   out = out.replace(DATETIME_NOW_RE, (m) => {
     const args = m
       .slice("datetime('now'".length, -1)
@@ -66,6 +108,7 @@ export function toPgDatetime(value: string): string {
     return result;
   });
   out = out.replace(DATE_ONLY_RE, "to_char(now(), 'YYYY-MM-DD')");
+  out = out.replace(/\b([a-z_][a-z0-9_]*)\s*(>=|<=|>|<)\s*now\(\)/gi, "$1::timestamptz $2 now()");
   return out;
 }
 
@@ -76,7 +119,9 @@ function getPool(): Pool {
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
       max: 10,
-      ssl: { rejectUnauthorized: false },
+      ssl: process.env.DATABASE_SSL_DISABLED === "true"
+        ? undefined
+        : { rejectUnauthorized: false },
     });
     pool.on("error", (err) => {
       if (process.env.NODE_ENV !== "test") console.error("pg pool error:", err);
@@ -123,6 +168,9 @@ CREATE TABLE IF NOT EXISTS users (
   referral_code TEXT UNIQUE,
   referred_by INTEGER REFERENCES users(id),
   commune TEXT,
+  gender TEXT,
+  goal TEXT,
+  seen_onboarding INTEGER NOT NULL DEFAULT 0,
   blocked INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -237,6 +285,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   title TEXT NOT NULL,
   body TEXT NOT NULL,
   icon TEXT NOT NULL DEFAULT 'notifications',
+  type TEXT,
   read INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -254,6 +303,8 @@ CREATE TABLE IF NOT EXISTS lesson_reads (
   read_at TEXT NOT NULL DEFAULT (datetime('now')),
   PRIMARY KEY (user_id, lesson_id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_lesson_reads_user_readat ON lesson_reads (user_id, lesson_id, read_at);
 
 CREATE TABLE IF NOT EXISTS forum_categories (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -320,6 +371,15 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   actor_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
   action TEXT NOT NULL,
   detail TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS user_consents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  ip TEXT,
+  user_agent TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -475,7 +535,10 @@ CREATE TABLE IF NOT EXISTS chapters (
   description TEXT DEFAULT '',
   order_index INTEGER NOT NULL DEFAULT 0,
   position INTEGER NOT NULL DEFAULT 0,
-  officiel_ref TEXT DEFAULT ''
+  officiel_ref TEXT DEFAULT '',
+  created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  status TEXT NOT NULL DEFAULT 'approved',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS lessons (
@@ -493,7 +556,8 @@ CREATE TABLE IF NOT EXISTS lessons (
   is_premium INTEGER NOT NULL DEFAULT 0,
   position INTEGER NOT NULL DEFAULT 0,
   created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  status TEXT NOT NULL DEFAULT 'approved'
 );
 
 CREATE TABLE IF NOT EXISTS exercises (
@@ -518,6 +582,50 @@ CREATE TABLE IF NOT EXISTS user_progress (
   PRIMARY KEY (user_id, lesson_id)
 );
 
+CREATE TABLE IF NOT EXISTS classes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  teacher_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  subject_id INTEGER REFERENCES subjects(id),
+  grade_id INTEGER REFERENCES grades(id),
+  invite_code TEXT NOT NULL UNIQUE,
+  year TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS class_students (
+  class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  joined_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (class_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS class_assignments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  subject_id INTEGER REFERENCES subjects(id),
+  deadline TEXT,
+  max_score INTEGER NOT NULL DEFAULT 20,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS assignment_submissions (
+  assignment_id INTEGER NOT NULL REFERENCES class_assignments(id) ON DELETE CASCADE,
+  student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT,
+  score REAL,
+  feedback TEXT,
+  submitted_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (assignment_id, student_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_class_assignments_class ON class_assignments (class_id);
+CREATE INDEX IF NOT EXISTS idx_assignment_submissions_student ON assignment_submissions (student_id);
+CREATE INDEX IF NOT EXISTS idx_classes_teacher ON classes (teacher_id);
+CREATE INDEX IF NOT EXISTS idx_class_students_user ON class_students (user_id);
+
  CREATE TABLE IF NOT EXISTS push_subscriptions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -531,7 +639,7 @@ CREATE TABLE IF NOT EXISTS user_progress (
 CREATE TABLE IF NOT EXISTS rate_limits (
   key TEXT PRIMARY KEY,
   count INTEGER NOT NULL DEFAULT 1,
-  reset_at INTEGER NOT NULL
+  reset_at BIGINT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS subscription_plans (
@@ -551,6 +659,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   provider TEXT NOT NULL DEFAULT 'geniuspay',
   provider_subscription_id TEXT,
   provider_customer_id TEXT,
+  price_cents INTEGER,
   status TEXT NOT NULL CHECK (status IN ('incomplete','incomplete_expired','trial','active','past_due','cancelled','unpaid','no_default_provided','deleted')),
   started_at TEXT,
   end_at TEXT,
@@ -558,6 +667,17 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL UNIQUE,
+  ip TEXT,
+  user_agent TEXT,
+  source TEXT DEFAULT 'home',
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_newsletter_created ON newsletter_subscribers (created_at);
 `;
 
 export function getDb() {
@@ -574,10 +694,6 @@ export function toPgPlaceholders(sql: string): string {
   while (i < n) {
     const c = sql[i];
     if (c === "'") {
-        out += "''";
-        i += 2;
-        continue;
-      }
       out += c;
       i++;
       while (i < n) {
@@ -587,13 +703,13 @@ export function toPgPlaceholders(sql: string): string {
           continue;
         }
         if (sql[i] === "'") {
-          if (sql[i + 1] === "'") {
-            out += "''";
-            i += 2;
-            continue;
-          }
           out += sql[i];
           i++;
+          if (sql[i] === "'") {
+            out += sql[i];
+            i++;
+            continue;
+          }
           break;
         }
         out += sql[i];
@@ -612,32 +728,183 @@ export function toPgPlaceholders(sql: string): string {
   return out;
 }
 
+export function toPgRound(sql: string): string {
+  let out = "";
+  let i = 0;
+  const n = sql.length;
+  while (i < n) {
+    const m = /ROUND\(/i.exec(sql.slice(i));
+    if (!m) {
+      out += sql.slice(i);
+      break;
+    }
+    const parenStart = i + m.index + 6;
+    out += sql.slice(i, parenStart);
+    let depth = 1;
+    let j = parenStart;
+    let commaAt = -1;
+    while (j < n && depth > 0) {
+      const ch = sql[j];
+      if (ch === "(") depth++;
+      else if (ch === ")") depth--;
+      else if (ch === "," && depth === 1 && commaAt === -1) commaAt = j;
+      j++;
+    }
+    const innerEnd = j - 1;
+    if (commaAt !== -1) {
+      out += sql.slice(parenStart, commaAt) + "::numeric" + sql.slice(commaAt, innerEnd) + ")";
+    } else {
+      out += sql.slice(parenStart, innerEnd) + ")";
+    }
+    i = j;
+  }
+  return out;
+}
+
 export function toPgSchema(schema: string): string {
-  return schema
+  let out = schema
     .replace(/\bINTEGER PRIMARY KEY AUTOINCREMENT\b/g, "SERIAL PRIMARY KEY")
     .replace(/\bAUTOINCREMENT\b/g, "SERIAL")
     .replace(/DEFAULT \(datetime\('now'\)\)/g, "DEFAULT (now())")
     .replace(/datetime\('now'[^)]*\)/g, (m) => toPgDatetime(m));
+
+  const fkAlters: string[] = [];
+  const fkRe = /REFERENCES\s+([a-z_]+)\s*\(\s*([a-z_]+)\s*\)([^,\n)]*)/g;
+  out = out.replace(
+    /CREATE TABLE IF NOT EXISTS\s+([a-z_]+)\s*\(([^]*?)\)\s*;/g,
+    (_m, table: string, body: string) => {
+      fkRe.lastIndex = 0;
+      let mm: RegExpExecArray | null;
+      const fks: { col: string; refTbl: string; refCol: string; action: string }[] = [];
+      while ((mm = fkRe.exec(body))) {
+        const before = body.slice(0, mm.index);
+        const lastSep = Math.max(before.lastIndexOf(","), before.lastIndexOf("("));
+        const col = before.slice(lastSep + 1).trim().split(/\s+/)[0];
+        fks.push({ col, refTbl: mm[1], refCol: mm[2], action: mm[3].trim() });
+      }
+      for (const fk of fks) {
+        fkAlters.push(
+          `ALTER TABLE ${table} ADD CONSTRAINT fk_${table}_${fk.col} FOREIGN KEY (${fk.col}) REFERENCES ${fk.refTbl}(${fk.refCol})${fk.action ? " " + fk.action : ""};`,
+        );
+      }
+      return `CREATE TABLE IF NOT EXISTS ${table} (${body.replace(fkRe, "")});`;
+    },
+  );
+  return fkAlters.length ? out + "\n" + fkAlters.join("\n") : out;
 }
 
 export async function initDb() {
-  await ensureReady();
   if (IS_PG) {
     const pool = getPool();
-    const schema = toPgSchema(SCHEMA);
-    const client = await pool.connect();
-    try {
-      await client.query("BEGIN");
-      for (const stmt of schema.split(";")) {
-        const trimmed = stmt.trim();
-        if (trimmed) await client.query(trimmed);
+    const existing = await withPgRetry(() =>
+      pool.query(
+        "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users' LIMIT 1",
+      ),
+    );
+    if (existing.rowCount === 0) {
+      const schema = toPgSchema(SCHEMA);
+      await withPgRetry(async () => {
+        const client = await pool.connect();
+        try {
+          await client.query("BEGIN");
+          for (const stmt of schema.split(";")) {
+            const trimmed = stmt.trim();
+            if (trimmed) await client.query(trimmed);
+          }
+          await client.query("COMMIT");
+        } catch (e) {
+          await client.query("ROLLBACK");
+          throw e;
+        } finally {
+          client.release();
+        }
+      });
+    } else {
+      const hasRate = await withPgRetry(() =>
+        pool.query("SELECT to_regclass('public.rate_limits') IS NOT NULL AS exists"),
+      );
+      if (hasRate.rows[0].exists) {
+        await withPgRetry(() =>
+          pool.query("ALTER TABLE rate_limits ALTER COLUMN reset_at TYPE BIGINT USING reset_at::bigint"),
+        );
       }
-      await client.query("COMMIT");
-    } catch (e) {
-      await client.query("ROLLBACK");
-      throw e;
-    } finally {
-      client.release();
+      await withPgRetry(() =>
+        pool.query(
+          "CREATE INDEX IF NOT EXISTS idx_lesson_reads_user_readat ON lesson_reads (user_id, lesson_id, read_at)",
+        ),
+      );
+      const hasClasses = await withPgRetry(() =>
+        pool.query("SELECT to_regclass('public.classes') IS NOT NULL AS exists"),
+      );
+      if (!hasClasses.rows[0].exists) {
+        await withPgRetry(async () => {
+          const pieces = toPgSchema(`
+CREATE TABLE IF NOT EXISTS classes (
+  id SERIAL PRIMARY KEY,
+  teacher_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  subject_id INTEGER REFERENCES subjects(id),
+  grade_id INTEGER REFERENCES grades(id),
+  invite_code TEXT NOT NULL UNIQUE,
+  year TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS class_students (
+  class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  joined_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (class_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS class_assignments (
+  id SERIAL PRIMARY KEY,
+  class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  subject_id INTEGER REFERENCES subjects(id),
+  deadline TEXT,
+  max_score INTEGER NOT NULL DEFAULT 20,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS assignment_submissions (
+  assignment_id INTEGER NOT NULL REFERENCES class_assignments(id) ON DELETE CASCADE,
+  student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT,
+  score REAL,
+  feedback TEXT,
+  submitted_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (assignment_id, student_id)
+);
+CREATE INDEX IF NOT EXISTS idx_class_assignments_class ON class_assignments (class_id);
+CREATE INDEX IF NOT EXISTS idx_assignment_submissions_student ON assignment_submissions (student_id);
+CREATE INDEX IF NOT EXISTS idx_classes_teacher ON classes (teacher_id);
+CREATE INDEX IF NOT EXISTS idx_class_students_user ON class_students (user_id);
+`).split(";");
+          for (const stmt of pieces) {
+            const trimmed = stmt.trim();
+            if (trimmed) await pool.query(trimmed);
+          }
+        });
+      }
+      const hasNewsletter = await withPgRetry(() =>
+        pool.query("SELECT to_regclass('public.newsletter_subscribers') IS NOT NULL AS exists"),
+      );
+      if (!hasNewsletter.rows[0].exists) {
+        const pieces = toPgSchema(`
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id SERIAL PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  ip TEXT,
+  user_agent TEXT,
+  source TEXT DEFAULT 'home',
+  created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_newsletter_created ON newsletter_subscribers (created_at);
+`).split(";");
+        for (const stmt of pieces) {
+          const trimmed = stmt.trim();
+          if (trimmed) await pool.query(trimmed);
+        }
+      }
     }
     return;
   }
@@ -645,38 +912,46 @@ export async function initDb() {
 }
 
 export async function query<T = unknown>(sql: string, ...params: SqlParam[]): Promise<T[]> {
-  await ensureReady();
+  if (!isInsideInit()) await ensureReady();
   if (IS_PG) {
     const pool = getPool();
-    const r = await pool.query(toPgPlaceholders(sql), params as any);
+    const r = await withPgRetry(() => pool.query(toPgDatetime(toPgRound(toPgPlaceholders(sql))), params as any));
     return r.rows as T[];
   }
   return db.prepare(sql).all(...(params as any[])) as T[];
 }
 
 export async function queryOne<T = unknown>(sql: string, ...params: SqlParam[]): Promise<T | undefined> {
-  await ensureReady();
+  if (!isInsideInit()) await ensureReady();
   if (IS_PG) {
     const pool = getPool();
-    const r = await pool.query(toPgPlaceholders(sql), params as any);
+    const r = await withPgRetry(() => pool.query(toPgDatetime(toPgRound(toPgPlaceholders(sql))), params as any));
     return r.rowCount ? (r.rows[0] as T) : undefined;
   }
   return db.prepare(sql).get(...(params as any[])) as T | undefined;
 }
 
 export async function run(sql: string, ...params: SqlParam[]): Promise<{ lastInsertRowid: number | null; changes: number }> {
-  await ensureReady();
+  if (!isInsideInit()) await ensureReady();
   if (IS_PG) {
     const pool = getPool();
-    const r = await pool.query(toPgPlaceholders(sql), params as any);
+    let finalSql = sql;
+    const insertMatch = /^\s*insert\s+into\s+([a-zA-Z_]+)/i.exec(sql);
+    if (insertMatch && !NO_ID_TABLES.has(insertMatch[1])) {
+      finalSql = `${sql.replace(/;\s*$/, "")} RETURNING id`;
+    }
+    const r = await withPgRetry(() => pool.query(toPgDatetime(toPgRound(toPgPlaceholders(finalSql))), params as any));
     const row = r.rows?.[0] || {};
     return {
-      lastInsertRowid: row.last_insert_rowid ?? row.inserted_id ?? null,
+      lastInsertRowid: row.last_insert_rowid ?? row.inserted_id ?? row.id ?? null,
       changes: r.rowCount ?? 0,
     };
   }
   const res = db.prepare(sql).run(...(params as any[]));
-  return { lastInsertRowid: res.lastInsertRowid as number | null, changes: res.changes };
+  return {
+    lastInsertRowid: res.lastInsertRowid == null ? null : Number(res.lastInsertRowid),
+    changes: Number(res.changes),
+  };
 }
 
-export { db, IS_PG, NO_ID_TABLES, toPgDatetime, toPgPlaceholders, toPgSchema };
+export { db, NO_ID_TABLES };

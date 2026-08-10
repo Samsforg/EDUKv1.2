@@ -71,8 +71,18 @@ describe("validation.ts", () => {
     });
 
     it("should reject answer out of range", () => {
-      const v = validate(QuizSubmitSchema, { quiz_id: 1, answers: [0, 5] });
+      const v = validate(QuizSubmitSchema, { quiz_id: 1, answers: [0, 6] });
       expect(v.ok).toBe(false);
+    });
+
+    it("should accept answer index up to 5 (6 options)", () => {
+      const v = validate(QuizSubmitSchema, { quiz_id: 1, answers: [0, 5] });
+      expect(v.ok).toBe(true);
+    });
+
+    it("should accept unanswered answer as -1", () => {
+      const v = validate(QuizSubmitSchema, { quiz_id: 1, answers: [-1, 2] });
+      expect(v.ok).toBe(true);
     });
   });
 

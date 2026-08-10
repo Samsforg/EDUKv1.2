@@ -1,9 +1,10 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { setPromoActive, deletePromoCode } from "@/lib/promo";
 import { requireAdmin } from "@/lib/admin-guard";
 import { getCurrentUser } from "@/lib/session";
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function PATCHHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const forbidden = await requireAdmin();
   if (forbidden) return forbidden;
 
@@ -11,19 +12,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const body = await req.json().catch(() => ({}));
   const actor = await getCurrentUser();
   if (body.active !== undefined) {
-    const result = setPromoActive(Number(id), Boolean(body.active), actor!.id);
+    const result = await setPromoActive(Number(id), Boolean(body.active), actor!.id);
     if ("error" in result) return NextResponse.json(result, { status: 400 });
   }
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = guardApi("PATCH /api/admin/promo/[id]", PATCHHandler);
+
+async function DELETEHandler(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const forbidden = await requireAdmin();
   if (forbidden) return forbidden;
 
   const { id } = await params;
   const actor = await getCurrentUser();
-  const result = deletePromoCode(Number(id), actor!.id);
+  const result = await deletePromoCode(Number(id), actor!.id);
   if ("error" in result) return NextResponse.json(result, { status: 400 });
   return NextResponse.json({ ok: true });
 }
+
+export const DELETE = guardApi("DELETE /api/admin/promo/[id]", DELETEHandler);

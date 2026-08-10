@@ -31,7 +31,7 @@ export default async function Page({
   const status = str(sp.status);
   const page = Math.max(1, Number.parseInt(str(sp.page), 10) || 1);
 
-  const { users, total, pages, page: currentPage } = getAdminUsersPage({
+  const { users, total, pages, page: currentPage } = await getAdminUsersPage({
     q,
     role,
     status: (status === "active" || status === "blocked" ? status : undefined) as "active" | "blocked" | undefined,
@@ -111,6 +111,10 @@ export default async function Page({
                     <td className="px-6 py-4 text-on-surface-variant">
                       {u.class_level ?? "—"}
                       {u.serie_name ? <p className="text-xs">{u.serie_name}</p> : null}
+                      <p className="text-xs">
+                        {u.gender === "M" ? "Masculin" : u.gender === "F" ? "Féminin" : "—"}
+                        {u.commune ? ` • ${u.commune}` : ""}
+                      </p>
                     </td>
                     <td className="px-6 py-4 font-bold text-on-surface">{u.xp}</td>
                     <td className="px-6 py-4 text-on-surface-variant">{u.streak} j</td>

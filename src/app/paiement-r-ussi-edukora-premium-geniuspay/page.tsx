@@ -1,8 +1,45 @@
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = { title: "Paiement Confirmé - Edukora" };
+import React from "react";
 
 export default function Page() {
+  const [state, setState] = React.useState<{
+    amount: number;
+    currency: string;
+    plan_name: string;
+    status: string;
+    ref: string | null;
+  } | null>(null);
+  const [error, setError] = React.useState<string>("");
+
+  React.useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (!ref) {
+      setError("Vous êtes bien Premium ! Retournez à l'accueil pour profiter de vos avantages.");
+      return;
+    }
+    fetch(`/api/premium/status?ref=${encodeURIComponent(ref)}`, { credentials: "same-origin" })
+      .then((res) => res.json())
+      .then((d) => {
+        if (d.error) throw new Error(d.error);
+        setState({ plan_name: d.plan_name, amount: d.amount, currency: d.currency, status: d.status, ref });
+      })
+      .catch((e) => setError(e.message || "Erreur de chargement"));
+  }, []);
+
+  const planName = state?.plan_name ?? "Pass Premium Mensuel";
+  const isQuarter = planName.includes("Trimestriel");
+  const koraTitle = isQuarter ? "Tuteur IA : 100 questions / trimestre" : "Tuteur IA : 30 questions / mois";
+  const koraSubtitle = isQuarter
+    ? "Posez vos questions à Kora jusqu'à 100 fois par trimestre."
+    : "Posez vos questions à Kora jusqu'à 30 fois par mois.";
+  const amount = state?.amount ?? null;
+  const amountLabel =
+    amount != null
+      ? `${amount.toLocaleString("fr-FR")} ${state?.currency ?? "FCFA"}`
+      : "...";
+  const userShortRef = state?.ref ? state.ref.replace(/^sub_/, "").slice(0, 10).toUpperCase() : "......";
+
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col items-center" >
 
@@ -34,22 +71,26 @@ export default function Page() {
 <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-sm">
 <div className="flex justify-between items-center mb-4">
 <span className="text-label-xs bg-primary-container text-on-primary-container px-3 py-1 rounded-full font-bold uppercase tracking-wider">Abonnement Actif</span>
-<span className="text-label-sm text-on-surface-variant">ID: #ED-82910</span>
+<span className="text-label-sm text-on-surface-variant">ID: #{userShortRef}</span>
 </div>
 <div className="flex items-center gap-4">
 <div className="w-12 h-12 bg-secondary-container/10 rounded-lg flex items-center justify-center text-secondary-container">
 <span className="material-symbols-outlined text-[32px]">workspace_premium</span>
 </div>
 <div className="flex flex-col">
-<span className="font-headline font-bold text-[18px] text-on-surface">Pass Premium Mensuel</span>
-<span className="text-primary font-bold text-[20px]">1,000 FCFA <span className="text-on-surface-variant font-normal text-sm">/ mois</span></span>
+<span className="font-headline font-bold text-[18px] text-on-surface">{planName}</span>
+<span className="text-primary font-bold text-[20px]">{amountLabel} <span className="text-on-surface-variant font-normal text-sm">/ mois</span></span>
 </div>
 </div>
 </div>
 
+{error && (
+  <div className="px-4 py-3 bg-error-container text-on-error-container rounded-xl text-sm font-semibold w-full text-center">{error}</div>
+)}
+
 <div className="flex items-center justify-center gap-3 bg-surface-container-low py-3 px-4 rounded-lg">
 <span className="text-[12px] font-medium text-on-surface-variant uppercase tracking-widest">Sécurisé par</span>
-<img alt="Geniuspay" className="h-6 object-contain grayscale opacity-70" src="/images/ecran-269.png" />
+<img  alt="Geniuspay" className="h-6 object-contain grayscale opacity-70" src="/images/ecran-269.webp" loading="lazy" />
 </div>
 
 <section className="flex flex-col gap-4">
@@ -61,8 +102,8 @@ export default function Page() {
 <span className="material-symbols-outlined">smart_toy</span>
 </div>
 <div>
-<p className="font-headline font-bold text-on-surface">Tuteur IA illimité</p>
-<p className="text-[13px] text-on-surface-variant">Réponses instantanées 24h/7j pour vos devoirs.</p>
+<p className="font-headline font-bold text-on-surface">{koraTitle}</p>
+<p className="text-[13px] text-on-surface-variant">{koraSubtitle}</p>
 </div>
 </div>
 
@@ -89,31 +130,31 @@ export default function Page() {
 </section>
 
 <div className="mt-4">
-<button className="w-full bg-secondary-container hover:bg-secondary text-white font-headline font-bold py-4 rounded-xl shadow-md active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+<a href="/accueil-edukora" className="block w-full bg-secondary-container hover:bg-secondary text-white font-headline font-bold py-4 rounded-xl shadow-md active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
                 Commencer mes révisions
                 <span className="material-symbols-outlined">arrow_forward</span>
-</button>
+</a>
 <p className="text-center text-[11px] text-outline mt-3 px-6 italic">Un reçu de paiement a été envoyé à votre adresse email associée.</p>
 </div>
 </main>
 
 <nav className="fixed bottom-0 w-full z-50 bg-surface-container-lowest dark:bg-surface-container-high shadow-[0_-1px_3px_0_rgba(0,0,0,0.1)] flex justify-around items-center h-20 px-2 pb-safe">
-<div className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-colors active:scale-90 duration-150">
+<a href="/accueil-edukora" className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-colors active:scale-90 duration-150">
 <span className="material-symbols-outlined mb-1">home</span>
 <span className="font-label text-label-xs">Accueil</span>
-</div>
-<div className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-colors active:scale-90 duration-150">
+</a>
+<a href="/fiches" className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-colors active:scale-90 duration-150">
 <span className="material-symbols-outlined mb-1">school</span>
 <span className="font-label text-label-xs">Cours</span>
-</div>
-<div className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-colors active:scale-90 duration-150">
+</a>
+<a href="/tuteur-ia" className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-colors active:scale-90 duration-150">
 <span className="material-symbols-outlined mb-1">smart_toy</span>
 <span className="font-label text-label-xs">tuteur IA</span>
-</div>
-<div className="flex flex-col items-center justify-center bg-primary-container dark:bg-on-primary-fixed-variant text-on-primary-container dark:text-primary-fixed rounded-xl px-4 py-1 transition-colors active:scale-90 duration-150">
+</a>
+<a href="/profil" className="flex flex-col items-center justify-center bg-primary-container dark:bg-on-primary-fixed-variant text-on-primary-container dark:text-primary-fixed rounded-xl px-4 py-1 transition-colors active:scale-90 duration-150">
 <span className="material-symbols-outlined mb-1" style={{"fontVariationSettings":"'FILL' 1"}}>person</span>
 <span className="font-label text-label-xs">Profil</span>
-</div>
+</a>
 </nav>
 <script>
         // Micro-interaction for benefits cards

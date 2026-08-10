@@ -1,20 +1,23 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { maybeSendDailyReminder } from "@/lib/reminders";
+import { notifyOnLogin } from "@/lib/proactive";
 
-export async function GET() {
+async function GETHandler() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
-  maybeSendDailyReminder(user.id);
+  await maybeSendDailyReminder(user.id);
+  await notifyOnLogin(user.id);
 
-  const me = queryOne<{ xp: number; streak: number; role: string }>(
+  const me = (await queryOne<{ xp: number; streak: number; role: string }>(
     "SELECT xp, streak, role FROM users WHERE id = ?",
     user.id,
-  )!;
+  ))!;
 
-  const quizStats = query<{
+  const quizStats = await query<{
     subject_id: number;
     name: string;
     icon: string;
@@ -32,12 +35,12 @@ export async function GET() {
     user.id,
   );
 
-  const examBest = queryOne<{ best: number | null; count: number }>(
+  const examBest = await queryOne<{ best: number | null; count: number }>(
     `SELECT MAX(score_over_20) AS best, COUNT(*) AS count FROM exam_attempts WHERE user_id = ?`,
     user.id,
   );
 
-  const recentQuizzes = query<{
+  const recentQuizzes = await query<{
     id: number;
     title: string;
     score: number;
@@ -50,7 +53,7 @@ export async function GET() {
     user.id,
   );
 
-  const badges = query<{ code: string; name: string; icon: string; description: string; earned_at: string }>(
+  const badges = await query<{ code: string; name: string; icon: string; description: string; earned_at: string }>(
     `SELECT b.code, b.name, b.icon, b.description, ub.earned_at
      FROM user_badges ub JOIN badges b ON b.id = ub.badge_id
      WHERE ub.user_id = ? ORDER BY ub.earned_at DESC`,
@@ -83,3 +86,5 @@ export async function GET() {
     badges,
   });
 }
+
+export const GET = guardApi("GET /api/me/progress", GETHandler);

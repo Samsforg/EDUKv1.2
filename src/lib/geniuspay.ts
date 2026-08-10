@@ -2,12 +2,14 @@ const GP_BASE = process.env.GENIUSPAY_API_BASE ?? "https://pay.genius.ci/api/v1/
 
 function gpFetch(path: string, init?: RequestInit) {
   const apiKey = process.env.GENIUSPAY_API_KEY;
-  if (!apiKey) throw new Error("GENIUSPAY_API_KEY non configuré");
+  const apiSecret = process.env.GENIUSPAY_API_SECRET;
+  if (!apiKey || !apiSecret) throw new Error("GENIUSPAY_API_KEY / GENIUSPAY_API_SECRET non configurés");
   return fetch(`${GP_BASE}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      "X-API-Key": apiKey,
+      "X-API-Secret": apiSecret,
       ...(init?.headers ?? {}),
     },
   });
@@ -17,7 +19,15 @@ function normalizePhone(phone: string): string {
   const cleaned = phone.replace(/[^+\d]/g, "");
   if (cleaned.startsWith("+")) return cleaned;
   const countryCode = process.env.GENIUSPAY_COUNTRY_CODE ?? "225";
+  if (cleaned.startsWith(countryCode)) return `+${cleaned}`;
   return `+${countryCode}${cleaned}`;
+}
+
+// Rend un numéro comparable indépendamment du préfixe (+225 / 225 / 07...).
+export function canonicalPhone(phone: string | null | undefined): string | null {
+  if (!phone) return null;
+  const digits = phone.replace(/[^+\d]/g, "").replace(/^\+/, "").replace(/^225/, "").replace(/^00/, "") || phone;
+  return digits.length >= 9 ? digits.slice(-9) : digits;
 }
 
 export async function gpCreateSubscription(params: {

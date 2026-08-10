@@ -1,8 +1,9 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
-export async function GET(
+async function GETHandler(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -12,7 +13,7 @@ export async function GET(
   const { id } = await params;
   const postId = Number(id);
 
-  const post = queryOne<{
+  const post = await queryOne<{
     id: number;
     category_id: number;
     category_name: string;
@@ -43,7 +44,7 @@ export async function GET(
   );
   if (!post) return NextResponse.json({ error: "Sujet introuvable" }, { status: 404 });
 
-  const replies = query<{
+  const replies = await query<{
     id: number;
     author_id: number;
     author_name: string;
@@ -66,6 +67,8 @@ export async function GET(
     replies: replies.map((r) => ({ ...r, created_at: timeAgo(r.created_at) })),
   });
 }
+
+export const GET = guardApi("GET /api/forum/posts/[id]", GETHandler);
 
 function timeAgo(date: string) {
   const s = Math.floor((Date.now() - new Date(date + "Z").getTime()) / 1000);

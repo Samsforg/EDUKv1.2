@@ -1,8 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import Link from "next/link";
-import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 
 interface Attempt {
@@ -43,9 +42,9 @@ export default function AttemptsPage() {
 }
 
 function AttemptsContent() {
-  const { id } = useParams<{ id: string }>();
   const params = useSearchParams();
   const router = useRouter();
+  const id = params.get("id") ?? "";
   const type = params.get("type") === "paper" ? "paper" : "quiz";
   const [data, setData] = useState<DetailData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,6 +65,30 @@ function AttemptsContent() {
   }, [type, id]);
 
   const title = data?.quiz?.title ?? data?.paper?.title ?? "";
+
+  if (!id)
+    return (
+      <div className="bg-background text-on-background font-body-md min-h-screen pb-16 font-['Hanken_Grotesk']">
+        <PageHeader title="Tentatives des élèves" subtitle="Réponses des élèves à tes quiz et sujets" backHref="/espace-prof" />
+        <main className="px-margin-mobile pt-6 space-y-4">
+          <div className="text-center py-16 space-y-4">
+            <div className="w-16 h-16 rounded-full bg-primary-container/30 flex items-center justify-center mx-auto">
+              <span className="material-symbols-outlined text-primary text-3xl">group</span>
+            </div>
+            <p className="font-headline-md font-semibold text-on-surface">Aucun quiz ou sujet sélectionné</p>
+            <p className="font-body-md text-on-surface-variant max-w-sm mx-auto">
+              Choisis une classe puis un quiz ou un sujet pour consulter les tentatives de tes élèves.
+            </p>
+            <button
+              onClick={() => router.push("/espace-prof/classes")}
+              className="inline-block bg-primary text-on-primary font-label-md px-6 py-3 rounded-full"
+            >
+              Voir mes classes
+            </button>
+          </div>
+        </main>
+      </div>
+    );
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen pb-16 font-['Hanken_Grotesk']">

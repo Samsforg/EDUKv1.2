@@ -1,0 +1,139 @@
+src/app/api/me/progress/route.ts(71,9): error TS18048: 'me' is possibly 'undefined'.
+src/app/api/me/progress/route.ts(72,13): error TS18048: 'me' is possibly 'undefined'.
+src/app/api/prof/paper/route.ts(41,14): error TS1030: 'async' modifier already seen.
+src/app/api/prof/paper/route.ts(78,5): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/app/api/prof/quiz/route.ts(39,14): error TS1030: 'async' modifier already seen.
+src/app/api/prof/quiz/route.ts(71,5): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/app/api/tutor/route.ts(24,14): error TS1030: 'async' modifier already seen.
+src/app/api/tutor/route.ts(37,19): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/app/api/tutor/route.ts(37,25): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'Promise<{ id: number; }[]>'.
+  Property '0' does not exist on type 'Promise<{ id: number; }[]>'.
+src/app/api/tutor/route.ts(47,17): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/app/api/tutor/route.ts(47,23): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'Promise<{ id: number; }[]>'.
+  Property '0' does not exist on type 'Promise<{ id: number; }[]>'.
+src/lib/admin.ts(30,40): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<AdminStats>'?
+src/lib/admin.ts(106,52): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<ActivityItem[]>'?
+src/lib/admin.ts(204,42): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<SubjectStats[]>'?
+src/lib/admin.ts(237,40): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<AdminUserRow[]>'?
+src/lib/admin.ts(266,73): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<UserListResult>'?
+src/lib/admin.ts(311,88): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ ok: true; } | { error: string; }>'?
+src/lib/admin.ts(339,4): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ ok: true; } | { error: string; }>'?
+src/lib/admin.ts(385,45): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ subjects: ContentSubject[]; totals: { lessons: number; chapters: number; quizzes: number; papers: number; questions: number; }; }>'?
+src/lib/admin.ts(432,15): error TS2339: Property 'map' does not exist on type 'Promise<Omit<ForumPostRow, "relative">[]>'.
+src/lib/admin.ts(432,20): error TS7006: Parameter 'r' implicitly has an 'any' type.
+src/lib/admin.ts(435,56): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ ok: true; } | { error: string; }>'?
+src/lib/admin.ts(457,44): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<PendingCourse[]>'?
+src/lib/admin.ts(512,4): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ ok: true; } | { error: string; }>'?
+src/lib/admin.ts(552,45): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<TrendDay[]>'?
+src/lib/admin.ts(592,4): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ ok: true; } | { error: string; }>'?
+src/lib/admin.ts(612,70): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ ok: true; } | { error: string; }>'?
+src/lib/admin.ts(633,4): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ ok: true; count: number; } | { error: string; }>'?
+src/lib/admin.ts(703,54): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<UserDetail>'?
+src/lib/admin.ts(812,4): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ ok: true; } | { error: string; }>'?
+src/lib/admin.ts(850,43): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ totals: { referrers: number; referred: number; active_week: number; }; top: ReferrerRow[]; list: ReferredRow[]; }>'?
+src/lib/audit.ts(33,14): error TS1030: 'async' modifier already seen.
+src/lib/audit.ts(37,14): error TS1030: 'async' modifier already seen.
+src/lib/audit.ts(37,73): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<AuditRow[]>'?
+src/lib/audit.ts(62,14): error TS1030: 'async' modifier already seen.
+src/lib/audit.ts(62,48): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ action: string; count: number; }[]>'?
+src/lib/audit.ts(68,14): error TS1030: 'async' modifier already seen.
+src/lib/audit.ts(68,46): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ total: number; today: number; }>'?
+src/lib/badges.ts(85,14): error TS1030: 'async' modifier already seen.
+src/lib/badges.ts(85,61): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<BadgeContext>'?
+src/lib/badges.ts(150,14): error TS1030: 'async' modifier already seen.
+src/lib/badges.ts(159,14): error TS1030: 'async' modifier already seen.
+src/lib/badges.ts(159,67): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<BadgeProgress[]>'?
+src/lib/badges.ts(175,14): error TS1030: 'async' modifier already seen.
+src/lib/badges.ts(175,60): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<string[]>'?
+src/lib/db.ts(9,14): error TS2323: Cannot redeclare exported variable 'IS_PG'.
+src/lib/db.ts(39,17): error TS2323: Cannot redeclare exported variable 'toPgDatetime'.
+src/lib/db.ts(569,17): error TS2323: Cannot redeclare exported variable 'toPgPlaceholders'.
+src/lib/db.ts(611,17): error TS2323: Cannot redeclare exported variable 'toPgSchema'.
+src/lib/db.ts(675,67): error TS2322: Type 'number | bigint' is not assignable to type 'number'.
+  Type 'bigint' is not assignable to type 'number'.
+src/lib/db.ts(678,14): error TS2323: Cannot redeclare exported variable 'IS_PG'.
+src/lib/db.ts(678,14): error TS2484: Export declaration conflicts with exported declaration of 'IS_PG'.
+src/lib/db.ts(678,35): error TS2323: Cannot redeclare exported variable 'toPgDatetime'.
+src/lib/db.ts(678,35): error TS2484: Export declaration conflicts with exported declaration of 'toPgDatetime'.
+src/lib/db.ts(678,49): error TS2323: Cannot redeclare exported variable 'toPgPlaceholders'.
+src/lib/db.ts(678,49): error TS2484: Export declaration conflicts with exported declaration of 'toPgPlaceholders'.
+src/lib/db.ts(678,67): error TS2323: Cannot redeclare exported variable 'toPgSchema'.
+src/lib/db.ts(678,67): error TS2484: Export declaration conflicts with exported declaration of 'toPgSchema'.
+src/lib/defis.ts(25,65): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ xp: number; participants: number; }>'?
+src/lib/defis.ts(35,210): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<ChallengeSummary>'?
+src/lib/defis.ts(43,40): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<ChallengeSummary[]>'?
+src/lib/defis.ts(52,72): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<ChallengeDetail | null>'?
+src/lib/defis.ts(61,40): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ rank: number; user_id: number; name: string; xp: number; contributions: number; }[]>'?
+src/lib/disputes.ts(19,38): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<DisputeRow[]>'?
+src/lib/disputes.ts(47,4): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ ok: true; id: number; } | { error: string; }>'?
+src/lib/disputes.ts(63,4): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ ok: true; } | { error: string; }>'?
+src/lib/init.ts(249,5): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/init.ts(308,8): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/init.ts(364,8): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/init.ts(771,5): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/init.ts(869,5): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/init.ts(1023,5): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/ligue.ts(32,63): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<number>'?
+src/lib/ligue.ts(62,56): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<void>'?
+src/lib/ligue.ts(88,61): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<LigueChallenge>'?
+src/lib/ligue.ts(117,69): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/ligue.ts(122,72): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/live-prof.ts(23,52): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<ProfLive[]>'?
+src/lib/live-prof.ts(25,17): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/live-prof.ts(26,15): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/live-prof.ts(35,69): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<boolean>'?
+src/lib/live-prof.ts(77,79): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<number>'?
+src/lib/live-prof.ts(91,8): error TS18048: 'prof' is possibly 'undefined'.
+src/lib/live-prof.ts(91,27): error TS18048: 'prof' is possibly 'undefined'.
+src/lib/live.ts(48,37): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ live_now: LiveSession | null; upcoming: LiveSession[]; replays: LiveSession[]; categories: string[]; }>'?
+src/lib/live.ts(58,53): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<LiveSession[]>'?
+src/lib/live.ts(76,68): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<LiveDetail | null>'?
+src/lib/live.ts(116,71): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<LiveMessage[]>'?
+src/lib/live.ts(126,78): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ registered: boolean; }>'?
+src/lib/live.ts(140,77): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<boolean>'?
+src/lib/live.ts(148,56): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<boolean>'?
+src/lib/parents.ts(15,60): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<ParentChild[]>'?
+src/lib/parents.ts(29,73): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<boolean>'?
+src/lib/parents.ts(74,49): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<ActivityEvent[]>'?
+src/lib/parents.ts(118,54): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ label: string; hour: number; }>'?
+src/lib/parents.ts(147,57): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<SubjectStat[]>'?
+src/lib/parents.ts(214,70): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<RecentResult[]>'?
+src/lib/parents.ts(324,76): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<DashboardData>'?
+src/lib/parents.ts(400,63): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<string>'?
+src/lib/parents.ts(417,32): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<string>'?
+src/lib/parents.ts(459,15): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/parents.ts(464,3): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/proctoring.ts(43,78): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<number>'?
+src/lib/proctoring.ts(99,48): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ sessions: ProctoringSessionRow[]; events: ProctoringEventRow[]; stats: { active: number; today: number; warnings: number; }; }>'?
+src/lib/proctoring.ts(160,70): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ ok: true; } | { error: string; }>'?
+src/lib/promo.ts(19,40): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<PromoRow[]>'?
+src/lib/promo.ts(61,20): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/promo.ts(65,6): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/promo.ts(76,3): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/promo.ts(84,85): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ ok: true; } | { error: string; }>'?
+src/lib/promo.ts(92,69): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ ok: true; } | { error: string; }>'?
+src/lib/rank.ts(152,13): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/rank.ts(200,37): error TS18048: 'me' is possibly 'undefined'.
+src/lib/rank.ts(211,7): error TS18048: 'me' is possibly 'undefined'.
+src/lib/rank.ts(217,7): error TS18048: 'me' is possibly 'undefined'.
+src/lib/rank.ts(218,7): error TS18048: 'me' is possibly 'undefined'.
+src/lib/rank.ts(227,9): error TS18048: 'me' is possibly 'undefined'.
+src/lib/rank.ts(228,13): error TS18048: 'me' is possibly 'undefined'.
+src/lib/rank.ts(229,17): error TS18048: 'me' is possibly 'undefined'.
+src/lib/rank.ts(230,16): error TS18048: 'me' is possibly 'undefined'.
+src/lib/rank.ts(231,14): error TS18048: 'me' is possibly 'undefined'.
+src/lib/rate-limit.ts(20,64): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ allowed: boolean; remaining: number; resetAt: number; }>'?
+src/lib/reminders.ts(14,60): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<ReminderSettings>'?
+src/lib/reminders.ts(43,3): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/reminders.ts(58,10): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/reminders.ts(61,59): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<{ id: number; name: string; icon: string; color: string; } | null>'?
+src/lib/reminders.ts(83,63): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<boolean>'?
+src/lib/seed.ts(79,17): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/seed.ts(86,9): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/seed.ts(283,17): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/seed.ts(289,9): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/seed.ts(316,5): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/seed.ts(448,7): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/session.ts(137,65): error TS1064: The return type of an async function or method must be the global Promise<T> type. Did you mean to write 'Promise<boolean>'?
+src/lib/sync-client.ts(58,7): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+src/lib/sync-client.ts(71,23): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.

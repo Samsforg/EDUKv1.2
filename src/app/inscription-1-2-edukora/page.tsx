@@ -19,10 +19,18 @@ export default function Page() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [serieId, setSerieId] = useState<number | null>(null);
+  const [gender, setGender] = useState<"M" | "F" | "">("");
+  const [commune, setCommune] = useState("");
+  const [classLevel, setClassLevel] = useState("");
   const [role, setRole] = useState<"student" | "teacher">("student");
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const CLASSES = ["6ème", "5ème", "4ème", "3ème", "2nde", "1ère", "Terminale"];
+  const LYCEE_LEVELS = ["2nde", "1ère", "Terminale"];
+  const showSerie = LYCEE_LEVELS.includes(classLevel.trim());
 
   useEffect(() => {
     fetch("/api/series")
@@ -46,6 +54,14 @@ export default function Page() {
       setError("Le mot de passe doit contenir au moins 6 caractères.");
       return;
     }
+    if (role === "student" && !classLevel.trim()) {
+      setError("Veuillez choisir votre classe ou votre niveau.");
+      return;
+    }
+    if (!acceptPrivacy) {
+      setError("Veuillez accepter la politique de confidentialité.");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/auth/register", {
@@ -57,15 +73,23 @@ export default function Page() {
           email: email.trim() || null,
           phone: phone.trim() || null,
           password,
-          serie_id: serieId,
           role,
+          accept_privacy: acceptPrivacy,
+          ...(role === "student"
+            ? {
+                serie_id: showSerie ? serieId : null,
+                gender: gender || null,
+                commune: commune.trim() || null,
+                class_level: classLevel || null,
+              }
+            : {}),
         }),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "Une erreur est survenue.");
       } else {
-        router.push(role === "teacher" ? "/espace-prof" : "/accueil-edukora");
+        router.push(role === "teacher" ? "/espace-prof" : "/bienvenue");
       }
     } catch {
       setError("Erreur réseau. Réessayez.");
@@ -89,7 +113,7 @@ export default function Page() {
       <main className="w-full max-w-md bg-surface-container-lowest rounded-xl shadow-sm border border-surface-variant p-6 sm:p-8 flex flex-col">
         <header className="flex flex-col items-center text-center mb-8">
           <div className="w-14 h-14 mb-4 bg-surface-container-lowest rounded-2xl flex items-center justify-center p-1">
-            <img src="/images/logo-edukora.png" alt="Edukora" className="w-full h-full object-contain" />
+            <img  src="/images/logo-edukora.webp" alt="Edukora" className="w-full h-full object-contain" loading="lazy" />
           </div>
           <h1 className="font-headline-md text-3xl font-bold text-primary mb-2 tracking-tight">Créer un compte</h1>
           <p className="text-on-surface-variant text-base">Rejoignez Edukora et préparez votre BAC ou BEPC.</p>
@@ -197,26 +221,74 @@ export default function Page() {
           </div>
 
           {role === "student" && (
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-on-surface">Ma série</label>
-              <div className="grid grid-cols-2 gap-2">
-                {series.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => setSerieId(s.id)}
-                    className={`rounded-lg border px-3 py-3 text-left transition-colors ${
-                      serieId === s.id
-                        ? "border-primary bg-primary/5 text-primary"
-                        : "border-outline-variant bg-surface-container-lowest text-on-surface hover:border-primary/40"
-                    }`}
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-semibold text-on-surface">Genre</label>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value as "M" | "F" | "")}
+                    className={inputClass}
                   >
-                    <span className="block font-bold">{s.code}</span>
-                    <span className="block text-xs text-on-surface-variant">{s.name}</span>
-                  </button>
-                ))}
+                    <option value="">—</option>
+                    <option value="M">Masculin</option>
+                    <option value="F">Féminin</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="commune" className="block text-sm font-semibold text-on-surface">Commune</label>
+                  <input
+                    id="commune"
+                    type="text"
+                    autoComplete="address-level2"
+                    placeholder="Ex. Cocody, Yopougon…"
+                    value={commune}
+                    onChange={(e) => setCommune(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
               </div>
-            </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-on-surface">Classe ou niveau</label>
+                <select
+                  value={classLevel}
+                  onChange={(e) => {
+                    setClassLevel(e.target.value);
+                    setSerieId(null);
+                  }}
+                  className={inputClass}
+                >
+                  <option value="">Choisir ma classe…</option>
+                  {CLASSES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
+              {showSerie && (
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-semibold text-on-surface">Ma série</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {series.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setSerieId(s.id)}
+                        className={`rounded-lg border px-3 py-3 text-left transition-colors ${
+                          serieId === s.id
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-outline-variant bg-surface-container-lowest text-on-surface hover:border-primary/40"
+                        }`}
+                      >
+                        <span className="block font-bold">{s.code}</span>
+                        <span className="block text-xs text-on-surface-variant">{s.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {error && (
@@ -224,6 +296,23 @@ export default function Page() {
               {error}
             </p>
           )}
+
+          <div className="flex items-start gap-3">
+            <input
+              className="mt-1 w-5 h-5 text-primary border-outline-variant rounded focus:ring-primary bg-surface transition-all"
+              id="acceptPrivacy"
+              type="checkbox"
+              checked={acceptPrivacy}
+              onChange={(e) => setAcceptPrivacy(e.target.checked)}
+            />
+            <label className="text-xs text-on-surface-variant leading-relaxed" htmlFor="acceptPrivacy">
+              J&apos;accepte la{" "}
+              <Link href="/param-tres-de-confidentialit-edukora" className="text-primary font-semibold underline">
+                politique de confidentialité
+              </Link>{" "}
+              d&apos;Edukora et le traitement de mes données personnelles.
+            </label>
+          </div>
 
           <button
             type="submit"

@@ -20,7 +20,7 @@ export default async function Page() {
   if (!user) redirect("/connexion-edukora");
   if (user.role !== "admin") redirect("/accueil-edukora");
 
-  const codes = getPromoCodes();
+  const codes = await getPromoCodes();
 
   return (
     <AdminShell active="promo">

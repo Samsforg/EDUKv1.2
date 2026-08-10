@@ -82,22 +82,22 @@ export interface BadgeContext {
   xp: number;
 }
 
-export function computeContext(userId: number): BadgeContext {
-  const u = queryOne<{ xp: number; streak: number }>("SELECT xp, streak FROM users WHERE id = ?", userId);
-  const quizCount = queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM quiz_attempts WHERE user_id = ?", userId)!.c;
-  const perfectCount = queryOne<{ c: number }>(
+export async function computeContext(userId: number): Promise<BadgeContext >{
+  const u = await queryOne<{ xp: number; streak: number }>("SELECT xp, streak FROM users WHERE id = ?", userId);
+  const quizCount = (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM quiz_attempts WHERE user_id = ?", userId))!.c;
+  const perfectCount = (await queryOne<{ c: number }>(
     "SELECT COUNT(*) AS c FROM quiz_attempts WHERE user_id = ? AND max_score > 0 AND score = max_score",
     userId,
-  )!.c;
-  const examCount = queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM exam_attempts WHERE user_id = ?", userId)!.c;
-  const lessonCount = queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM lesson_reads WHERE user_id = ?", userId)!.c;
-  const postCount = queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM forum_posts WHERE user_id = ?", userId)!.c;
-  const replyCount = queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM forum_replies WHERE user_id = ?", userId)!.c;
-  const savedCount = queryOne<{ c: number }>(
+  ))!.c;
+  const examCount = (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM exam_attempts WHERE user_id = ?", userId))!.c;
+  const lessonCount = (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM lesson_reads WHERE user_id = ?", userId))!.c;
+  const postCount = (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM forum_posts WHERE user_id = ?", userId))!.c;
+  const replyCount = (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM forum_replies WHERE user_id = ?", userId))!.c;
+  const savedCount = (await queryOne<{ c: number }>(
     "SELECT (SELECT COUNT(*) FROM favorites WHERE user_id = ?) + (SELECT COUNT(*) FROM saved_lessons WHERE user_id = ?) AS c",
     userId,
     userId,
-  )!.c;
+  ))!.c;
   return {
     quizCount,
     perfectCount,
@@ -147,19 +147,19 @@ function measure(code: string, ctx: BadgeContext): number {
   }
 }
 
-export function ensureBadges() {
+export async function ensureBadges() {
   for (const def of BADGE_DEFS) {
-    const existing = queryOne<{ id: number }>("SELECT id FROM badges WHERE code = ?", def.code);
+    const existing = await queryOne<{ id: number }>("SELECT id FROM badges WHERE code = ?", def.code);
     if (!existing) {
-      run("INSERT INTO badges (code, name, icon, description) VALUES (?, ?, ?, ?)", def.code, def.name, def.icon, def.description);
+      await run("INSERT INTO badges (code, name, icon, description) VALUES (?, ?, ?, ?)", def.code, def.name, def.icon, def.description);
     }
   }
 }
 
-export function computeBadgeProgress(userId: number): BadgeProgress[] {
-  const ctx = computeContext(userId);
+export async function computeBadgeProgress(userId: number): Promise<BadgeProgress[] >{
+  const ctx = await computeContext(userId);
   const earnedMap = new Map<string, string>();
-  const earned = query<{ code: string; earned_at: string }>(
+  const earned = await query<{ code: string; earned_at: string }>(
     "SELECT b.code, ub.earned_at FROM badges b JOIN user_badges ub ON ub.badge_id = b.id WHERE ub.user_id = ?",
     userId,
   );
@@ -172,24 +172,24 @@ export function computeBadgeProgress(userId: number): BadgeProgress[] {
   });
 }
 
-export function refreshBadges(userId: number): string[] {
-  const ctx = computeContext(userId);
+export async function refreshBadges(userId: number): Promise<string[] >{
+  const ctx = await computeContext(userId);
   const newly: string[] = [];
   for (const def of BADGE_DEFS) {
     if (measure(def.code, ctx) < def.goal) continue;
-    const badge = queryOne<{ id: number; name: string; icon: string; description: string }>(
+    const badge = await queryOne<{ id: number; name: string; icon: string; description: string }>(
       "SELECT id, name, icon, description FROM badges WHERE code = ?",
       def.code,
     );
     if (!badge) continue;
-    const exists = queryOne<{ user_id: number }>(
+    const exists = await queryOne<{ user_id: number }>(
       "SELECT user_id FROM user_badges WHERE user_id = ? AND badge_id = ?",
       userId,
       badge.id,
     );
     if (exists) continue;
-    run("INSERT INTO user_badges (user_id, badge_id) VALUES (?, ?)", userId, badge.id);
-    notify(userId, "Badge gagné !", `Tu as débloqué « ${badge.name} » : ${badge.description}`, badge.icon);
+    await run("INSERT INTO user_badges (user_id, badge_id) VALUES (?, ?)", userId, badge.id);
+    await notify(userId, "Badge gagné !", `Tu as débloqué « ${badge.name} » : ${badge.description}`, badge.icon);
     newly.push(def.code);
   }
   return newly;

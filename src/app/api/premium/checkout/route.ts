@@ -1,9 +1,17 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { queryOne, run } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { gpCreateSubscription } from "@/lib/geniuspay";
+import { sendSubscriptionReceipt } from "@/lib/mailer";
 
-export async function POST(req: Request) {
+function parseDateish(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const d = /^\d{4}-\d{2}-\d{2}T/.test(value) ? new Date(value) : new Date(`${value}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+async function POSTHandler(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
@@ -11,7 +19,7 @@ export async function POST(req: Request) {
   const { plan_id } = body;
   if (!plan_id) return NextResponse.json({ error: "plan_id requis" }, { status: 400 });
 
-  const plan = queryOne<{
+  const plan = await queryOne<{
     id: number;
     name: string;
     interval: string;
@@ -21,7 +29,7 @@ export async function POST(req: Request) {
 
   if (!plan) return NextResponse.json({ error: "Plan inconnu" }, { status: 400 });
 
-  const existing = queryOne<{ id: number }>(
+  const existing = await queryOne<{ id: number }>(
     "SELECT id FROM subscriptions WHERE user_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1",
     user.id,
   );
@@ -30,8 +38,11 @@ export async function POST(req: Request) {
   const phone = user.phone;
   if (!phone) {
     return NextResponse.json(
-      { error: "Ajoutez votre numéro de téléphone dans votre profil avant de vous abonner" },
-      { status: 400 },
+      {
+        code: "PHONE_REQUIRED",
+        error: "Ajoutez votre numéro de téléphone pour finaliser l'abonnement",
+      },
+      { status: 426 },
     );
   }
 
@@ -52,19 +63,34 @@ export async function POST(req: Request) {
   }
 
   const now = new Date().toISOString();
-  run(
-    "INSERT INTO subscriptions (user_id, plan_id, provider, provider_subscription_id, provider_customer_id, status, started_at, end_at) VALUES (?, ?, 'geniuspay', ?, ?, ?, ?, ?)",
+  const isActive = gpSub.status === "active";
+  await run(
+    "INSERT INTO subscriptions (user_id, plan_id, provider, provider_subscription_id, provider_customer_id, price_cents, status, started_at, end_at) VALUES (?, ?, 'geniuspay', ?, ?, ?, ?, ?, ?)",
     user.id,
     plan.id,
     gpSub.id,
     phone,
-    gpSub.status === "active" ? "active" : "incomplete",
+    Math.round(plan.price_cents),
+    isActive ? "active" : "incomplete",
     now,
-    gpSub.next_billing_date ? new Date(gpSub.next_billing_date + "T00:00:00").toISOString() : null,
+    parseDateish(gpSub.next_billing_date),
   );
+
+  if (isActive) {
+    const okMail = await sendSubscriptionReceipt(user.id, {
+      planName: plan.name,
+      amount: Math.round(plan.price_cents),
+      currency: plan.currency,
+      endAt: gpSub.next_billing_date ?? null,
+      reference: gpSub.id,
+    });
+    console.log(`[checkout] reçu ${okMail ? "envoyé" : "ENVOI ÉCHOUÉ"} -> user ${user.id} (${plan.name})`);
+  }
 
   return NextResponse.json({
     ref: gpSub.id,
     url: `/validation-ussd-geniuspay?ref=${encodeURIComponent(gpSub.id)}`,
   });
 }
+
+export const POST = guardApi("POST /api/premium/checkout", POSTHandler);

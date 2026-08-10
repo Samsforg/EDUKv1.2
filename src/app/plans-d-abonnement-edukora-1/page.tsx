@@ -1,8 +1,39 @@
 import type { Metadata } from "next";
+import { getCachedPremiumPlans, planFeatures, formatPlanPrice, type PlanRow } from "@/lib/plans";
 
-export const metadata: Metadata = { title: "Abonnement - Edukora" };
+export const metadata: Metadata = {
+  title: "Abonnement Premium",
+  description:
+    "Choisissez votre abonnement Edukora Premium et payez en toute sécurité par Mobile Money (Orange, MTN, Moov) en FCFA. Accédez à toutes les fiches, le simulateur et le tuteur IA.",
+  alternates: { canonical: "/plans-d-abonnement-edukora-1" },
+};
 
-export default function Page() {
+export const revalidate = 300;
+
+const FALLBACK_MONTH: PlanRow = {
+  id: 0,
+  name: "Réussite",
+  interval: "month",
+  price_cents: 4900,
+  currency: "XOF",
+  features:
+    "Accès illimité à toutes les fiches\n30 questions par mois à Kora IA\nSimulateur complet + Correction détaillée\nSupport prioritaire par nos professeurs",
+  sort_order: 1,
+};
+
+export default async function Page() {
+  const plans = await getCachedPremiumPlans().catch(() => []);
+  const month =
+    plans.find((p) => p.price_cents > 0 && p.interval === "month") ?? FALLBACK_MONTH;
+  const realQuarter =
+    plans.find((p) => p.price_cents > 0 && p.interval === "quarter" && p.name.includes("Trimestriel")) ??
+    plans.find((p) => p.price_cents > 0 && p.interval === "quarter");
+  const quarter = realQuarter ?? { ...month, interval: "quarter", price_cents: 0, id: 0 } as PlanRow;
+  const monthFeatures = planFeatures(month);
+  const quarterFeatures = realQuarter?.features
+    ? planFeatures(realQuarter)
+    : monthFeatures.map((f) => (f.includes("Kora IA") ? "100 questions par trimestre à Kora IA" : f));
+
   return (
     <div className="bg-background text-on-background min-h-screen pb-24" style={{ minHeight: "max(884px, 100dvh)" }}>
 
@@ -35,7 +66,7 @@ export default function Page() {
 
 <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 flex flex-col transition-transform hover:scale-[1.02]">
 <div className="mb-6">
-<h3 className="text-xl font-bold text-on-surface mb-1">Pass Découverte</h3>
+<h3 className="text-xl font-bold text-on-surface mb-1">Découverte</h3>
 <p className="text-sm text-on-surface-variant">Idéal pour explorer nos ressources de base.</p>
 </div>
 <div className="mb-8">
@@ -48,7 +79,7 @@ export default function Page() {
 </li>
 <li className="flex items-center gap-3 text-on-surface-variant">
 <span className="material-symbols-outlined text-tertiary-container text-xl fill-icon" style={{"fontVariationSettings":"'FILL' 1"}}>check_circle</span>
-<span>3 questions/jour au Tuteur AI</span>
+<span>5 questions/mois au Tuteur AI</span>
 </li>
 <li className="flex items-center gap-3 text-outline opacity-50">
 <span className="material-symbols-outlined text-xl">block</span>
@@ -59,9 +90,9 @@ export default function Page() {
 <span className="line-through">Simulateur d'examen complet</span>
 </li>
 </ul>
-<button className="w-full py-3 px-4 rounded-lg border border-primary text-primary font-bold transition-all active:scale-95 hover:bg-primary-container hover:text-on-primary-container">
+<a href="/accueil-edukora" className="block w-full py-3 px-4 rounded-lg border border-primary text-primary font-bold transition-all active:scale-95 hover:bg-primary-container hover:text-on-primary-container text-center">
                     Continuer en gratuit
-                </button>
+                </a>
 </div>
 
 <div className="relative bg-primary text-on-primary rounded-xl p-8 flex flex-col shadow-xl transition-transform hover:scale-[1.02] overflow-hidden">
@@ -70,34 +101,32 @@ export default function Page() {
                     Le plus populaire
                 </div>
 <div className="mb-6">
-<h3 className="text-xl font-bold mb-1">Pass Premium</h3>
+<h3 className="text-xl font-bold mb-1">Réussite</h3>
 <p className="text-sm text-on-primary-container/80">L'expérience complète pour réussir votre examen.</p>
 </div>
 <div className="mb-8">
-<div id="price-container">
-<span className="text-4xl font-extrabold" id="price-value">1,000</span>
+<div id="price-container" data-price-month={`${month.price_cents}`} data-price-quarter={`${quarter.price_cents}`} data-plan-month={`${month.id}`} data-plan-quarter={`${quarter.id}`}>
+<span className="text-4xl font-extrabold" id="price-value">{formatPlanPrice(month.price_cents).replace(/ FCFA$/, "")}</span>
 <span className="text-xl font-bold ml-1">FCFA</span>
 <span className="text-sm font-normal opacity-80" id="price-period">/ mois</span>
 </div>
-<div className="hidden mt-1 text-xs font-bold text-secondary-fixed" id="savings-badge">Économisez 500 FCFA par trimestre</div>
+<div className="hidden mt-1 text-xs font-bold text-secondary-fixed" id="savings-badge">Prix 3 mois sans engagement</div>
 </div>
-<ul className="space-y-4 mb-10 flex-grow">
-<li className="flex items-center gap-3">
+<ul id="features-month" className="space-y-4 mb-10 flex-grow">
+{monthFeatures.map((f) => (
+<li className="flex items-center gap-3" key={f}>
 <span className="material-symbols-outlined text-tertiary-fixed text-xl fill-icon" style={{"fontVariationSettings":"'FILL' 1"}}>check_circle</span>
-<span className="font-medium">Tuteur IA illimité 24/7</span>
+<span className="font-medium">{f}</span>
 </li>
-<li className="flex items-center gap-3">
+))}
+</ul>
+<ul id="features-quarter" className="space-y-4 mb-10 flex-grow hidden">
+{quarterFeatures.map((f) => (
+<li className="flex items-center gap-3" key={f}>
 <span className="material-symbols-outlined text-tertiary-fixed text-xl fill-icon" style={{"fontVariationSettings":"'FILL' 1"}}>check_circle</span>
-<span className="font-medium">Fiches certifiées par les profs</span>
+<span className="font-medium">{f}</span>
 </li>
-<li className="flex items-center gap-3">
-<span className="material-symbols-outlined text-tertiary-fixed text-xl fill-icon" style={{"fontVariationSettings":"'FILL' 1"}}>check_circle</span>
-<span className="font-medium">Simulateur d'examen illimité</span>
-</li>
-<li className="flex items-center gap-3">
-<span className="material-symbols-outlined text-tertiary-fixed text-xl fill-icon" style={{"fontVariationSettings":"'FILL' 1"}}>check_circle</span>
-<span className="font-medium">Mode Hors-ligne complet</span>
-</li>
+))}
 </ul>
 <button
   id="subscribe-btn"
@@ -106,6 +135,17 @@ export default function Page() {
 >
   S&apos;abonner maintenant
 </button>
+<div id="phone-required" className="hidden mt-4 rounded-xl bg-surface-container-low p-4 space-y-3">
+<p className="text-sm font-bold text-on-surface">Ajoutez votre numéro Mobile Money</p>
+<p className="text-xs text-on-surface-variant">Indispensable pour recevoir le paiement d&apos;abonnement (Orange, MTN, Moov, Wave).</p>
+<input id="phone-input" type="tel" inputMode="tel" autoComplete="tel" placeholder="+225 07 00 00 00 00"
+       className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 text-base text-on-surface focus:outline-none focus:border-primary transition-colors" />
+<button id="phone-save" type="button"
+        className="w-full py-3 px-4 rounded-lg bg-primary text-on-primary font-bold text-base hover:bg-primary-container transition-colors">
+Enregistrer et continuer
+</button>
+<p id="phone-error" className="hidden text-xs text-error bg-error-container/30 rounded-lg px-3 py-2"></p>
+</div>
 <p className="mt-4 text-[10px] text-center opacity-60">Sans engagement. Annulez à tout moment.</p>
 </div>
 </div>
@@ -154,19 +194,19 @@ export default function Page() {
 </main>
 
 <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-16 px-2 pb-safe bg-surface dark:bg-on-background shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] rounded-t-xl">
-<a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 transition-transform duration-200 ease-in-out active:scale-90 hover:text-primary" href="#">
+<a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 transition-transform duration-200 ease-in-out active:scale-90 hover:text-primary" href="/accueil-edukora">
 <span className="material-symbols-outlined">home</span>
 <span className="font-label text-label-xs font-semibold">Accueil</span>
 </a>
-<a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 transition-transform duration-200 ease-in-out active:scale-90 hover:text-primary" href="#">
+<a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 transition-transform duration-200 ease-in-out active:scale-90 hover:text-primary" href="/fiches">
 <span className="material-symbols-outlined">menu_book</span>
 <span className="font-label text-label-xs font-semibold">Cours</span>
 </a>
-<a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 transition-transform duration-200 ease-in-out active:scale-90 hover:text-primary" href="#">
+<a className="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 transition-transform duration-200 ease-in-out active:scale-90 hover:text-primary" href="/tuteur-ia">
 <span className="material-symbols-outlined">smart_toy</span>
 <span className="font-label text-label-xs font-semibold">Tuteur AI</span>
 </a>
-<a className="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 transition-transform duration-200 ease-in-out active:scale-90" href="#">
+<a className="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 transition-transform duration-200 ease-in-out active:scale-90" href="/profil">
 <span className="material-symbols-outlined fill-icon" style={{"fontVariationSettings":"'FILL' 1"}}>person</span>
 <span className="font-label text-label-xs font-semibold">Profil</span>
 </a>
@@ -177,25 +217,42 @@ export default function Page() {
         const priceVal = document.getElementById('price-value');
         const pricePeriod = document.getElementById('price-period');
         const savingsBadge = document.getElementById('savings-badge');
+        const pc = document.getElementById('price-container');
+
+        let currentPlanId = pc.getAttribute('data-plan-month');
+        const renderPrice = (monthly) =&gt; &#123;
+            currentPlanId = pc.getAttribute(monthly ? 'data-plan-month' : 'data-plan-quarter');
+            pc.setAttribute('data-current-plan', currentPlanId);
+            priceVal.innerText = pc.getAttribute(monthly ? 'data-price-month' : 'data-price-quarter');
+            pricePeriod.innerText = monthly ? '/ mois' : '/ trimestre';
+            savingsBadge.classList.toggle('hidden', monthly);
+            const fm = document.getElementById('features-month');
+            const fq = document.getElementById('features-quarter');
+            if (fm && fq) &#123;
+                fm.classList.toggle('hidden', !monthly);
+                fq.classList.toggle('hidden', monthly);
+            &#125;
+        &#125;;
+
+        const hasQuarter = pc.getAttribute('data-plan-quarter') !== '0';
+        pc.setAttribute('data-current-plan', currentPlanId);
+        if (!hasQuarter) &#123;
+            btnTrim.disabled = true;
+            btnTrim.classList.add('opacity-40', 'cursor-not-allowed');
+        &#125;
 
         btnMonthly.addEventListener('click', () =&gt; &#123;
             btnMonthly.classList.add('bg-surface-container-lowest', 'text-primary', 'shadow-sm');
             btnTrim.classList.remove('bg-surface-container-lowest', 'text-primary', 'shadow-sm');
             btnTrim.classList.add('text-on-surface-variant');
-            
-            priceVal.innerText = '1,000';
-            pricePeriod.innerText = '/ mois';
-            savingsBadge.classList.add('hidden');
+            renderPrice(true);
         &#125;);
 
         btnTrim.addEventListener('click', () =&gt; &#123;
             btnTrim.classList.add('bg-surface-container-lowest', 'text-primary', 'shadow-sm');
             btnMonthly.classList.remove('bg-surface-container-lowest', 'text-primary', 'shadow-sm');
             btnMonthly.classList.add('text-on-surface-variant');
-            
-            priceVal.innerText = '2,500';
-            pricePeriod.innerText = '/ trimestre';
-            savingsBadge.classList.remove('hidden');
+            renderPrice(false);
         &#125;);
     </script>
 
@@ -203,22 +260,80 @@ export default function Page() {
         (function() &#123;
           var btn = document.getElementById('subscribe-btn');
           if (!btn) return;
-          btn.addEventListener('click', function() &#123;
+          var phoneBox = document.getElementById('phone-required');
+          var phoneInput = document.getElementById('phone-input');
+          var phoneSave = document.getElementById('phone-save');
+          var phoneError = document.getElementById('phone-error');
+
+          function doCheckout() &#123;
+            var pc = document.getElementById('price-container');
+            var planId = pc ? pc.getAttribute('data-current-plan') || pc.getAttribute('data-plan-month') : null;
             btn.disabled = true;
             btn.innerHTML = 'Redirection vers le paiement...';
-            fetch('/api/premium/checkout', &#123;
+            return fetch('/api/premium/checkout', &#123;
               method: 'POST',
               headers: &#123; 'Content-Type': 'application/json' &#125;,
               credentials: 'same-origin',
-              body: JSON.stringify(&#123; plan_id: 1 &#125;)
+              body: JSON.stringify(&#123; plan_id: Number(planId || 0) &#125;)
             &#125;)
-              .then(function(r) &#123; return r.json(); &#125;)
-              .then(function(d) &#123;
-                if (d.url) window.location.href = d.url;
-                else &#123; btn.disabled = false; btn.innerHTML = d.error || 'Erreur'; &#125;
-              &#125;)
+                .then(function(r) &#123;
+                  return r.json().then(function(d) &#123; return &#123; status: r.status, d: d &#125;; &#125;);
+                &#125;)
+                .then(function(res) &#123;
+                  var d = res.d;
+                  if (res.status === 401) &#123; window.location.href = '/connexion-edukora?from=/plans-d-abonnement-edukora-1'; return; &#125;
+                  if (d.url) &#123; window.location.href = d.url; return; &#125;
+                  if (d.code === 'PHONE_REQUIRED' && phoneBox) &#123;
+                    btn.disabled = false;
+                    btn.innerHTML = "S'abonner maintenant";
+                    phoneBox.classList.remove('hidden');
+                    phoneError.classList.add('hidden');
+                    phoneInput.focus();
+                    return;
+                  &#125;
+                  btn.disabled = false; btn.innerHTML = d.error || 'Erreur';
+                &#125;)
               .catch(function() &#123; btn.disabled = false; btn.innerHTML = 'Erreur réseau'; &#125;);
-          &#125;);
+          &#125;
+
+          btn.addEventListener('click', doCheckout);
+
+          if (phoneSave && phoneInput) &#123;
+            phoneSave.addEventListener('click', function() &#123;
+              var p = (phoneInput.value || '').trim();
+              if (!p) &#123;
+                phoneError.textContent = 'Veuillez saisir votre numéro de téléphone.';
+                phoneError.classList.remove('hidden');
+                return;
+              &#125;
+              phoneSave.disabled = true;
+              phoneSave.innerHTML = 'Enregistrement...';
+              fetch('/api/me/profile', &#123;
+                method: 'PATCH',
+                headers: &#123; 'Content-Type': 'application/json' &#125;,
+                credentials: 'same-origin',
+                body: JSON.stringify(&#123; phone: p &#125;)
+              &#125;)
+                .then(function(r) &#123; return r.json().catch(function() &#123; return &#123;&#125;; &#125;); &#125;)
+                .then(function(d) &#123;
+                  phoneSave.disabled = false;
+                  phoneSave.innerHTML = 'Enregistrer et continuer';
+                  if (d && d.error) &#123;
+                    phoneError.textContent = d.error;
+                    phoneError.classList.remove('hidden');
+                    return;
+                  &#125;
+                  phoneBox.classList.add('hidden');
+                  doCheckout();
+                &#125;)
+                .catch(function() &#123;
+                  phoneSave.disabled = false;
+                  phoneSave.innerHTML = 'Enregistrer et continuer';
+                  phoneError.textContent = 'Erreur réseau. Réessayez.';
+                  phoneError.classList.remove('hidden');
+                &#125;);
+            &#125;);
+          &#125;
         &#125;)();
     </script>
 

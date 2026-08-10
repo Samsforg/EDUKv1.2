@@ -37,31 +37,74 @@ export default function CoursPage() {
   const [data, setData] = useState<CoursData | null>(null);
   const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<"unauthorized" | "network" | null>(null);
 
   useEffect(() => {
     fetch("/api/cours")
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then(async (r) => {
+        if (!r.ok) {
+          if (r.status === 401 || r.status === 403) throw new Error("unauthorized");
+          throw new Error("network");
+        }
+        return r.json();
+      })
       .then((d) => {
         setData(d);
         if (d.userGrade && !selectedGrade) setSelectedGrade(d.userGrade.code);
       })
-      .catch(() => setError(true));
+      .catch((e) => setError(e.message === "unauthorized" ? "unauthorized" : "network"));
   }, []);
 
-  if (error)
+  if (error === "unauthorized")
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center">
         <span className="material-symbols-outlined text-5xl text-outline">lock</span>
         <p className="font-bold text-on-surface">Connecte-toi pour voir les cours</p>
-        <Link href="/login" className="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl">
+        <Link href="/connexion-edukora" className="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl">
           Se connecter
         </Link>
       </div>
     );
 
+  if (error === "network")
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <span className="material-symbols-outlined text-5xl text-outline">wifi_off</span>
+        <p className="font-bold text-on-surface">Impossible de charger les cours</p>
+        <p className="text-on-surface-variant text-sm">Vérifie ta connexion puis réessaye.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl"
+        >
+          Réessayer
+        </button>
+      </div>
+    );
+
   if (!data)
-    return <div className="min-h-screen bg-background" />;
+    return (
+      <div className="bg-background min-h-screen pb-24">
+        <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg animate-pulse">
+          <div className="h-8 w-56 bg-surface-container-high rounded-lg mb-8" />
+          <div className="h-4 w-32 bg-surface-container-high rounded mb-4" />
+          <div className="flex gap-2 mb-8">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-10 w-24 bg-surface-container-high rounded-full" />
+            ))}
+          </div>
+          <div className="h-4 w-48 bg-surface-container-high rounded mb-4" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-outline-variant p-6 flex flex-col items-center gap-3">
+                <div className="w-16 h-16 rounded-xl bg-surface-container-high" />
+                <div className="h-4 w-24 bg-surface-container-high rounded" />
+                <div className="h-3 w-10 bg-surface-container-high rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
 
   const { grades, subjects, userGrade, userSubscription } = data;
 
@@ -161,7 +204,7 @@ export default function CoursPage() {
             <span className="material-symbols-outlined text-3xl mb-2">workspace_premium</span>
             <h3 className="font-title-md font-bold mb-2">Débloque tout le programme MENAET</h3>
             <p className="text-on-tertiary-container/80 mb-4">Accède à toutes les leçons, exercices corrigés, vidéos et fiches de révision pour réussir ton BAC/BEPC.</p>
-            <Link href="/abonnement" className="bg-on-tertiary-container text-tertiary-container font-bold px-6 py-3 rounded-xl inline-block">
+            <Link href="/plans-d-abonnement-edukora-1" className="bg-on-tertiary-container text-tertiary-container font-bold px-6 py-3 rounded-xl inline-block">
               Voir les offres
             </Link>
           </div>

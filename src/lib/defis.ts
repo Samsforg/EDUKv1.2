@@ -22,8 +22,8 @@ export interface ChallengeDetail extends ChallengeSummary {
   total_participants: number;
 }
 
-function sideScore(challengeId: number, side: "a" | "b"): { xp: number; participants: number } {
-  const row = queryOne<{ xp: number | null; participants: number }>(
+async function sideScore(challengeId: number, side: "a" | "b"): Promise<{ xp: number; participants: number } >{
+  const row = await queryOne<{ xp: number | null; participants: number }>(
     `SELECT COALESCE(SUM(xp), 0) AS xp, COUNT(DISTINCT user_id) AS participants
      FROM challenge_contributions WHERE challenge_id = ? AND side = ?`,
     challengeId,
@@ -32,25 +32,25 @@ function sideScore(challengeId: number, side: "a" | "b"): { xp: number; particip
   return { xp: row?.xp ?? 0, participants: row?.participants ?? 0 };
 }
 
-function toSummary(c: { id: number; name: string; category: string; commune_a: string; commune_b: string; description: string; reward_desc: string; status: string; starts_at: string; ends_at: string }): ChallengeSummary {
+async function toSummary(c: { id: number; name: string; category: string; commune_a: string; commune_b: string; description: string; reward_desc: string; status: string; starts_at: string; ends_at: string }): Promise<ChallengeSummary >{
   return {
     ...c,
-    a: sideScore(c.id, "a"),
-    b: sideScore(c.id, "b"),
+    a: await sideScore(c.id, "a"),
+    b: await sideScore(c.id, "b"),
   };
 }
 
-export function getChallenges(): ChallengeSummary[] {
-  const rows = query<
+export async function getChallenges(): Promise<ChallengeSummary[] >{
+  const rows = await query<
     { id: number; name: string; category: string; commune_a: string; commune_b: string; description: string; reward_desc: string; status: string; starts_at: string; ends_at: string }
   >(
     "SELECT id, name, category, commune_a, commune_b, description, reward_desc, status, starts_at, ends_at FROM challenges ORDER BY CASE status WHEN 'active' THEN 0 WHEN 'upcoming' THEN 1 ELSE 2 END, ends_at",
   );
-  return rows.map(toSummary);
+  return Promise.all(rows.map(toSummary));
 }
 
-export function getChallengeDetail(id: number, userId?: number): ChallengeDetail | null {
-  const c = queryOne<
+export async function getChallengeDetail(id: number, userId?: number): Promise<ChallengeDetail | null >{
+  const c = await queryOne<
     { id: number; name: string; category: string; commune_a: string; commune_b: string; description: string; reward_desc: string; status: string; starts_at: string; ends_at: string }
   >(
     "SELECT id, name, category, commune_a, commune_b, description, reward_desc, status, starts_at, ends_at FROM challenges WHERE id = ?",
@@ -58,8 +58,8 @@ export function getChallengeDetail(id: number, userId?: number): ChallengeDetail
   );
   if (!c) return null;
 
-  const top = (side: "a" | "b"): ChallengeDetail["top_a"] => {
-    const rows = query<
+  const top = async (side: "a" | "b"): Promise<ChallengeDetail["top_a"]> => {
+    const rows = await query<
       { user_id: number; name: string; xp: number; contributions: number }
     >(
       `SELECT u.id AS user_id, u.first_name || ' ' || u.last_name AS name, SUM(cc.xp) AS xp, COUNT(*) AS contributions
@@ -73,14 +73,14 @@ export function getChallengeDetail(id: number, userId?: number): ChallengeDetail
   };
 
   const meCommune = userId
-    ? queryOne<{ commune: string | null }>("SELECT commune FROM users WHERE id = ?", userId)?.commune ?? null
+    ? (await queryOne<{ commune: string | null }>("SELECT commune FROM users WHERE id = ?", userId))?.commune ?? null
     : null;
 
   let myXp = 0;
   let mySide: "a" | "b" | null = null;
   let myRank: number | null = null;
   if (userId) {
-    const mine = queryOne<{ side: string | null; xp: number }>(
+    const mine = await queryOne<{ side: string | null; xp: number }>(
       `SELECT side, COALESCE(SUM(xp), 0) AS xp FROM challenge_contributions WHERE challenge_id = ? AND user_id = ? GROUP BY side ORDER BY SUM(xp) DESC LIMIT 1`,
       id,
       userId,
@@ -88,7 +88,7 @@ export function getChallengeDetail(id: number, userId?: number): ChallengeDetail
     if (mine && mine.side) {
       myXp = mine.xp;
       mySide = mine.side === "a" ? "a" : "b";
-      const above = queryOne<{ n: number }>(
+      const above = await queryOne<{ n: number }>(
         `SELECT COUNT(*) AS n FROM (
            SELECT user_id FROM challenge_contributions WHERE challenge_id = ? AND side = ? AND user_id != ?
            GROUP BY user_id HAVING SUM(xp) > ?
@@ -103,19 +103,19 @@ export function getChallengeDetail(id: number, userId?: number): ChallengeDetail
   }
 
   return {
-    ...toSummary(c),
-    top_a: top("a"),
-    top_b: top("b"),
+    ...(await toSummary(c)),
+    top_a: await top("a"),
+    top_b: await top("b"),
     me: { commune: meCommune, my_xp: myXp, my_rank: myRank, side: mySide },
     total_participants: 0,
   };
 }
 
-export function creditChallengeContribution(userId: number, xp: number) {
+export async function creditChallengeContribution(userId: number, xp: number) {
   if (xp < 5) return;
-  const user = queryOne<{ commune: string | null }>("SELECT commune FROM users WHERE id = ?", userId);
+  const user = await queryOne<{ commune: string | null }>("SELECT commune FROM users WHERE id = ?", userId);
   if (!user?.commune) return;
-  const challenges = query<{ id: number; category: string; commune_a: string; commune_b: string }>(
+  const challenges = await query<{ id: number; category: string; commune_a: string; commune_b: string }>(
     "SELECT id, category, commune_a, commune_b FROM challenges WHERE status = 'active'",
   );
   for (const c of challenges) {
@@ -128,7 +128,7 @@ export function creditChallengeContribution(userId: number, xp: number) {
       side = "b";
     }
     if (side) {
-      run(
+      await run(
         "INSERT INTO challenge_contributions (challenge_id, user_id, side, xp) VALUES (?, ?, ?, ?)",
         c.id,
         userId,

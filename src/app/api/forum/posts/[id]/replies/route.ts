@@ -1,10 +1,11 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne, run } from "@/lib/db";
 import { getCurrentUser, notify } from "@/lib/session";
 import { refreshBadges } from "@/lib/badges";
 import { creditLigueChallenges } from "@/lib/ligue";
 
-export async function POST(
+async function POSTHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -17,24 +18,24 @@ export async function POST(
   const content = String(body?.content ?? "").trim();
   if (content.length < 2) return NextResponse.json({ error: "Réponse trop courte" }, { status: 400 });
 
-  const post = queryOne<{ id: number; user_id: number; title: string }>(
+  const post = await queryOne<{ id: number; user_id: number; title: string }>(
     "SELECT id, user_id, title FROM forum_posts WHERE id = ?",
     postId,
   );
   if (!post) return NextResponse.json({ error: "Sujet introuvable" }, { status: 404 });
 
-  const r = run(
+  const r = await run(
     "INSERT INTO forum_replies (post_id, user_id, content) VALUES (?, ?, ?)",
     postId,
     user.id,
     content,
   );
 
-  refreshBadges(user.id);
-  creditLigueChallenges(user.id, "forum_replies", 1);
+  await refreshBadges(user.id);
+  await creditLigueChallenges(user.id, "forum_replies", 1);
 
   if (post.user_id !== user.id) {
-    notify(
+    await notify(
       post.user_id,
       "Nouvelle réponse sur le forum",
       `${user.first_name} a répondu à ton sujet « ${post.title} »`,
@@ -44,3 +45,5 @@ export async function POST(
 
   return NextResponse.json({ id: Number(r.lastInsertRowid) }, { status: 201 });
 }
+
+export const POST = guardApi("POST /api/forum/posts/[id]/replies", POSTHandler);

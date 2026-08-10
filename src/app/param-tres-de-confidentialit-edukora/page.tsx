@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import DataControls from "./DataControls";
 
 export const metadata: Metadata = { title: "Paramètres de Confidentialité - Edukora" };
 
@@ -15,7 +16,7 @@ export default function Page() {
 </div>
 <div className="flex items-center gap-2">
 <div className="w-8 h-8 rounded-full overflow-hidden border border-on-primary/20">
-<img className="w-full h-full object-cover" src="/images/ecran-270.png" alt="A professional close-up studio portrait of a young Ivorian student with a warm, confident expression. The lighting is bright and even, reflecting a clean academic environment. The style is modern corporate photography, using the Edukora primary blue as a subtle background accent. High contrast and sharp focus represent academic excellence." />
+<img  className="w-full h-full object-cover" src="/images/ecran-270.webp" alt="A professional close-up studio portrait of a young Ivorian student with a warm, confident expression. The lighting is bright and even, reflecting a clean academic environment. The style is modern corporate photography, using the Edukora primary blue as a subtle background accent. High contrast and sharp focus represent academic excellence." loading="lazy" />
 </div>
 </div>
 </header>
@@ -106,16 +107,7 @@ export default function Page() {
 <span className="material-symbols-outlined text-primary" style={{"fontVariationSettings":"'FILL' 1"}}>database</span>
 <h3 className="font-headline text-xl font-semibold text-primary">Contrôle des données</h3>
 </div>
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-<button className="flex items-center justify-center gap-3 border border-primary text-primary px-4 py-3 rounded-xl font-semibold hover:bg-primary-fixed/50 transition-all active:scale-95">
-<span className="material-symbols-outlined">download</span>
-                        Télécharger mes données
-                    </button>
-<button className="flex items-center justify-center gap-3 border border-error text-error px-4 py-3 rounded-xl font-semibold hover:bg-error-container/20 transition-all active:scale-95">
-<span className="material-symbols-outlined">delete_forever</span>
-                        Supprimer mon compte
-                    </button>
-</div>
+<DataControls />
 <p className="text-label-sm text-on-surface-variant mt-4 text-center">
                     Note: La suppression du compte est irréversible et effacera tout votre historique d'examen.
                 </p>

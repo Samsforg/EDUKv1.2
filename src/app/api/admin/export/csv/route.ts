@@ -1,12 +1,13 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { buildReportCsv } from "@/lib/report";
 import { requireAdmin } from "@/lib/admin-guard";
 
-export async function GET() {
+async function GETHandler() {
   const forbidden = await requireAdmin();
   if (forbidden) return forbidden;
 
-  const csv = buildReportCsv();
+  const csv = await buildReportCsv();
   const filename = `edukora-rapport-${new Date().toISOString().slice(0, 10)}.csv`;
 
   return new NextResponse(csv, {
@@ -17,3 +18,5 @@ export async function GET() {
     },
   });
 }
+
+export const GET = guardApi("GET /api/admin/export/csv", GETHandler);

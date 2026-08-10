@@ -1,0 +1,92 @@
+MENTIONS LÉGALES
+Site : Edukora
+Adresse : https://edukora.net
+Dernière mise à jour : 8 août 2026
+1. Éditeur du site
+Le site et la plateforme numérique Edukora, accessibles à l'adresse https://edukora.net, sont édités par :
+Soma Samaké FORGO
+Statut juridique : Immatriculation en cours
+RCCM : En cours
+IDU : En cours
+Adresse postale : 09 BP 989 Abidjan 08, Côte d’Ivoire
+Téléphone : +225 07 09 14 15 45
+E-mail général : contact@edukora.net
+E-mail support : support@edukora.net
+E-mail du responsable : somasamakeforgo@edukora.net
+Les informations relatives au RCCM et à l'IDU seront mises à jour dès leur attribution officielle.
+2. Directeur de publication
+Le directeur de publication du site est : Soma Samaké FORGO
+E-mail : somasamakeforgo@edukora.net
+3. Hébergement et infrastructure technique
+La plateforme Edukora utilise plusieurs prestataires techniques :
+Application et infrastructure web : Vercel
+Site : https://vercel.com
+Base de données : Néon
+Site : https://neon.tech
+Nom de domaine : LWS
+Le nom de domaine edukora.net est enregistré auprès de LWS.
+Ces prestataires peuvent traiter certaines données techniques nécessaires au fonctionnement, à la sécurité, à l'hébergement ou à la maintenance de la plateforme.
+4. Objet du site
+Edukora est une plateforme numérique éducative destinée notamment à faciliter l'accès à des ressources pédagogiques et à des outils d'apprentissage.
+La plateforme peut notamment proposer :
+* des cours et ressources pédagogiques ;
+* des exercices ;
+* des évaluations ;
+* des espaces personnels pour les apprenants ;
+* des espaces destinés aux enseignants ;
+* des fonctionnalités destinées aux parents ou responsables légaux ;
+* des outils de suivi pédagogique ;
+* un assistant pédagogique basé sur l'intelligence artificielle (« Tuteur IA ») ;
+* des services numériques complémentaires.
+5. Propriété intellectuelle
+La dénomination Edukora, son identité visuelle, son logo, ses interfaces, sa structure, ses textes, contenus pédagogiques, illustrations, logiciels, bases de données et autres éléments composant la plateforme sont protégés par les dispositions applicables en matière de propriété intellectuelle.
+Toute reproduction, représentation, adaptation, modification, distribution ou exploitation non autorisée de tout ou partie de ces éléments est interdite, sauf autorisation préalable de l'éditeur ou du titulaire des droits concernés.
+Les contenus appartenant à des tiers restent la propriété de leurs titulaires respectifs.
+6. Données personnelles
+Edukora collecte et traite certaines données personnelles nécessaires à la création des comptes, au fonctionnement des services, à la personnalisation de l'expérience pédagogique, à la sécurité et à l'amélioration de la plateforme.
+Ces traitements sont réalisés conformément à la réglementation ivoirienne applicable, notamment à la loi n°2013-450 du 19 juin 2013 relative à la protection des données à caractère personnel.
+Les modalités détaillées sont présentées dans la Politique de confidentialité d'Edukora.
+7. Cookies
+Edukora peut utiliser des cookies ou technologies similaires nécessaires :
+* à l'authentification ;
+* au maintien des sessions ;
+* à la sécurité ;
+* au fonctionnement de certaines fonctionnalités ;
+* à l'amélioration des performances.
+Lorsque cela est requis par la réglementation applicable, le consentement de l'utilisateur est demandé avant l'utilisation de cookies non nécessaires.
+8. Tuteur IA
+Le Tuteur IA d'Edukora constitue un outil d'assistance pédagogique.
+Les réponses générées automatiquement peuvent comporter des erreurs ou des informations incomplètes et ne doivent pas être considérées comme des décisions ou évaluations scolaires officielles.
+Les utilisateurs sont invités à vérifier les informations importantes auprès de sources pédagogiques appropriées ou de leurs enseignants.
+9. Responsabilité
+Edukora met en œuvre des moyens raisonnables afin d'assurer la disponibilité, la sécurité et le bon fonctionnement de la plateforme.
+Toutefois, l'éditeur ne peut garantir une disponibilité permanente ou l'absence totale d'erreurs, de bugs, d'interruptions ou de dysfonctionnements.
+Edukora ne saurait notamment être tenue responsable des interruptions résultant :
+* d'opérations de maintenance ;
+* de problèmes de connexion Internet ;
+* de défaillances d'un prestataire tiers ;
+* d'un problème affectant l'équipement de l'utilisateur ;
+* d'une utilisation frauduleuse ou abusive du compte ;
+* d'un événement indépendant de la volonté de l'éditeur.
+10. Liens vers des sites tiers
+Edukora peut contenir des liens vers des services ou sites externes.
+L'éditeur n'est pas responsable du contenu, de la disponibilité ou des pratiques de confidentialité de ces services tiers.
+11. Sécurité
+Edukora met en œuvre des mesures techniques et organisationnelles raisonnables destinées à protéger les informations traitées contre les accès non autorisés, la perte, l'altération ou la divulgation illicite.
+Aucune infrastructure connectée à Internet ne pouvant garantir une sécurité absolue, l'utilisateur reconnaît l'existence de risques résiduels.
+12. Droit applicable
+Les présentes mentions légales sont soumises au droit ivoirien.
+La plateforme est notamment susceptible d'être concernée par :
+* la loi n°2013-450 du 19 juin 2013 relative à la protection des données à caractère personnel ;
+* la loi n°2013-546 du 30 juillet 2013 relative aux transactions électroniques ;
+* la loi n°2013-451 du 19 juin 2013 relative à la lutte contre la cybercriminalité.
+13. Contact
+Pour toute question concernant les présentes mentions légales :
+Edukora - Soma Samaké FORGO
+E-mail : contact@edukora.net
+Support : support@edukora.net
+Téléphone : +225 07 09 14 15 45
+
+
+© 2026 Edukora — Tous droits réservés.
+

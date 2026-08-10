@@ -1,3 +1,4 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { queryOne, run } from "@/lib/db";
@@ -16,12 +17,12 @@ function ensureVapid() {
   }
 }
 
-export async function POST(req: NextRequest) {
+async function POSTHandler(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
   const ip = getClientIp(req);
-  const rl = rateLimit(`push:${user.id}:${ip}`, "push_subscribe");
+  const rl = await rateLimit(`push:${user.id}:${ip}`, "push_subscribe");
   if (!rl.allowed) return rateLimitResponse(rl.resetAt);
 
   const { subscription } = await req.json();
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
 
   ensureVapid();
 
-  const existing = queryOne<{ id: number }>(
+  const existing = await queryOne<{ id: number }>(
     "SELECT id FROM push_subscriptions WHERE user_id = ? AND endpoint = ?",
     user.id, subscription.endpoint
   );
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, message: "Déjà abonné" });
   }
 
-  run(
+  await run(
     "INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth) VALUES (?, ?, ?, ?)",
     user.id, subscription.endpoint, subscription.keys.p256dh, subscription.keys.auth
   );
@@ -47,11 +48,15 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(req: NextRequest) {
+export const POST = guardApi("POST /api/push/subscribe", POSTHandler);
+
+async function DELETEHandler(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
   const { endpoint } = await req.json();
-  run("DELETE FROM push_subscriptions WHERE user_id = ? AND endpoint = ?", user.id, endpoint);
+  await run("DELETE FROM push_subscriptions WHERE user_id = ? AND endpoint = ?", user.id, endpoint);
   return NextResponse.json({ ok: true });
 }
+
+export const DELETE = guardApi("DELETE /api/push/subscribe", DELETEHandler);

@@ -17,12 +17,12 @@ export default async function Page({
   if (user.role !== "parent") redirect("/accueil-edukora");
 
   const sp = await searchParams;
-  const children = getParentChildren(user.id);
+  const children = await getParentChildren(user.id);
   if (children.length === 0) redirect("/espace-parent/jumelage");
 
   const requested = sp.child ? Number(sp.child) : null;
   const active = children.find((c) => c.child_id === requested) ?? children[0];
-  const data = getDashboardData(user.id, active.child_id);
+  const data = await getDashboardData(user.id, active.child_id);
 
   const initials = `${active.first_name[0]}${active.last_name[0]}`.toUpperCase();
 

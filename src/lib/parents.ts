@@ -12,9 +12,9 @@ export interface ParentChild {
   last_active: string | null;
 }
 
-export function getParentChildren(parentId: number): ParentChild[] {
+export async function getParentChildren(parentId: number): Promise<ParentChild[] >{
   const today = new Date().toISOString().slice(0, 10);
-  return query<ParentChild>(
+  return (await query<ParentChild>(
     `SELECT u.id AS child_id, u.first_name, u.last_name, u.class_level, u.xp, u.streak, u.last_active,
             s.name AS serie_name
      FROM parent_child pc
@@ -23,34 +23,34 @@ export function getParentChildren(parentId: number): ParentChild[] {
      WHERE pc.parent_id = ?
      ORDER BY pc.created_at ASC`,
     parentId,
-  ).map((c) => ({ ...c, online: c.last_active === today }));
+  )).map((c) => ({ ...c, online: c.last_active === today }));
 }
 
-export function isChildLinked(parentId: number, childId: number): boolean {
-  return !!queryOne<{ id: number }>(
+export async function isChildLinked(parentId: number, childId: number): Promise<boolean >{
+  return !!await queryOne<{ id: number }>(
     "SELECT id FROM parent_child WHERE parent_id = ? AND child_id = ?",
     parentId,
     childId,
   );
 }
 
-export function resolveLinkedChild(
+export async function resolveLinkedChild(
   parentId: number,
   requestedChildId?: number | null,
-): ParentChild | null {
-  const children = getParentChildren(parentId);
+): Promise<ParentChild | null >{
+  const children = await getParentChildren(parentId);
   if (requestedChildId) {
     return children.find((c) => c.child_id === requestedChildId) ?? null;
   }
   return children[0] ?? null;
 }
 
-export function linkChild(parentId: number, childId: number) {
-  run("INSERT INTO parent_child (parent_id, child_id) VALUES (?, ?)", parentId, childId);
+export async function linkChild(parentId: number, childId: number) {
+  await run("INSERT INTO parent_child (parent_id, child_id) VALUES (?, ?)", parentId, childId);
 }
 
-export function unlinkChild(parentId: number, childId: number) {
-  run("DELETE FROM parent_child WHERE parent_id = ? AND child_id = ?", parentId, childId);
+export async function unlinkChild(parentId: number, childId: number) {
+  await run("DELETE FROM parent_child WHERE parent_id = ? AND child_id = ?", parentId, childId);
 }
 
 export function getWeekRange() {
@@ -71,10 +71,10 @@ interface ActivityEvent {
   hours: number;
 }
 
-function activityEvents(childId: number): ActivityEvent[] {
-  const lessons = query<{ t: string }>("SELECT read_at AS t FROM lesson_reads WHERE user_id = ?", childId);
-  const quizzes = query<{ t: string }>("SELECT completed_at AS t FROM quiz_attempts WHERE user_id = ?", childId);
-  const exams = query<{ t: string; duration_seconds: number }>(
+async function activityEvents(childId: number): Promise<ActivityEvent[] >{
+  const lessons = await query<{ t: string }>("SELECT read_at AS t FROM lesson_reads WHERE user_id = ?", childId);
+  const quizzes = await query<{ t: string }>("SELECT completed_at AS t FROM quiz_attempts WHERE user_id = ?", childId);
+  const exams = await query<{ t: string; duration_seconds: number }>(
     "SELECT completed_at AS t, duration_seconds FROM exam_attempts WHERE user_id = ?",
     childId,
   );
@@ -94,14 +94,14 @@ export interface WeekDay {
   isToday: boolean;
 }
 
-export function getWeeklyActivity(childId: number) {
+export async function getWeeklyActivity(childId: number) {
   const { monday, sunday, today } = getWeekRange();
   const labels = ["LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM"];
   const days: WeekDay[] = labels.map((label, i) => {
     const date = new Date(Date.parse(monday + "T00:00:00Z") + i * 86400000).toISOString().slice(0, 10);
     return { label, date, hours: 0, active: false, isToday: date === today };
   });
-  const events = activityEvents(childId).filter((e) => e.t.slice(0, 10) >= monday && e.t.slice(0, 10) <= sunday);
+  const events = (await activityEvents(childId)).filter((e) => e.t.slice(0, 10) >= monday && e.t.slice(0, 10) <= sunday);
   for (const e of events) {
     const date = e.t.slice(0, 10);
     const day = days.find((d) => d.date === date);
@@ -115,8 +115,8 @@ export function getWeeklyActivity(childId: number) {
   return { days, total, activeDays };
 }
 
-export function getPeakHours(childId: number): { label: string; hour: number } {
-  const events = activityEvents(childId);
+export async function getPeakHours(childId: number): Promise<{ label: string; hour: number } >{
+  const events = await activityEvents(childId);
   if (events.length === 0) return { label: "18h-20h", hour: 18 };
   const counts = new Map<number, number>();
   for (const e of events) {
@@ -144,8 +144,8 @@ export interface SubjectStat {
   avg_over_20: number;
 }
 
-export function getSubjectStats(childId: number): SubjectStat[] {
-  const rows = query<{
+export async function getSubjectStats(childId: number): Promise<SubjectStat[] >{
+  const rows = await query<{
     subject_id: number;
     name: string;
     icon: string;
@@ -211,8 +211,8 @@ function relativeLabel(dateStr: string): string {
   return `${d.getDate()} ${month}`;
 }
 
-export function getRecentResults(childId: number, limit = 10): RecentResult[] {
-  const quizRows = query<{
+export async function getRecentResults(childId: number, limit = 10): Promise<RecentResult[] >{
+  const quizRows = await query<{
     id: number;
     score: number;
     max_score: number;
@@ -229,7 +229,7 @@ export function getRecentResults(childId: number, limit = 10): RecentResult[] {
      WHERE qa.user_id = ?`,
     childId,
   );
-  const examRows = query<{
+  const examRows = await query<{
     id: number;
     score: number;
     score_over_20: number;
@@ -321,8 +321,8 @@ export interface DashboardData {
   subjects: SubjectStat[];
 }
 
-export function getDashboardData(parentId: number, childId: number): DashboardData {
-  const children = getParentChildren(parentId);
+export async function getDashboardData(parentId: number, childId: number): Promise<DashboardData >{
+  const children = await getParentChildren(parentId);
   const child = children.find((c) => c.child_id === childId) ?? children[0] ?? null;
   if (!child) {
     return {
@@ -342,14 +342,14 @@ export function getDashboardData(parentId: number, childId: number): DashboardDa
     };
   }
   const id = child.child_id;
-  const week = getWeeklyActivity(id);
-  const subjects = getSubjectStats(id);
-  const results = getRecentResults(id, 4);
+  const week = await getWeeklyActivity(id);
+  const subjects = await getSubjectStats(id);
+  const results = await getRecentResults(id, 4);
 
   const avgValues = subjects.length ? subjects.reduce((s, x) => s + x.avg_over_20, 0) / subjects.length : 0;
   const estimated_average = Math.round(avgValues * 10) / 10;
 
-  const oldRows = query<{ score: number; max_score: number; score_over_20: number; completed_at: string }>(
+  const oldRows = await query<{ score: number; max_score: number; score_over_20: number; completed_at: string }>(
     `SELECT qa.score, qa.max_score, NULL AS score_over_20, qa.completed_at FROM quiz_attempts qa WHERE qa.user_id = ? AND qa.completed_at < datetime('now', '-30 days')
      UNION ALL
      SELECT ea.score, NULL AS max_score, ea.score_over_20, ea.completed_at FROM exam_attempts ea WHERE ea.user_id = ? AND ea.completed_at < datetime('now', '-30 days')`,
@@ -397,16 +397,16 @@ export function getDashboardData(parentId: number, childId: number): DashboardDa
   };
 }
 
-export function getOrCreatePairingCode(userId: number): string {
-  const existing = queryOne<{ code: string; expires_at: string | null }>(
+export async function getOrCreatePairingCode(userId: number): Promise<string >{
+  const existing = await queryOne<{ code: string; expires_at: string | null }>(
     "SELECT code, expires_at FROM pairing_codes WHERE user_id = ? ORDER BY created_at DESC LIMIT 1",
     userId,
   );
   if (existing && (!existing.expires_at || new Date(existing.expires_at) > new Date())) {
     return existing.code;
   }
-  const code = generateCode();
-  run(
+  const code = await generateCode();
+  await run(
     "INSERT INTO pairing_codes (user_id, code, expires_at) VALUES (?, ?, datetime('now', '+30 days'))",
     userId,
     code,
@@ -414,18 +414,18 @@ export function getOrCreatePairingCode(userId: number): string {
   return code;
 }
 
-function generateCode(): string {
+async function generateCode(): Promise<string >{
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "";
   for (;;) {
     code = "";
     for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-    if (!queryOne<{ id: number }>("SELECT id FROM pairing_codes WHERE code = ?", code)) return code;
+    if (!await queryOne<{ id: number }>("SELECT id FROM pairing_codes WHERE code = ?", code)) return code;
   }
 }
 
-export function getParentSettings(userId: number) {
-  const s = queryOne<{
+export async function getParentSettings(userId: number) {
+  const s = await queryOne<{
     academic_alerts: number;
     score_drop: number;
     results_alert: number;
@@ -446,7 +446,7 @@ export function getParentSettings(userId: number) {
   );
 }
 
-export function saveParentSettings(
+export async function saveParentSettings(
   userId: number,
   fields: Partial<{
     academic_alerts: boolean;
@@ -456,12 +456,12 @@ export function saveParentSettings(
     encouragement: boolean;
   }>,
 ) {
-  const cur = getParentSettings(userId);
+  const cur = await getParentSettings(userId);
   const next = { ...cur };
   (Object.keys(fields) as (keyof typeof fields)[]).forEach((k) => {
     if (typeof fields[k] === "boolean") (next as Record<string, number>)[k] = fields[k] ? 1 : 0;
   });
-  run(
+  await run(
     `INSERT INTO parent_notification_settings (user_id, academic_alerts, score_drop, results_alert, weekly_report, encouragement, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
      ON CONFLICT(user_id) DO UPDATE SET

@@ -1,6 +1,14 @@
 import Link from "next/link";
 import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Fonctionnalités",
+  description:
+    "Découvrez les fonctionnalités Edukora : simulateur d'examen BAC/BEPC, fiches certifiées par des inspecteurs, tuteur IA Kora, classements et ligues. Toutes séries, toutes classes.",
+  alternates: { canonical: "/fonctionnalites" },
+};
 
 const features = [
   {

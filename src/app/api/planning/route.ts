@@ -1,6 +1,8 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
+import { resolveUserGradeIds, gradeInClause } from "@/lib/level";
 
 function normalize(s: string) {
   return s
@@ -25,26 +27,43 @@ function durationMinutes(type: string) {
   return type === "exam" ? 120 : 30;
 }
 
-export async function GET() {
+async function GETHandler() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
-  const subjects = query<{ id: number; name: string; icon: string; color: string }>(
+  const gradeClause = await (async () => {
+    const ids = await resolveUserGradeIds(user.serie_id, user.class_level);
+    return ids ? gradeInClause(ids) : null;
+  })();
+
+  const subjects = await query<{ id: number; name: string; icon: string; color: string }>(
     "SELECT id, name, icon, color FROM subjects ORDER BY id",
   );
 
-  const chapters = query<{ id: number; subject_id: number; title: string; position: number }>(
-    "SELECT id, subject_id, title, position FROM chapters ORDER BY subject_id, position",
+  const chapters = await query<{ id: number; subject_id: number; title: string; position: number }>(
+    `SELECT id, subject_id, title, position FROM chapters WHERE status = 'approved' ${
+      gradeClause ? `AND ${gradeClause.clause}` : ""
+    } ORDER BY subject_id, position`,
+    ...(gradeClause?.params ?? []),
   );
 
-  const lessons = query<{ id: number; chapter_id: number; title: string; read: number }>(
+  const lessons = await query<{ id: number; chapter_id: number; title: string; read: number }>(
     `SELECT l.id, l.chapter_id, l.title,
             (SELECT COUNT(*) FROM lesson_reads lr WHERE lr.lesson_id = l.id AND lr.user_id = ?) AS read
-     FROM lessons l ORDER BY l.chapter_id, l.position`,
+     FROM lessons l WHERE l.status = 'approved'
+       ${gradeClause ? `AND l.chapter_id IN (SELECT id FROM chapters WHERE ${gradeClause.clause})` : ""}
+     ORDER BY l.chapter_id, l.position`,
     user.id,
+    ...(gradeClause?.params ?? []),
   );
 
-  const quizRows = query<{
+  const chapterIds = new Set(chapters.map((c) => c.id));
+  const quizChapterClause =
+    chapterIds.size > 0
+      ? `(q.chapter_id IS NULL OR q.chapter_id IN (${[...chapterIds].map(() => "?").join(",")}))`
+      : "(q.chapter_id IS NULL)";
+
+  const quizRows = await query<{
     id: number;
     subject_id: number;
     chapter_id: number | null;
@@ -55,9 +74,10 @@ export async function GET() {
     `SELECT q.id, q.subject_id, q.chapter_id, q.title,
             (SELECT MAX(a.score * 100.0 / a.max_score) FROM quiz_attempts a WHERE a.quiz_id = q.id AND a.user_id = ?) AS best,
             (SELECT COUNT(*) FROM quiz_attempts a WHERE a.quiz_id = q.id AND a.user_id = ?) AS attempts
-     FROM quizzes q ORDER BY q.subject_id, q.id`,
+     FROM quizzes q WHERE ${quizChapterClause} ORDER BY q.subject_id, q.id`,
     user.id,
     user.id,
+    ...chapterIds,
   );
 
   const lessonsByChapter = new Map<number, { id: number; title: string; read: boolean }[]>();
@@ -75,13 +95,29 @@ export async function GET() {
   }
 
   type ChapterInfo = {
+    id: number;
     title: string;
     lessons_total: number;
     lessons_read: number;
     next_lesson: { id: number; title: string } | null;
     status: "not_started" | "in_progress" | "needs_revision" | "mastered";
+    status_label: string;
     quiz: { id: number; title: string; best: number | null } | null;
   };
+
+  const REVIEW_AFTER_DAYS = 14;
+  const reviewRows = await query<{ chapter_id: number; last_read: string }>(
+    `SELECT l.chapter_id, MAX(lr.read_at) AS last_read
+     FROM lesson_reads lr JOIN lessons l ON l.id = lr.lesson_id
+     WHERE lr.user_id = ? GROUP BY l.chapter_id`,
+    user.id,
+  );
+  const lastReadDays: Record<number, number> = {};
+  const now = Date.now();
+  for (const r of reviewRows) {
+    const raw = r.last_read.includes("T") ? r.last_read : `${r.last_read}Z`;
+    lastReadDays[r.chapter_id] = Math.max(0, Math.floor((now - new Date(raw).getTime()) / 86400000));
+  }
 
   const subjectChapters = new Map<number, ChapterInfo[]>();
   const subjectStats = new Map<number, { unread: number; revise: number }>();
@@ -98,21 +134,34 @@ export async function GET() {
       null;
 
     let status: ChapterInfo["status"] = "not_started";
-    if (total > 0 && read > 0 && read < total) status = "in_progress";
-    else if (total > 0 && read === total) {
-      status =
-        subjQuizzes.length > 0 && (chapterQuiz?.best ?? null) !== null && (chapterQuiz?.best ?? 0) >= 70
-          ? "mastered"
-          : "needs_revision";
+    let status_label = "À commencer";
+    if (total > 0 && read > 0 && read < total) {
+      status = "in_progress";
+      status_label = "En cours";
+    } else if (total > 0 && read === total) {
+      if (subjQuizzes.length > 0 && (chapterQuiz?.best ?? null) !== null && (chapterQuiz?.best ?? 0) >= 70) {
+        if ((lastReadDays[c.id] ?? 0) >= REVIEW_AFTER_DAYS) {
+          status = "needs_revision";
+          status_label = "À revoir";
+        } else {
+          status = "mastered";
+          status_label = "Maîtrisé";
+        }
+      } else {
+        status = "needs_revision";
+        status_label = "À renforcer";
+      }
     }
 
     const arr = subjectChapters.get(c.subject_id) ?? [];
     arr.push({
+      id: c.id,
       title: c.title,
       lessons_total: total,
       lessons_read: read,
-      next_lesson: unread[0] ?? null,
+      next_lesson: unread[0] ?? chLessons[0] ?? null,
       status,
+      status_label,
       quiz: chapterQuiz ?? null,
     });
     subjectChapters.set(c.subject_id, arr);
@@ -123,7 +172,7 @@ export async function GET() {
     subjectStats.set(c.subject_id, st);
   }
 
-  const papers = query<{ id: number; subject_id: number; title: string }>(
+  const papers = await query<{ id: number; subject_id: number; title: string }>(
     "SELECT id, subject_id, title FROM exam_papers ORDER BY subject_id, year DESC",
   );
 
@@ -139,6 +188,16 @@ export async function GET() {
 
     for (const ch of [...chaptersList].sort((a, b) => a.lessons_read - b.lessons_read)) {
       if (ch.status === "needs_revision") {
+        if (ch.status_label === "À revoir" && ch.next_lesson) {
+          tasks.push({
+            type: "lesson",
+            title: ch.title,
+            subtitle: `Relire (dernière lecture il y a ${lastReadDays[ch.id] ?? ""} jours)`,
+            href: `/fiches/${ch.next_lesson.id}`,
+            priority: -1,
+          });
+          continue;
+        }
         const q = ch.quiz;
         if (q) {
           tasks.push({
@@ -169,18 +228,19 @@ export async function GET() {
         });
       }
     }
-    tasksBySubject.set(s.id, tasks);
+    tasksBySubject.set(s.id, tasks.sort((a, b) => a.priority - b.priority));
   }
 
   const subjectsWithTasks = subjects.filter((s) => (tasksBySubject.get(s.id) ?? []).length > 0);
 
-  // Focus : matière la plus à réviser puis la plus en retard
-  const focusSubject = [...subjects]
+  // Focus : matière la plus à réviser puis la plus en retard (parmi les matières du niveau)
+  const focusCandidates = (gradeClause ? subjects.filter((s) => (subjectStats.get(s.id)?.unread ?? 0) > 0) : subjects) as typeof subjects;
+  const focusSubject = [...focusCandidates]
     .sort((a, b) => {
       const sa = subjectStats.get(a.id) ?? { unread: 0, revise: 0 };
       const sb = subjectStats.get(b.id) ?? { unread: 0, revise: 0 };
       return sb.revise - sa.revise || sb.unread - sa.unread;
-    })[0];
+    })[0] ?? subjects[0];
 
   // Interleaving round-robin entre matières
   const sequence: SequenceItem[] = [];
@@ -267,3 +327,5 @@ export async function GET() {
     days,
   });
 }
+
+export const GET = guardApi("GET /api/planning", GETHandler);

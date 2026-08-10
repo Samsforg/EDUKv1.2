@@ -1,19 +1,22 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { getParentSettings, saveParentSettings } from "@/lib/parents";
 
 const FIELDS = ["academic_alerts", "score_drop", "results_alert", "weekly_report", "encouragement"] as const;
 
-export async function GET() {
+async function GETHandler() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
   if (user.role !== "parent") {
     return NextResponse.json({ error: "Réservé aux parents" }, { status: 403 });
   }
-  return NextResponse.json({ settings: getParentSettings(user.id) });
+  return NextResponse.json({ settings: await getParentSettings(user.id) });
 }
 
-export async function PUT(req: NextRequest) {
+export const GET = guardApi("GET /api/parent/notifications", GETHandler);
+
+async function PUTHandler(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
   if (user.role !== "parent") {
@@ -27,6 +30,8 @@ export async function PUT(req: NextRequest) {
   for (const f of FIELDS) {
     if (typeof body[f] === "boolean") fields[f] = body[f];
   }
-  const settings = saveParentSettings(user.id, fields);
+  const settings = await saveParentSettings(user.id, fields);
   return NextResponse.json({ ok: true, settings });
 }
+
+export const PUT = guardApi("PUT /api/parent/notifications", PUTHandler);

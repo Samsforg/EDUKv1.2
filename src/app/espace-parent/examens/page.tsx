@@ -19,13 +19,13 @@ export default async function Page({
   if (user.role !== "parent") redirect("/accueil-edukora");
 
   const sp = await searchParams;
-  const children = getParentChildren(user.id);
+  const children = await getParentChildren(user.id);
   if (children.length === 0) redirect("/espace-parent/jumelage");
-  const active = resolveLinkedChild(user.id, sp.child ? Number(sp.child) : null) ?? children[0];
+  const active = await resolveLinkedChild(user.id, sp.child ? Number(sp.child) : null) ?? children[0];
   const childId = active.child_id;
 
-  const allResults = getRecentResults(childId, 100);
-  const subjects = getSubjectStats(childId);
+  const allResults = await getRecentResults(childId, 100);
+  const subjects = await getSubjectStats(childId);
   const estimated =
     subjects.length > 0
       ? Math.round((subjects.reduce((s, x) => s + x.avg_over_20, 0) / subjects.length) * 10) / 10

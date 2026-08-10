@@ -20,13 +20,13 @@ function section(lines: string[]): string {
   return lines.join("");
 }
 
-export function buildReportCsv(): string {
-  const stats = getAdminStats();
-  const users = getAdminUsers();
-  const subjects = getSubjectStats();
-  const trends = getTrends(14);
-  const activity = getActivityFeed(50);
-  const content = getContentOverview();
+export async function buildReportCsv(): Promise<string >{
+  const stats = await getAdminStats();
+  const users = await getAdminUsers();
+  const subjects = await getSubjectStats();
+  const trends = await getTrends(14);
+  const activity = await getActivityFeed(50);
+  const content = await getContentOverview();
 
   const out: string[] = [];
 

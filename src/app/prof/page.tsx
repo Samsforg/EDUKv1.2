@@ -108,7 +108,7 @@ export default function ProfBoard() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center">
         <span className="material-symbols-outlined text-5xl text-outline">lock</span>
         <p className="font-bold text-on-surface">{error}</p>
-        <Link href="/login" className="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl">
+        <Link href="/connexion-edukora" className="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl">
           Se connecter
         </Link>
       </div>

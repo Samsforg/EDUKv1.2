@@ -63,6 +63,13 @@ const STATUS_STYLE: Record<string, { bg: string; text: string; icon: string }> =
   mastered: { bg: "bg-[#1b873b]/15", text: "text-[#1b873b]", icon: "check_circle" },
 };
 
+function getStatusStyle(status: string, statusLabel: string) {
+  if (status === "needs_revision" && statusLabel === "À revoir") {
+    return { bg: "bg-orange/15", text: "text-orange", icon: "history" };
+  }
+  return STATUS_STYLE[status] ?? STATUS_STYLE.not_started;
+}
+
 export default function ParcoursPage() {
   const [data, setData] = useState<PlanData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -183,12 +190,17 @@ export default function ParcoursPage() {
 
             {/* Compteurs de statut */}
             <section className="grid grid-cols-4 gap-2">
-              {([
-                ["not_started", "À commencer", s.status_counts.not_started],
-                ["in_progress", "En cours", s.status_counts.in_progress],
-                ["needs_revision", "À renforcer", s.status_counts.needs_revision],
-                ["mastered", "Maîtrisé", s.status_counts.mastered],
-              ] as const).map(([status, label, count]) => {
+              {(() => {
+                const aRevoir = data.subjects.flatMap((s) => s.chapters).filter((c) => c.status === "needs_revision" && c.status_label === "À revoir").length;
+                const aRenforcer = data.subjects.flatMap((s) => s.chapters).filter((c) => c.status === "needs_revision" && c.status_label === "À renforcer").length;
+                return [
+                  ["not_started", "À commencer", s.status_counts.not_started],
+                  ["in_progress", "En cours", s.status_counts.in_progress],
+                  ...(aRevoir > 0 ? [["needs_revision", "À revoir", aRevoir]] : []),
+                  ...(aRenforcer > 0 ? [["needs_revision", "À renforcer", aRenforcer]] : []),
+                  ["mastered", "Maîtrisé", s.status_counts.mastered],
+                ] as const;
+              })().map(([status, label, count]) => {
                 const style = STATUS_STYLE[status];
                 return (
                   <div key={status} className={`${style.bg} rounded-xl p-3 text-center`}>
@@ -259,7 +271,7 @@ export default function ParcoursPage() {
                     {isOpen && (
                       <div className="border-t border-outline-variant/60">
                         {subj.chapters.map((ch) => {
-                          const st = STATUS_STYLE[ch.status];
+                          const st = getStatusStyle(ch.status, ch.status_label);
                           return (
                             <div key={ch.id} className="px-4 py-3 border-b border-outline-variant/40 last:border-b-0 space-y-1.5">
                               <div className="flex items-center justify-between gap-2">

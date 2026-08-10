@@ -34,9 +34,11 @@ export default async function Page({
 
   const sp = await searchParams;
   const action = typeof sp.action === "string" ? sp.action : "";
-  const logs = getAuditLogs(100, action || undefined);
-  const actions = getAuditActions();
-  const stats = getAuditStats();
+  const [logs, actions, stats] = await Promise.all([
+    getAuditLogs(100, action || undefined),
+    getAuditActions(),
+    getAuditStats(),
+  ]);
 
   return (
     <AdminShell active="journal">

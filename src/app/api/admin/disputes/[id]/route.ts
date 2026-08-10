@@ -1,9 +1,10 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { resolveDispute } from "@/lib/disputes";
 import { requireAdmin } from "@/lib/admin-guard";
 import { getCurrentUser } from "@/lib/session";
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function PATCHHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const forbidden = await requireAdmin();
   if (forbidden) return forbidden;
 
@@ -13,7 +14,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Réponse requise" }, { status: 400 });
   }
   const actor = await getCurrentUser();
-  const result = resolveDispute(Number(id), body.resolution, actor!.id);
+  const result = await resolveDispute(Number(id), body.resolution, actor!.id);
   if ("error" in result) return NextResponse.json(result, { status: 400 });
   return NextResponse.json({ ok: true });
 }
+
+export const PATCH = guardApi("PATCH /api/admin/disputes/[id]", PATCHHandler);

@@ -1,8 +1,9 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { blockUser, unblockUser } from "@/lib/live-prof";
 
-export async function POST(
+async function POSTHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -16,12 +17,14 @@ export async function POST(
   if (!Number.isInteger(userId) || userId <= 0)
     return NextResponse.json({ error: "Utilisateur invalide" }, { status: 400 });
 
-  const r = blockUser(Number(id), user.id, userId);
+  const r = await blockUser(Number(id), user.id, userId);
   if (r === null) return NextResponse.json({ error: "Session introuvable ou non autorisée" }, { status: 404 });
   return NextResponse.json(r);
 }
 
-export async function DELETE(
+export const POST = guardApi("POST /api/prof/lives/[id]/block", POSTHandler);
+
+async function DELETEHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -35,7 +38,9 @@ export async function DELETE(
   if (!Number.isInteger(userId) || userId <= 0)
     return NextResponse.json({ error: "Utilisateur invalide" }, { status: 400 });
 
-  const r = unblockUser(Number(id), user.id, userId);
+  const r = await unblockUser(Number(id), user.id, userId);
   if (r === null) return NextResponse.json({ error: "Session introuvable ou non autorisée" }, { status: 404 });
   return NextResponse.json(r);
 }
+
+export const DELETE = guardApi("DELETE /api/prof/lives/[id]/block", DELETEHandler);

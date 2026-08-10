@@ -1,13 +1,14 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { CATEGORY_ORDER, computeBadgeProgress, refreshBadges, type BadgeCategory, type BadgeProgress } from "@/lib/badges";
 
-export async function GET() {
+async function GETHandler() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
-  refreshBadges(user.id);
-  const badges = computeBadgeProgress(user.id);
+  await refreshBadges(user.id);
+  const badges = await computeBadgeProgress(user.id);
   const earned = badges.filter((b) => b.earned_at !== null);
   const locked = badges.filter((b) => b.earned_at === null);
 
@@ -33,3 +34,5 @@ export async function GET() {
     categories,
   });
 }
+
+export const GET = guardApi("GET /api/me/badges", GETHandler);

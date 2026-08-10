@@ -13,7 +13,7 @@ export default async function Page() {
   if (!user) redirect("/connexion-edukora");
   if (user.role !== "admin") redirect("/accueil-edukora");
 
-  const { sessions, events, stats } = getProctoringOverview();
+  const { sessions, events, stats } = await getProctoringOverview();
 
   return (
     <AdminShell active="proctoring">

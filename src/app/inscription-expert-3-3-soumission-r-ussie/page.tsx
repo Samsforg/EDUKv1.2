@@ -36,7 +36,7 @@ export default function Page() {
 <div className="relative mb-8 seal-animation">
 <div className="absolute inset-0 bg-primary-fixed blur-3xl opacity-20 rounded-full"></div>
 <div className="relative w-32 h-32 md:w-40 md:h-40 bg-white border-4 border-primary rounded-full flex items-center justify-center overflow-hidden shadow-lg">
-<img className="w-24 h-24 md:w-32 md:h-32 object-contain opacity-90" src="/images/ecran-192.png" alt="A highly detailed, elegant academic seal or crest for a prestigious educational institution. The seal features a central open book and a torch of knowledge, surrounded by a laurel wreath. The aesthetic uses Academic Blue and National Orange accents, set against a pristine white background. The style is professional and institutional, conveying authority and trust." />
+<img  className="w-24 h-24 md:w-32 md:h-32 object-contain opacity-90" src="/images/ecran-192.webp" alt="A highly detailed, elegant academic seal or crest for a prestigious educational institution. The seal features a central open book and a torch of knowledge, surrounded by a laurel wreath. The aesthetic uses Academic Blue and National Orange accents, set against a pristine white background. The style is professional and institutional, conveying authority and trust." loading="lazy" />
 <div className="absolute inset-0 border-8 border-primary-container/10 rounded-full"></div>
 </div>
 <div className="absolute -bottom-2 -right-2 bg-tertiary text-on-tertiary w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow-md border-4 border-surface">
@@ -107,7 +107,7 @@ export default function Page() {
 <aside className="hidden lg:flex fixed left-0 top-16 flex-col h-[calc(100vh-64px)] w-[280px] border-r border-surface-border bg-surface py-6">
 <div className="px-6 mb-8 flex items-center gap-4">
 <div className="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold overflow-hidden">
-<img className="w-full h-full object-cover" src="/images/ecran-193.png" alt="A professional portrait of a senior professor, Dr. Aris Thorne. He has a kind but authoritative expression, wearing a navy blue suit and glasses. The background is a blurred academic library with warm lighting. The image style is clean, sharp, and corporate, representing a high-level subject matter expert for an online education platform." />
+<img  className="w-full h-full object-cover" src="/images/ecran-193.webp" alt="A professional portrait of a senior professor, Dr. Aris Thorne. He has a kind but authoritative expression, wearing a navy blue suit and glasses. The background is a blurred academic library with warm lighting. The image style is clean, sharp, and corporate, representing a high-level subject matter expert for an online education platform." loading="lazy" />
 </div>
 <div>
 <p className="font-bold text-on-surface leading-tight">Dr. Aris Thorne</p>

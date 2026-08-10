@@ -1,11 +1,22 @@
 import Link from "next/link";
 import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
+import { getCachedPremiumPlans, planFeatures, formatPlanPrice, formatPlanInterval, type PlanRow } from "@/lib/plans";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Tarifs et abonnements",
+  description:
+    "Tarifs Edukora en FCFA : plan Découverte gratuit, Premium Réussite et Premium Plus. Paiement Mobile Money (Orange, MTN, Moov), carte bancaire ou USSD. Sans engagement.",
+  alternates: { canonical: "/tarifs" },
+};
+
+export const revalidate = 300;
 
 const faq = [
   {
     q: "Puis-je commencer gratuitement ?",
-    a: "Oui ! Le plan Découverte est 100% gratuit et sans engagement. Il te donne accès à 10 fiches de révision par mois et 5 questions quotidiennes à Kora, notre tuteur IA.",
+    a: "Oui ! Le plan Découverte est 100% gratuit et sans engagement. Il te donne accès à 10 fiches de révision par mois et 5 questions mensuelles à Kora, notre tuteur IA.",
   },
   {
     q: "Comment payer mon abonnement Premium ?",
@@ -21,7 +32,38 @@ const faq = [
   },
 ];
 
-export default function Page() {
+const FALLBACK_DECOUVERTE: PlanRow = {
+  id: 0,
+  name: "Plan Découverte",
+  interval: "month",
+  price_cents: 0,
+  currency: "XOF",
+  features: ["Accès à 10 fiches de révision / mois", "5 questions par mois à Kora IA", "Simulateur d'examen (Accès limité)"].join("\n"),
+  sort_order: 0,
+};
+
+const FALLBACK_REUSSITE: PlanRow = {
+  id: 0,
+  name: "Premium Réussite",
+  interval: "month",
+  price_cents: 4900,
+  currency: "XOF",
+  features: ["Accès illimité à toutes les fiches", "30 questions par mois à Kora IA", "Simulateur complet + Correction détaillée", "Support prioritaire par nos professeurs"].join("\n"),
+  sort_order: 1,
+};
+
+export default async function Page() {
+  let plans: PlanRow[] = [];
+  try {
+    plans = await getCachedPremiumPlans();
+  } catch {
+    plans = [];
+  }
+  const decouverte = plans.find((p) => p.price_cents === 0 && p.interval === "month") ?? FALLBACK_DECOUVERTE;
+  const reussite = plans.find((p) => p.price_cents > 0 && p.interval === "month") ?? FALLBACK_REUSSITE;
+  const decouverteFeatures = planFeatures(decouverte);
+  const reussiteFeatures = planFeatures(reussite);
+
   return (
     <div className="bg-background text-on-background min-h-screen font-body">
       <MarketingHeader />
@@ -48,32 +90,27 @@ export default function Page() {
           <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
             <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 border border-outline-variant relative overflow-hidden hover:border-primary/30 transition-all">
               <div className="mb-8">
-                <h3 className="text-headline-md text-on-surface mb-2">Plan Découverte</h3>
+                <h3 className="text-headline-md text-on-surface mb-2">{decouverte.name}</h3>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-[32px] font-bold text-primary">0 FCFA</span>
-                  <span className="text-on-surface-variant">/mois</span>
+                  <span className="text-[32px] font-bold text-primary">{formatPlanPrice(decouverte.price_cents)}</span>
+                  <span className="text-on-surface-variant">{formatPlanInterval(decouverte.interval)}</span>
                 </div>
                 <p className="text-label-sm text-on-surface-variant mt-2">Idéal pour tester la plateforme</p>
               </div>
               <ul className="space-y-4 mb-10">
-                <li className="flex items-center gap-3 text-label-sm">
-                  <span className="material-symbols-outlined text-primary text-[20px]">check</span>
-                  Accès à 10 fiches de révision / mois
-                </li>
-                <li className="flex items-center gap-3 text-label-sm">
-                  <span className="material-symbols-outlined text-primary text-[20px]">check</span>
-                  5 questions quotidiennes à Kora IA
-                </li>
-                <li className="flex items-center gap-3 text-label-sm text-outline">
-                  <span className="material-symbols-outlined text-[20px]">block</span>
-                  Simulateur d'examen (Accès limité)
-                </li>
+                {decouverteFeatures.map((f) => (
+                  <li key={f} className="flex items-center gap-3 text-label-sm">
+                    <span className="material-symbols-outlined text-primary text-[20px]">check</span>
+                    {f}
+                  </li>
+                ))}
               </ul>
               <Link
                 href="/inscription-1-2-edukora"
                 className="w-full block text-center py-4 rounded-[16px] border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-colors"
               >
-                Commencer maintenant
+                <span className="material-symbols-outlined text-[18px] align-middle mr-1">rocket_launch</span>
+                Essayer gratuitement
               </Link>
             </div>
             <div className="bg-primary rounded-[32px] p-8 relative overflow-hidden shadow-2xl transform hover:-translate-y-1 transition-all">
@@ -81,30 +118,20 @@ export default function Page() {
                 Populaire
               </div>
               <div className="mb-8">
-                <h3 className="text-headline-md text-white mb-2">Premium Réussite</h3>
+                <h3 className="text-headline-md text-white mb-2">{reussite.name}</h3>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-[32px] font-bold text-primary-fixed">4,900 FCFA</span>
-                  <span className="text-primary-container">/mois</span>
+                  <span className="text-[32px] font-bold text-primary-fixed">{formatPlanPrice(reussite.price_cents)}</span>
+                  <span className="text-primary-container">{formatPlanInterval(reussite.interval)}</span>
                 </div>
                 <p className="text-on-primary-container text-label-sm mt-2">L'outil ultime pour le BAC &amp; BEPC</p>
               </div>
               <ul className="space-y-4 mb-10">
-                <li className="flex items-center gap-3 text-label-sm text-white">
-                  <span className="material-symbols-outlined text-tertiary-fixed text-[20px]">verified</span>
-                  Accès illimité à toutes les fiches
-                </li>
-                <li className="flex items-center gap-3 text-label-sm text-white">
-                  <span className="material-symbols-outlined text-tertiary-fixed text-[20px]">verified</span>
-                  Kora IA illimité 24h/24
-                </li>
-                <li className="flex items-center gap-3 text-label-sm text-white">
-                  <span className="material-symbols-outlined text-tertiary-fixed text-[20px]">verified</span>
-                  Simulateur complet + Correction détaillée
-                </li>
-                <li className="flex items-center gap-3 text-label-sm text-white">
-                  <span className="material-symbols-outlined text-tertiary-fixed text-[20px]">verified</span>
-                  Support prioritaire par nos professeurs
-                </li>
+                {reussiteFeatures.map((f) => (
+                  <li key={f} className="flex items-center gap-3 text-label-sm text-white">
+                    <span className="material-symbols-outlined text-tertiary-fixed text-[20px]">verified</span>
+                    {f}
+                  </li>
+                ))}
               </ul>
               <Link
                 href="/plans-d-abonnement-edukora-1"
@@ -117,6 +144,72 @@ export default function Page() {
           <p className="text-center text-label-sm text-on-surface-variant mt-8">
             Des questions ? Consulte notre FAQ ci-dessous ou contacte le support.
           </p>
+        </section>
+
+        <section className="px-4 md:px-8 pb-24">
+          <div className="max-w-5xl mx-auto py-20">
+            <h2 className="text-[32px] md:text-[40px] font-extrabold text-primary mb-4 text-center">Compare les plans</h2>
+            <p className="text-body-md text-on-surface-variant mb-12 text-center">
+              Tous les plans incluent l'accès aux leçons de ton programme (BAC ou BEPC).
+            </p>
+
+            <div className="bg-white/90 backdrop-blur-md rounded-[32px] border border-outline-variant overflow-hidden shadow-sm">
+              <div className="grid grid-cols-[1fr_auto_auto] md:grid-cols-[1fr_1fr_1fr] border-b border-outline-variant">
+                <div className="p-5 md:p-6" />
+                <div className="p-5 md:p-6 text-center">
+                  <p className="text-label-sm font-bold text-on-surface">{decouverte.name}</p>
+                  <p className="text-label-xs text-on-surface-variant mt-1">{formatPlanPrice(decouverte.price_cents)}/mois</p>
+                </div>
+                <div className="p-5 md:p-6 text-center bg-primary-fixed/40">
+                  <p className="text-label-sm font-bold text-primary">{reussite.name}</p>
+                  <p className="text-label-xs text-primary mt-1">{formatPlanPrice(reussite.price_cents)}/mois</p>
+                </div>
+              </div>
+
+              {[
+                { feature: "Fiches de révision", decouverte: "10 fiches / mois", reussite: "Accès illimité", highlight: true },
+                { feature: "Questions à Kora (IA)", decouverte: "5 questions / mois", reussite: "30 questions / mois", highlight: true },
+                { feature: "Simulateur d'examen", decouverte: "Accès limité", reussite: "Complet + corrections détaillées", highlight: true },
+                { feature: "Suivi de progression", decouverte: "Oui", reussite: "Oui + rapports détaillés" },
+                { feature: "Accès mobile & web", decouverte: "Oui", reussite: "Oui" },
+                { feature: "Support", decouverte: "Communauté", reussite: "Prioritaire par nos professeurs" },
+                { feature: "Garantie satisfait ou remboursé", decouverte: "—", reussite: "7 jours" },
+              ].map((row, i) => (
+                <div
+                  key={row.feature}
+                  className={`grid grid-cols-[1fr_auto_auto] md:grid-cols-[1fr_1fr_1fr] ${i % 2 === 0 ? "bg-surface-container-low/60" : ""} ${row.highlight ? "font-semibold" : ""}`}
+                >
+                  <div className="p-5 md:p-6 text-label-sm text-on-surface">{row.feature}</div>
+                  <div className="p-5 md:p-6 text-center text-label-sm text-on-surface-variant">{row.decouverte}</div>
+                  <div className="p-5 md:p-6 text-center text-label-sm text-primary bg-primary-fixed/40">{row.reussite}</div>
+                </div>
+              ))}
+
+              <div className="border-t border-outline-variant bg-white">
+                <div className="grid grid-cols-[1fr_auto_auto] md:grid-cols-[1fr_1fr_1fr]">
+                  <div className="p-5 md:p-6" />
+                  <div className="p-5 md:p-6 flex justify-center">
+                    <Link
+                      href="/inscription-1-2-edukora"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-[16px] border-2 border-primary text-primary text-label-sm font-bold hover:bg-primary/5 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
+                      Essayer gratuitement
+                    </Link>
+                  </div>
+                  <div className="p-5 md:p-6 flex justify-center bg-primary-fixed/40">
+                    <Link
+                      href="/plans-d-abonnement-edukora-1"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-[16px] bg-primary text-on-primary text-label-sm font-bold hover:bg-primary/90 transition-all active:scale-95"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">verified</span>
+                      Choisir Réussite
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className="pb-24 px-4 md:px-8 bg-surface-container-low">

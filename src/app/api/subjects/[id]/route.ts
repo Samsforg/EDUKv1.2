@@ -1,8 +1,9 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
-export async function GET(
+async function GETHandler(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -12,13 +13,13 @@ export async function GET(
   const { id } = await params;
   const subjectId = Number(id);
 
-  const subject = queryOne<{ id: number; name: string; icon: string; color: string }>(
+  const subject = await queryOne<{ id: number; name: string; icon: string; color: string }>(
     "SELECT id, name, icon, color FROM subjects WHERE id = ?",
     subjectId,
   );
   if (!subject) return NextResponse.json({ error: "Matière introuvable" }, { status: 404 });
 
-  const chapters = query<{
+  const chapters = await query<{
     id: number;
     title: string;
     position: number;
@@ -29,15 +30,15 @@ export async function GET(
     best_percent: number | null;
   }>(
     `SELECT c.id, c.title, c.position,
-            (SELECT COUNT(*) FROM lessons l WHERE l.chapter_id = c.id) AS lessons_total,
+            (SELECT COUNT(*) FROM lessons l WHERE l.chapter_id = c.id AND l.status = 'approved') AS lessons_total,
             (SELECT COUNT(*) FROM lessons l JOIN lesson_reads lr ON lr.lesson_id = l.id
-             WHERE l.chapter_id = c.id AND lr.user_id = ?) AS lessons_read,
+             WHERE l.chapter_id = c.id AND l.status = 'approved' AND lr.user_id = ?) AS lessons_read,
             (SELECT COUNT(*) FROM quizzes q WHERE q.chapter_id = c.id AND q.status = 'approved') AS quiz_count,
             (SELECT COUNT(*) FROM quiz_attempts a JOIN quizzes q ON q.id = a.quiz_id
              WHERE q.chapter_id = c.id AND q.status = 'approved' AND a.user_id = ?) AS attempts,
             (SELECT MAX(score * 100.0 / max_score) FROM quiz_attempts a JOIN quizzes q ON q.id = a.quiz_id
              WHERE q.chapter_id = c.id AND q.status = 'approved' AND a.user_id = ?) AS best_percent
-     FROM chapters c WHERE c.subject_id = ?
+     FROM chapters c WHERE c.subject_id = ? AND c.status = 'approved'
      ORDER BY c.position`,
     user.id,
     user.id,
@@ -63,3 +64,5 @@ export async function GET(
     })),
   });
 }
+
+export const GET = guardApi("GET /api/subjects/[id]", GETHandler);

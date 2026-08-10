@@ -14,7 +14,10 @@ type ActiveTab =
   | "journal"
   | "referral"
   | "proctoring"
-  | "profile";
+  | "profile"
+  | "defis"
+  | "tarifs"
+  | "abonnes";
 
 const TABS: { key: ActiveTab; href: string; icon: string; label: string; mobileLabel: string }[] = [
   { key: "overview", href: "/espace-admin", icon: "dashboard", label: "Overview", mobileLabel: "Overview" },
@@ -28,6 +31,9 @@ const TABS: { key: ActiveTab; href: string; icon: string; label: string; mobileL
   { key: "referral", href: "/espace-admin/parrainage", icon: "diversity_3", label: "Parrainage", mobileLabel: "Parrainage" },
   { key: "proctoring", href: "/espace-admin/proctoring", icon: "monitor_heart", label: "Proctoring", mobileLabel: "Proctoring" },
   { key: "profile", href: "/espace-admin/profil", icon: "person", label: "Profil", mobileLabel: "Profil" },
+  { key: "defis", href: "/espace-admin/defis", icon: "emoji_events", label: "Défis", mobileLabel: "Défis" },
+  { key: "tarifs", href: "/espace-admin/tarifs", icon: "sell", label: "Tarifs", mobileLabel: "Tarifs" },
+  { key: "abonnes", href: "/espace-admin/abonnes", icon: "subscriptions", label: "Abonnés", mobileLabel: "Abonnés" },
 ];
 
 export async function AdminShell({ active, children }: { active: ActiveTab; children: ReactNode }) {
@@ -39,7 +45,7 @@ export async function AdminShell({ active, children }: { active: ActiveTab; chil
       <aside className="fixed left-0 top-0 h-full flex-col z-40 bg-surface dark:bg-inverse-surface w-64 border-r border-outline-variant hidden md:flex">
         <div className="px-6 py-8 flex flex-col items-start gap-4">
           <div className="flex items-center gap-3">
-            <img alt="Edukora Logo" className="w-10 h-10 rounded-lg shadow-sm" src="/images/ecran-346.png" />
+            <img  alt="Edukora Logo" className="w-10 h-10 rounded-lg shadow-sm" src="/images/ecran-346.png" loading="lazy" />
             <div>
               <h1 className="font-headline text-headline-md font-bold text-primary leading-tight">Console admin</h1>
               <p className="font-body text-label-xs text-on-surface-variant">Contrôleur de plateforme</p>

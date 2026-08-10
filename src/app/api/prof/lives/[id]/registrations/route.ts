@@ -1,8 +1,9 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { query, queryOne, run } from "@/lib/db";
 
-export async function GET(
+async function GETHandler(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -14,7 +15,7 @@ export async function GET(
   const sessionId = Number(id);
 
   // Verify ownership
-  const owned = queryOne<{ c: number }>(
+  const owned = await queryOne<{ c: number }>(
     "SELECT COUNT(*) AS c FROM live_sessions WHERE id = ? AND created_by = ?",
     sessionId,
     user.id
@@ -22,7 +23,7 @@ export async function GET(
   if (!owned || owned.c === 0)
     return NextResponse.json({ error: "Session introuvable ou non autorisée" }, { status: 404 });
 
-  const registrations = query<{ 
+  const registrations = await query<{ 
     user_id: number; 
     first_name: string; 
     last_name: string; 
@@ -40,7 +41,9 @@ export async function GET(
   return NextResponse.json({ registrations });
 }
 
-export async function POST(
+export const GET = guardApi("GET /api/prof/lives/[id]/registrations", GETHandler);
+
+async function POSTHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -56,7 +59,7 @@ export async function POST(
     return NextResponse.json({ error: "Utilisateur invalide" }, { status: 400 });
 
   // Verify ownership
-  const owned = queryOne<{ c: number }>(
+  const owned = await queryOne<{ c: number }>(
     "SELECT COUNT(*) AS c FROM live_sessions WHERE id = ? AND created_by = ?",
     sessionId,
     user.id
@@ -65,7 +68,7 @@ export async function POST(
     return NextResponse.json({ error: "Session introuvable ou non autorisée" }, { status: 404 });
 
   // Check if already registered
-  const exists = queryOne<{ c: number }>(
+  const exists = await queryOne<{ c: number }>(
     "SELECT COUNT(*) AS c FROM live_registrations WHERE session_id = ? AND user_id = ?",
     sessionId,
     targetUserId
@@ -73,7 +76,7 @@ export async function POST(
   if (exists && exists.c > 0)
     return NextResponse.json({ error: "Déjà inscrit" }, { status: 400 });
 
-  run(
+  await run(
     "INSERT INTO live_registrations (session_id, user_id) VALUES (?, ?)",
     sessionId,
     targetUserId
@@ -82,7 +85,9 @@ export async function POST(
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(
+export const POST = guardApi("POST /api/prof/lives/[id]/registrations", POSTHandler);
+
+async function DELETEHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -98,7 +103,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Utilisateur invalide" }, { status: 400 });
 
   // Verify ownership
-  const owned = queryOne<{ c: number }>(
+  const owned = await queryOne<{ c: number }>(
     "SELECT COUNT(*) AS c FROM live_sessions WHERE id = ? AND created_by = ?",
     sessionId,
     user.id
@@ -106,7 +111,7 @@ export async function DELETE(
   if (!owned || owned.c === 0)
     return NextResponse.json({ error: "Session introuvable ou non autorisée" }, { status: 404 });
 
-  run(
+  await run(
     "DELETE FROM live_registrations WHERE session_id = ? AND user_id = ?",
     sessionId,
     targetUserId
@@ -114,3 +119,5 @@ export async function DELETE(
 
   return NextResponse.json({ ok: true });
 }
+
+export const DELETE = guardApi("DELETE /api/prof/lives/[id]/registrations", DELETEHandler);

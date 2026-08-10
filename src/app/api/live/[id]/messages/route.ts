@@ -1,3 +1,4 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne, run } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
@@ -5,20 +6,22 @@ import { getLiveMessages, isBlockedFromChat, isChatPaused } from "@/lib/live";
 import { validate, LiveMessageSchema } from "@/lib/validation";
 import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
 
-export async function GET(
+async function GETHandler(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
   const { id } = await params;
-  const session = queryOne<{ id: number }>("SELECT id FROM live_sessions WHERE id = ?", Number(id));
+  const session = await queryOne<{ id: number }>("SELECT id FROM live_sessions WHERE id = ?", Number(id));
   if (!session) return NextResponse.json({ error: "Session introuvable" }, { status: 404 });
-  const messages = getLiveMessages(session.id, 30);
+  const messages = await getLiveMessages(session.id, 30);
   return NextResponse.json({ messages });
 }
 
-export async function POST(
+export const GET = guardApi("GET /api/live/[id]/messages", GETHandler);
+
+async function POSTHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -26,7 +29,7 @@ export async function POST(
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
   const ip = getClientIp(req);
-  const rl = rateLimit(`live-msg:${user.id}:${ip}`, "live_message");
+  const rl = await rateLimit(`live-msg:${user.id}:${ip}`, "live_message");
   if (!rl.allowed) return rateLimitResponse(rl.resetAt);
 
   const { id } = await params;
@@ -36,7 +39,7 @@ export async function POST(
 
   const text = v.data.content.trim().slice(0, 300);
 
-  const session = queryOne<{ status: string }>(
+  const session = await queryOne<{ status: string }>(
     "SELECT status FROM live_sessions WHERE id = ?",
     Number(id),
   );
@@ -44,14 +47,14 @@ export async function POST(
   if (session.status !== "live") {
     return NextResponse.json({ error: "Le chat est fermé hors direct" }, { status: 400 });
   }
-  if (isChatPaused(Number(id))) {
+  if (await isChatPaused(Number(id))) {
     return NextResponse.json({ error: "Le chat est en pause par l'animateur" }, { status: 403 });
   }
-  if (isBlockedFromChat(Number(id), user.id)) {
+  if (await isBlockedFromChat(Number(id), user.id)) {
     return NextResponse.json({ error: "Vous avez été bloqué par le modérateur" }, { status: 403 });
   }
 
-  run(
+  await run(
     "INSERT INTO live_messages (session_id, user_id, body) VALUES (?, ?, ?)",
     Number(id),
     user.id,
@@ -59,3 +62,5 @@ export async function POST(
   );
   return NextResponse.json({ ok: true });
 }
+
+export const POST = guardApi("POST /api/live/[id]/messages", POSTHandler);

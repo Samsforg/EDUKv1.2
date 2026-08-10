@@ -1,3 +1,4 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne, run } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
@@ -8,12 +9,12 @@ function requireTeacher(user: { role: string } | null): NextResponse | null {
   return null;
 }
 
-export async function GET() {
+async function GETHandler() {
   const user = await getCurrentUser();
   const forbidden = requireTeacher(user);
   if (forbidden) return forbidden;
 
-  const papers = query<{
+  const papers = await query<{
     id: number;
     category: string;
     year: number;
@@ -38,7 +39,9 @@ export async function GET() {
   return NextResponse.json({ papers });
 }
 
-export async function POST(req: NextRequest) {
+export const GET = guardApi("GET /api/prof/paper", GETHandler);
+
+async function POSTHandler(req: NextRequest) {
   const user = await getCurrentUser();
   const forbidden = requireTeacher(user);
   if (forbidden) return forbidden;
@@ -58,10 +61,10 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const subject = queryOne<{ id: number }>("SELECT id FROM subjects WHERE id = ?", Number(body.subject_id));
+  const subject = await queryOne<{ id: number }>("SELECT id FROM subjects WHERE id = ?", Number(body.subject_id));
   if (!subject) return NextResponse.json({ error: "Matière introuvable" }, { status: 400 });
 
-  const result = run(
+  const result = await run(
     "INSERT INTO exam_papers (category, series_id, subject_id, year, title, duration_minutes, created_by, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     body.category,
     body.series_id ?? null,
@@ -74,8 +77,8 @@ export async function POST(req: NextRequest) {
   );
   const paperId = Number(result.lastInsertRowid);
 
-  body.questions.forEach((q: { question: string; options: string[]; answerIndex: number; explanation?: string; points?: number }, i: number) => {
-    run(
+  body.questions.forEach(async (q: { question: string; options: string[]; answerIndex: number; explanation?: string; points?: number }, i: number) => {
+    await run(
       "INSERT INTO questions (paper_id, question, options, answer_index, explanation, points, position) VALUES (?, ?, ?, ?, ?, ?, ?)",
       paperId,
       q.question.trim(),
@@ -90,7 +93,9 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, paper_id: paperId }, { status: 201 });
 }
 
-export async function DELETE(req: NextRequest) {
+export const POST = guardApi("POST /api/prof/paper", POSTHandler);
+
+async function DELETEHandler(req: NextRequest) {
   const user = await getCurrentUser();
   const forbidden = requireTeacher(user);
   if (forbidden) return forbidden;
@@ -98,13 +103,15 @@ export async function DELETE(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body || !body.id) return NextResponse.json({ error: "ID manquant" }, { status: 400 });
 
-  const paper = queryOne<{ id: number; created_by: number | null }>(
+  const paper = await queryOne<{ id: number; created_by: number | null }>(
     "SELECT id, created_by FROM exam_papers WHERE id = ?",
     Number(body.id),
   );
   if (!paper) return NextResponse.json({ error: "Sujet introuvable" }, { status: 404 });
   if (paper.created_by !== user!.id) return NextResponse.json({ error: "Pas ton sujet" }, { status: 403 });
 
-  run("DELETE FROM exam_papers WHERE id = ?", paper.id);
+  await run("DELETE FROM exam_papers WHERE id = ?", paper.id);
   return NextResponse.json({ ok: true });
 }
+
+export const DELETE = guardApi("DELETE /api/prof/paper", DELETEHandler);

@@ -1,12 +1,14 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne, run } from "@/lib/db";
 import { getCurrentUser, applyActivity, addXp, notify } from "@/lib/session";
+import { notifyOnActivity } from "@/lib/proactive";
 import { refreshBadges } from "@/lib/badges";
 import { creditLigueChallenges } from "@/lib/ligue";
 import { validate, QuizSubmitSchema } from "@/lib/validation";
 import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
 
-export async function POST(
+async function POSTHandler(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -14,7 +16,7 @@ export async function POST(
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
   const ip = getClientIp(req);
-  const rl = rateLimit(`quiz:${user.id}:${ip}`, "quiz_submit");
+  const rl = await rateLimit(`quiz:${user.id}:${ip}`, "quiz_submit");
   if (!rl.allowed) return rateLimitResponse(rl.resetAt);
 
   const { id } = await params;
@@ -22,13 +24,13 @@ export async function POST(
   const v = validate(QuizSubmitSchema, { ...body, quiz_id: Number(id) });
   if (!v.ok) return NextResponse.json({ error: v.errors[0] }, { status: 400 });
 
-  const quiz = queryOne<{ id: number; title: string }>(
+  const quiz = await queryOne<{ id: number; title: string }>(
     "SELECT id, title FROM quizzes WHERE id = ? AND status = 'approved'",
     Number(id),
   );
   if (!quiz) return NextResponse.json({ error: "Quiz introuvable" }, { status: 404 });
 
-  const questions = query<{ id: number; answer_index: number; points: number; explanation: string | null }>(
+  const questions = await query<{ id: number; answer_index: number; points: number; explanation: string | null }>(
     "SELECT id, answer_index, points, explanation FROM questions WHERE quiz_id = ? ORDER BY position",
     Number(id),
   );
@@ -48,7 +50,7 @@ export async function POST(
     };
   });
 
-  run(
+  await run(
     "INSERT INTO quiz_attempts (user_id, quiz_id, score, max_score, answers) VALUES (?, ?, ?, ?, ?)",
     user.id,
     Number(id),
@@ -57,17 +59,18 @@ export async function POST(
     JSON.stringify(details),
   );
 
-  applyActivity(user.id);
+  await applyActivity(user.id);
+  await notifyOnActivity(user.id);
   const pct = max > 0 ? Math.round((score * 100) / max) : 0;
   const xp = Math.max(1, Math.round(pct / 10));
-  addXp(user.id, xp);
-  creditLigueChallenges(user.id, "quiz_done", 1);
-  creditLigueChallenges(user.id, "xp_total", xp);
-  if (pct === 100) creditLigueChallenges(user.id, "quiz_perfect", 1);
+  await addXp(user.id, xp);
+  await creditLigueChallenges(user.id, "quiz_done", 1);
+  await creditLigueChallenges(user.id, "xp_total", xp);
+  if (pct === 100) await creditLigueChallenges(user.id, "quiz_perfect", 1);
 
-  const badges = refreshBadges(user.id);
+  const badges = await refreshBadges(user.id);
 
-  notify(
+  await notify(
     user.id,
     "Quiz terminé",
     `Tu as obtenu ${score}/${max} (${pct}%) au quiz « ${quiz.title} » (+${xp} XP).`,
@@ -76,3 +79,5 @@ export async function POST(
 
   return NextResponse.json({ score, max, pct, xp, details, badges });
 }
+
+export const POST = guardApi("POST /api/quiz/[id]/submit", POSTHandler);

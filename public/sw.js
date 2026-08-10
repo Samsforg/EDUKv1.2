@@ -46,8 +46,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets (_next/static, icons) → CacheFirst
-  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/")) {
+  // Static assets (_next/static, icons, fonts) → CacheFirst
+  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/") || url.pathname.startsWith("/fonts/")) {
     event.respondWith(cacheFirst(request, "next-static", 365 * 24 * 60 * 60));
     return;
   }

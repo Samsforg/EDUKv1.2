@@ -55,9 +55,13 @@ function ResetForm() {
   return (
     <div className="min-h-dvh bg-surface text-on-surface flex flex-col items-center justify-center p-4">
       <main className="w-full max-w-md bg-surface-container-lowest rounded-xl shadow-sm border border-surface-variant p-6 sm:p-8 flex flex-col">
+        <a href="/connexion-edukora" className="inline-flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors mb-4 -ml-2">
+          <span className="material-symbols-outlined text-lg">arrow_back</span>
+          Retour à la connexion
+        </a>
         <header className="flex flex-col items-center text-center mb-8">
           <div className="w-14 h-14 mb-4 bg-surface-container-lowest rounded-2xl flex items-center justify-center p-1">
-            <img src="/images/logo-edukora.png" alt="Edukora" className="w-full h-full object-contain" />
+            <img  src="/images/logo-edukora.webp" alt="Edukora" className="w-full h-full object-contain" loading="lazy" />
           </div>
           <h1 className="font-headline-md text-2xl font-bold text-primary mb-2 tracking-tight">Nouveau mot de passe</h1>
           <p className="text-on-surface-variant text-base">Choisissez un nouveau mot de passe pour votre compte.</p>

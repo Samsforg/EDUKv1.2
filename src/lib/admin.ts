@@ -2,6 +2,7 @@ import { query, queryOne, run } from "./db";
 import { notify } from "./session";
 import { hashPassword } from "./auth";
 import { logAudit } from "./audit";
+import { getAdminChallenges, getAdminLeagueChallenges } from "./admin-content";
 
 const ROLES = ["student", "teacher", "admin", "parent", "expert"] as const;
 export type AdminRole = (typeof ROLES)[number];
@@ -27,49 +28,44 @@ export interface ActivityItem {
   relative: string;
 }
 
-export function getAdminStats(): AdminStats {
-  const roles = query<{ role: string; c: number }>("SELECT role, COUNT(*) AS c FROM users GROUP BY role");
+export async function getAdminStats(): Promise<AdminStats> {
+  const roles = await query<{ role: string; c: number }>("SELECT role, COUNT(*) AS c FROM users GROUP BY role");
   const count = (role: string) => roles.find((r) => r.role === role)?.c ?? 0;
   const today = new Date().toISOString().slice(0, 10);
 
-  const online_today = queryOne<{ c: number }>(
-    "SELECT COUNT(*) AS c FROM users WHERE last_active >= ?",
-    today,
-  )?.c ?? 0;
+  const online_today =
+    (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM users WHERE last_active >= ?", today))?.c ?? 0;
 
-  const new_week = queryOne<{ c: number }>(
-    "SELECT COUNT(*) AS c FROM users WHERE created_at >= datetime('now', '-7 days')",
-  )?.c ?? 0;
+  const new_week =
+    (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM users WHERE created_at >= datetime('now', '-7 days')"))?.c ?? 0;
 
   const content = {
-    lessons: queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM lessons")?.c ?? 0,
-    chapters: queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM chapters")?.c ?? 0,
-    quizzes: queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM quizzes")?.c ?? 0,
-    papers: queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM exam_papers")?.c ?? 0,
-    questions: queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM questions")?.c ?? 0,
+    lessons: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM lessons"))?.c ?? 0,
+    chapters: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM chapters"))?.c ?? 0,
+    quizzes: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM quizzes"))?.c ?? 0,
+    papers: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM exam_papers"))?.c ?? 0,
+    questions: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM questions"))?.c ?? 0,
   };
 
   const attempts = {
-    quiz: queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM quiz_attempts")?.c ?? 0,
-    exam: queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM exam_attempts")?.c ?? 0,
+    quiz: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM quiz_attempts"))?.c ?? 0,
+    exam: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM exam_attempts"))?.c ?? 0,
   };
 
   const engagement = {
-    avg_quiz_percent: queryOne<{ v: number | null }>(
-      "SELECT ROUND(AVG(score * 100.0 / max_score)) AS v FROM quiz_attempts",
-    )?.v ?? null,
-    avg_exam_over_20: queryOne<{ v: number | null }>(
-      "SELECT ROUND(AVG(score_over_20), 1) AS v FROM exam_attempts",
-    )?.v ?? null,
-    total_xp: queryOne<{ v: number }>("SELECT COALESCE(SUM(xp), 0) AS v FROM users")?.v ?? 0,
+    avg_quiz_percent:
+      (await queryOne<{ v: number | null }>("SELECT ROUND(AVG(score * 100.0 / max_score)) AS v FROM quiz_attempts"))?.v ?? null,
+    avg_exam_over_20:
+      (await queryOne<{ v: number | null }>("SELECT ROUND(AVG(score_over_20), 1) AS v FROM exam_attempts"))?.v ?? null,
+    total_xp: (await queryOne<{ v: number }>("SELECT COALESCE(SUM(xp), 0) AS v FROM users"))?.v ?? 0,
   };
 
   const forum = {
-    posts: queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM forum_posts")?.c ?? 0,
-    replies: queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM forum_replies")?.c ?? 0,
+    posts: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM forum_posts"))?.c ?? 0,
+    replies: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM forum_replies"))?.c ?? 0,
   };
 
-  const parent_links = queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM parent_child")?.c ?? 0;
+  const parent_links = (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM parent_child"))?.c ?? 0;
 
   return {
     users: {
@@ -103,8 +99,8 @@ function relativeTime(iso: string): string {
   return then.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }
 
-export function getActivityFeed(limit = 10): ActivityItem[] {
-  const quiz = query<{
+export async function getActivityFeed(limit = 10): Promise<ActivityItem[]> {
+  const quiz = await query<{
     id: number;
     user_name: string;
     title: string;
@@ -123,7 +119,7 @@ export function getActivityFeed(limit = 10): ActivityItem[] {
     limit,
   );
 
-  const exam = query<{
+  const exam = await query<{
     id: number;
     user_name: string;
     title: string;
@@ -141,7 +137,7 @@ export function getActivityFeed(limit = 10): ActivityItem[] {
     limit,
   );
 
-  const forum = query<{
+  const forum = await query<{
     id: number;
     user_name: string;
     title: string;
@@ -201,7 +197,7 @@ export interface SubjectStats {
   avg_exam_over_20: number | null;
 }
 
-export function getSubjectStats(): SubjectStats[] {
+export async function getSubjectStats(): Promise<SubjectStats[]> {
   return query<SubjectStats>(
     `SELECT s.id AS subject_id, s.name, s.icon, s.color,
             (SELECT COUNT(*) FROM quizzes x WHERE x.subject_id = s.id) AS quizzes,
@@ -223,7 +219,10 @@ export interface AdminUserRow {
   first_name: string;
   last_name: string;
   class_level: string | null;
+  serie_id: number | null;
   serie_name: string | null;
+  gender: string | null;
+  commune: string | null;
   xp: number;
   streak: number;
   last_active: string | null;
@@ -234,17 +233,18 @@ export interface AdminUserRow {
   forum_posts: number;
 }
 
-export function getAdminUsers(): AdminUserRow[] {
+export async function getAdminUsers(): Promise<AdminUserRow[]> {
   const today = new Date().toISOString().slice(0, 10);
-  return query<AdminUserRow>(
+  const rows = await query<Omit<AdminUserRow, "online">>(
     `SELECT u.id, u.role, u.blocked, u.email, u.phone, u.first_name, u.last_name, u.class_level,
-            s.name AS serie_name, u.xp, u.streak, u.last_active, u.created_at,
+            u.serie_id, s.name AS serie_name, u.gender, u.commune, u.xp, u.streak, u.last_active, u.created_at,
             (SELECT COUNT(*) FROM quiz_attempts a WHERE a.user_id = u.id) AS quiz_attempts,
             (SELECT COUNT(*) FROM exam_attempts a WHERE a.user_id = u.id) AS exam_attempts,
             (SELECT COUNT(*) FROM forum_posts p WHERE p.user_id = u.id) AS forum_posts
      FROM users u LEFT JOIN series s ON s.id = u.serie_id
      ORDER BY u.id`,
-  ).map((u) => ({ ...u, online: !!u.last_active && u.last_active.slice(0, 10) === today }));
+  );
+  return rows.map((u) => ({ ...u, online: !!u.last_active && u.last_active.slice(0, 10) === today }));
 }
 
 export interface UserListFilters {
@@ -263,7 +263,7 @@ export interface UserListResult {
   pageSize: number;
 }
 
-export function getAdminUsersPage(filters: UserListFilters = {}): UserListResult {
+export async function getAdminUsersPage(filters: UserListFilters = {}): Promise<UserListResult> {
   const today = new Date().toISOString().slice(0, 10);
   const q = filters.q?.trim() ?? "";
   const role = filters.role ?? "all";
@@ -287,13 +287,13 @@ export function getAdminUsersPage(filters: UserListFilters = {}): UserListResult
   const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
 
   const total =
-    queryOne<{ c: number }>(`SELECT COUNT(*) AS c FROM users u ${whereSql}`, ...params)?.c ?? 0;
+    (await queryOne<{ c: number }>(`SELECT COUNT(*) AS c FROM users u ${whereSql}`, ...params))?.c ?? 0;
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const page = Math.min(Math.max(1, filters.page ?? 1), pages);
 
-  const users = query<AdminUserRow>(
+  const rows = await query<Omit<AdminUserRow, "online">>(
     `SELECT u.id, u.role, u.blocked, u.email, u.phone, u.first_name, u.last_name, u.class_level,
-            s.name AS serie_name, u.xp, u.streak, u.last_active, u.created_at,
+            u.serie_id, s.name AS serie_name, u.gender, u.commune, u.xp, u.streak, u.last_active, u.created_at,
             (SELECT COUNT(*) FROM quiz_attempts a WHERE a.user_id = u.id) AS quiz_attempts,
             (SELECT COUNT(*) FROM exam_attempts a WHERE a.user_id = u.id) AS exam_attempts,
             (SELECT COUNT(*) FROM forum_posts p WHERE p.user_id = u.id) AS forum_posts
@@ -303,28 +303,33 @@ export function getAdminUsersPage(filters: UserListFilters = {}): UserListResult
     ...params,
     pageSize,
     (page - 1) * pageSize,
-  ).map((u) => ({ ...u, online: !!u.last_active && u.last_active.slice(0, 10) === today }));
+  );
+  const users = rows.map((u) => ({ ...u, online: !!u.last_active && u.last_active.slice(0, 10) === today }));
 
   return { users, total, page, pages, pageSize };
 }
 
-export function changeUserRole(targetId: number, role: string, actorId: number): { ok: true } | { error: string } {
+export async function changeUserRole(
+  targetId: number,
+  role: string,
+  actorId: number,
+): Promise<{ ok: true } | { error: string }> {
   if (!ROLES.includes(role as AdminRole)) return { error: "Rôle invalide" };
   if (targetId === actorId) return { error: "Vous ne pouvez pas modifier votre propre rôle" };
 
-  const target = queryOne<{ id: number; role: string; first_name: string; last_name: string }>(
+  const target = await queryOne<{ id: number; role: string; first_name: string; last_name: string }>(
     "SELECT id, role, first_name, last_name FROM users WHERE id = ?",
     targetId,
   );
   if (!target) return { error: "Utilisateur introuvable" };
 
   if (target.role === "admin" && role !== "admin") {
-    const admins = queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM users WHERE role = 'admin'");
+    const admins = await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM users WHERE role = 'admin'");
     if (!admins || admins.c <= 1) return { error: "Impossible de rétrograder le dernier administrateur" };
   }
 
-  run("UPDATE users SET role = ? WHERE id = ?", role, targetId);
-  logAudit(
+  await run("UPDATE users SET role = ? WHERE id = ?", role, targetId);
+  await logAudit(
     actorId,
     "role",
     `Rôle de ${target.first_name} ${target.last_name} (#${targetId}) changé en « ${role} »`,
@@ -332,25 +337,25 @@ export function changeUserRole(targetId: number, role: string, actorId: number):
   return { ok: true };
 }
 
-export function updateUser(
+export async function updateUser(
   targetId: number,
   fields: Record<string, unknown>,
   actorId: number,
-): { ok: true } | { error: string } {
+): Promise<{ ok: true } | { error: string }> {
   if (targetId === actorId) return { error: "Vous ne pouvez pas modifier votre propre compte via cette route" };
 
-  const allowed = ["first_name", "last_name", "email", "phone", "serie_id", "class_level"] as const;
+  const allowed = ["first_name", "last_name", "email", "phone", "serie_id", "class_level", "gender", "commune"] as const;
   const updates: string[] = [];
   const params: (string | number | null)[] = [];
 
   for (const [key, value] of Object.entries(fields)) {
     if (!allowed.includes(key as (typeof allowed)[number])) continue;
     if (key === "email" && value) {
-      const exists = queryOne<{ id: number }>("SELECT id FROM users WHERE email = ? AND id != ?", String(value), targetId);
+      const exists = await queryOne<{ id: number }>("SELECT id FROM users WHERE email = ? AND id != ?", String(value), targetId);
       if (exists) return { error: "Cet email est déjà utilisé" };
     }
     if (key === "phone" && value) {
-      const exists = queryOne<{ id: number }>("SELECT id FROM users WHERE phone = ? AND id != ?", String(value), targetId);
+      const exists = await queryOne<{ id: number }>("SELECT id FROM users WHERE phone = ? AND id != ?", String(value), targetId);
       if (exists) return { error: "Ce numéro est déjà utilisé" };
     }
     updates.push(`${key} = ?`);
@@ -360,9 +365,9 @@ export function updateUser(
   if (updates.length === 0) return { error: "Aucun champ valide à mettre à jour" };
 
   params.push(targetId);
-  run(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`, ...params);
+  await run(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`, ...params);
 
-  logAudit(
+  await logAudit(
     actorId,
     "profile",
     `Profil de l'utilisateur #${targetId} mis à jour : ${Object.keys(fields).join(", ")}`,
@@ -372,6 +377,7 @@ export function updateUser(
 
 export interface ContentSubject {
   subject_id: number;
+  code: string;
   name: string;
   icon: string;
   color: string;
@@ -382,9 +388,9 @@ export interface ContentSubject {
   questions: number;
 }
 
-export function getContentOverview(): { subjects: ContentSubject[]; totals: AdminStats["content"] } {
-  const subjects = query<ContentSubject>(
-    `SELECT s.id AS subject_id, s.name, s.icon, s.color,
+export async function getContentOverview(): Promise<{ subjects: ContentSubject[]; totals: AdminStats["content"] }> {
+  const subjects = await query<ContentSubject>(
+    `SELECT s.id AS subject_id, s.code, s.name, s.icon, s.color,
             (SELECT COUNT(*) FROM chapters c WHERE c.subject_id = s.id) AS chapters,
             (SELECT COUNT(*) FROM lessons l JOIN chapters c ON c.id = l.chapter_id WHERE c.subject_id = s.id) AS lessons,
             (SELECT COUNT(*) FROM quizzes q WHERE q.subject_id = s.id) AS quizzes,
@@ -398,7 +404,7 @@ export function getContentOverview(): { subjects: ContentSubject[]; totals: Admi
     chapters: subjects.reduce((a, b) => a + b.chapters, 0),
     quizzes: subjects.reduce((a, b) => a + b.quizzes, 0),
     papers: subjects.reduce((a, b) => a + b.papers, 0),
-    questions: queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM questions")?.c ?? 0,
+    questions: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM questions"))?.c ?? 0,
   };
 
   return { subjects, totals };
@@ -418,8 +424,8 @@ export interface ForumPostRow {
   relative: string;
 }
 
-export function getForumPosts(): ForumPostRow[] {
-  const rows = query<Omit<ForumPostRow, "relative">>(
+export async function getForumPosts(): Promise<ForumPostRow[]> {
+  const rows = await query<Omit<ForumPostRow, "relative">>(
     `SELECT p.id, c.name AS category_name, c.icon AS category_icon, c.color AS category_color,
             u.first_name || ' ' || u.last_name AS author, p.title, p.content, p.created_at,
             (SELECT COUNT(*) FROM forum_replies r WHERE r.post_id = p.id) AS replies,
@@ -432,15 +438,15 @@ export function getForumPosts(): ForumPostRow[] {
   return rows.map((r) => ({ ...r, relative: relativeTime(r.created_at) }));
 }
 
-export function deleteForumPost(postId: number): { ok: true } | { error: string } {
-  const post = queryOne<{ id: number }>("SELECT id FROM forum_posts WHERE id = ?", postId);
+export async function deleteForumPost(postId: number): Promise<{ ok: true } | { error: string }> {
+  const post = await queryOne<{ id: number }>("SELECT id FROM forum_posts WHERE id = ?", postId);
   if (!post) return { error: "Sujet introuvable" };
-  run("DELETE FROM forum_posts WHERE id = ?", postId);
+  await run("DELETE FROM forum_posts WHERE id = ?", postId);
   return { ok: true };
 }
 
 export interface PendingCourse {
-  kind: "quiz" | "paper";
+  kind: "quiz" | "paper" | "chapter" | "lesson";
   id: number;
   title: string;
   subject_name: string;
@@ -450,12 +456,13 @@ export interface PendingCourse {
   question_count: number;
   category?: string;
   year?: number;
+  grade_name?: string;
   created_at: string;
   relative: string;
 }
 
-export function getPendingCourses(): PendingCourse[] {
-  const quizzes = query<{
+export async function getPendingCourses(): Promise<PendingCourse[]> {
+  const quizzes = await query<{
     id: number;
     title: string;
     subject_name: string;
@@ -474,7 +481,7 @@ export function getPendingCourses(): PendingCourse[] {
      WHERE q.status = 'pending'
      ORDER BY q.created_at DESC`,
   );
-  const papers = query<{
+  const papers = await query<{
     id: number;
     title: string;
     subject_name: string;
@@ -496,39 +503,85 @@ export function getPendingCourses(): PendingCourse[] {
      WHERE p.status = 'pending'
      ORDER BY p.created_at DESC`,
   );
+  const chapters = await query<{
+    id: number;
+    title: string;
+    subject_name: string;
+    subject_icon: string;
+    subject_color: string;
+    creator: string;
+    question_count: number;
+    grade_name: string;
+    created_at: string;
+  }>(
+    `SELECT c.id, c.title, s.name AS subject_name, s.icon AS subject_icon, s.color AS subject_color,
+            u.first_name || ' ' || u.last_name AS creator, g.name AS grade_name, c.created_at,
+            (SELECT COUNT(*) FROM lessons l WHERE l.chapter_id = c.id) AS question_count
+     FROM chapters c
+     JOIN subjects s ON s.id = c.subject_id
+     LEFT JOIN users u ON u.id = c.created_by
+     LEFT JOIN grades g ON g.id = c.grade_id
+     WHERE c.status = 'pending'
+     ORDER BY c.created_at DESC`,
+  );
+  const lessons = await query<{
+    id: number;
+    title: string;
+    subject_name: string;
+    subject_icon: string;
+    subject_color: string;
+    creator: string;
+    question_count: number;
+    grade_name: string;
+    created_at: string;
+  }>(
+    `SELECT l.id, l.title, s.name AS subject_name, s.icon AS subject_icon, s.color AS subject_color,
+            u.first_name || ' ' || u.last_name AS creator, g.name AS grade_name, l.created_at,
+            (SELECT COUNT(*) FROM exercises e WHERE e.lesson_id = l.id) AS question_count
+     FROM lessons l
+     JOIN chapters c ON c.id = l.chapter_id
+     JOIN subjects s ON s.id = c.subject_id
+     LEFT JOIN users u ON u.id = l.created_by
+     LEFT JOIN grades g ON g.id = c.grade_id
+     WHERE l.status = 'pending'
+     ORDER BY l.created_at DESC`,
+  );
 
   const items: PendingCourse[] = [
     ...quizzes.map((q) => ({ ...q, kind: "quiz" as const, relative: relativeTime(q.created_at) })),
     ...papers.map((p) => ({ ...p, kind: "paper" as const, relative: relativeTime(p.created_at) })),
+    ...chapters.map((c) => ({ ...c, kind: "chapter" as const, relative: relativeTime(c.created_at) })),
+    ...lessons.map((l) => ({ ...l, kind: "lesson" as const, relative: relativeTime(l.created_at) })),
   ];
   return items.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
 }
 
-export function setCourseStatus(
+export async function setCourseStatus(
   kind: string,
   id: number,
   status: string,
   actorId: number | null = null,
-): { ok: true } | { error: string } {
-  if (kind !== "quiz" && kind !== "paper") return { error: "Type de contenu invalide" };
+): Promise<{ ok: true } | { error: string }> {
+  if (!["quiz", "paper", "chapter", "lesson"].includes(kind)) return { error: "Type de contenu invalide" };
   if (status !== "approved" && status !== "rejected") return { error: "Statut invalide" };
-  const table = kind === "quiz" ? "quizzes" : "exam_papers";
-  const row = queryOne<{ id: number; created_by: number | null; title: string }>(
+  const table = { quiz: "quizzes", paper: "exam_papers", chapter: "chapters", lesson: "lessons" }[kind as "quiz" | "paper" | "chapter" | "lesson"];
+  const row = await queryOne<{ id: number; created_by: number | null; title: string }>(
     `SELECT id, created_by, title FROM ${table} WHERE id = ?`,
     id,
   );
   if (!row) return { error: "Contenu introuvable" };
-  run(`UPDATE ${table} SET status = ? WHERE id = ?`, status, id);
+  await run(`UPDATE ${table} SET status = ? WHERE id = ?`, status, id);
 
   if (status === "approved" || status === "rejected") {
-    const typeLabel = kind === "quiz" ? "quiz" : "sujet d'examen";
-    logAudit(
+    const typeLabel =
+      kind === "quiz" ? "quiz" : kind === "paper" ? "sujet d'examen" : kind === "chapter" ? "chapitre" : "leçon";
+    await logAudit(
       actorId,
       status === "approved" ? "approbation" : "rejet",
-      `${typeLabel === "quiz" ? "Quiz" : "Sujet"} « ${row.title} » ${status === "approved" ? "approuvé" : "rejeté"}`,
+      `${typeLabel[0].toUpperCase() + typeLabel.slice(1)} « ${row.title} » ${status === "approved" ? "approuvé" : "rejeté"}`,
     );
     if (row.created_by) {
-      notify(
+      await notify(
         row.created_by,
         status === "approved" ? "Contenu approuvé" : "Contenu rejeté",
         status === "approved"
@@ -549,22 +602,22 @@ export interface TrendDay {
   exam_attempts: number;
 }
 
-export function getTrends(days = 14): TrendDay[] {
+export async function getTrends(days = 14): Promise<TrendDay[]> {
   const dayStr = (offset: number) => {
     const d = new Date(Date.now() - offset * 86400000);
     return d.toISOString().slice(0, 10);
   };
   const start = dayStr(days - 1);
 
-  const regs = query<{ day: string; c: number }>(
+  const regs = await query<{ day: string; c: number }>(
     "SELECT substr(created_at, 1, 10) AS day, COUNT(*) AS c FROM users WHERE created_at >= ? GROUP BY day",
     `${start} 00:00:00`,
   );
-  const quiz = query<{ day: string; c: number }>(
+  const quiz = await query<{ day: string; c: number }>(
     "SELECT substr(completed_at, 1, 10) AS day, COUNT(*) AS c FROM quiz_attempts WHERE completed_at >= ? GROUP BY day",
     `${start} 00:00:00`,
   );
-  const exam = query<{ day: string; c: number }>(
+  const exam = await query<{ day: string; c: number }>(
     "SELECT substr(completed_at, 1, 10) AS day, COUNT(*) AS c FROM exam_attempts WHERE completed_at >= ? GROUP BY day",
     `${start} 00:00:00`,
   );
@@ -585,13 +638,13 @@ export function getTrends(days = 14): TrendDay[] {
   });
 }
 
-export function setUserBlocked(
+export async function setUserBlocked(
   targetId: number,
   blocked: boolean,
   actorId: number,
-): { ok: true } | { error: string } {
+): Promise<{ ok: true } | { error: string }> {
   if (targetId === actorId) return { error: "Vous ne pouvez pas bloquer votre propre compte" };
-  const target = queryOne<{ id: number; role: string; first_name: string; last_name: string }>(
+  const target = await queryOne<{ id: number; role: string; first_name: string; last_name: string }>(
     "SELECT id, role, first_name, last_name FROM users WHERE id = ?",
     targetId,
   );
@@ -599,9 +652,9 @@ export function setUserBlocked(
   if (blocked && target.role === "admin") {
     return { error: "Impossible de bloquer un administrateur" };
   }
-  run("UPDATE users SET blocked = ? WHERE id = ?", blocked ? 1 : 0, targetId);
-  if (blocked) run("DELETE FROM sessions WHERE user_id = ?", targetId);
-  logAudit(
+  await run("UPDATE users SET blocked = ? WHERE id = ?", blocked ? 1 : 0, targetId);
+  if (blocked) await run("DELETE FROM sessions WHERE user_id = ?", targetId);
+  await logAudit(
     actorId,
     blocked ? "blocage" : "deblocage",
     `Compte « ${target.first_name} ${target.last_name} » (#${targetId}) ${blocked ? "bloqué" : "débloqué"}`,
@@ -609,28 +662,28 @@ export function setUserBlocked(
   return { ok: true };
 }
 
-export function deleteUser(targetId: number, actorId: number): { ok: true } | { error: string } {
+export async function deleteUser(targetId: number, actorId: number): Promise<{ ok: true } | { error: string }> {
   if (targetId === actorId) return { error: "Vous ne pouvez pas supprimer votre propre compte" };
-  const target = queryOne<{ id: number; role: string; first_name: string; last_name: string }>(
+  const target = await queryOne<{ id: number; role: string; first_name: string; last_name: string }>(
     "SELECT id, role, first_name, last_name FROM users WHERE id = ?",
     targetId,
   );
   if (!target) return { error: "Utilisateur introuvable" };
   if (target.role === "admin") {
-    const admins = queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM users WHERE role = 'admin'");
+    const admins = await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM users WHERE role = 'admin'");
     if (!admins || admins.c <= 1) return { error: "Impossible de supprimer le dernier administrateur" };
   }
-  run("DELETE FROM users WHERE id = ?", targetId);
-  logAudit(actorId, "suppression", `Compte « ${target.first_name} ${target.last_name} » (#${targetId}) supprimé`);
+  await run("DELETE FROM users WHERE id = ?", targetId);
+  await logAudit(actorId, "suppression", `Compte « ${target.first_name} ${target.last_name} » (#${targetId}) supprimé`);
   return { ok: true };
 }
 
-export function sendNotification(
+export async function sendNotification(
   actorId: number,
   target: number | "all",
   title: string,
   body: string,
-): { ok: true; count: number } | { error: string } {
+): Promise<{ ok: true; count: number } | { error: string }> {
   if (!title || !title.trim()) return { error: "Titre requis" };
   if (!body || !body.trim()) return { error: "Message requis" };
 
@@ -638,16 +691,16 @@ export function sendNotification(
   const cleanBody = body.trim().slice(0, 300);
 
   if (target === "all") {
-    const users = query<{ id: number }>("SELECT id FROM users WHERE role IN ('student', 'teacher', 'parent')");
-    users.forEach((u) => notify(u.id, cleanTitle, cleanBody, "campaign"));
-    logAudit(actorId, "notification", `Campagne « ${cleanTitle} » envoyée à ${users.length} utilisateurs`);
+    const users = await query<{ id: number }>("SELECT id FROM users WHERE role IN ('student', 'teacher', 'parent')");
+    for (const u of users) await notify(u.id, cleanTitle, cleanBody, "campaign");
+    await logAudit(actorId, "notification", `Campagne « ${cleanTitle} » envoyée à ${users.length} utilisateurs`);
     return { ok: true, count: users.length };
   }
 
-  const user = queryOne<{ id: number }>("SELECT id FROM users WHERE id = ?", Number(target));
+  const user = await queryOne<{ id: number }>("SELECT id FROM users WHERE id = ?", Number(target));
   if (!user) return { error: "Utilisateur introuvable" };
-  notify(user.id, cleanTitle, cleanBody, "campaign");
-  logAudit(actorId, "notification", `Notification « ${cleanTitle} » envoyée à #${user.id}`);
+  await notify(user.id, cleanTitle, cleanBody, "campaign");
+  await logAudit(actorId, "notification", `Notification « ${cleanTitle} » envoyée à #${user.id}`);
   return { ok: true, count: 1 };
 }
 
@@ -700,11 +753,11 @@ export interface UserDetail {
   };
 }
 
-export function getUserDetail(userId: number): UserDetail {
+export async function getUserDetail(userId: number): Promise<UserDetail> {
   const today = new Date().toISOString().slice(0, 10);
-  const user = queryOne<AdminUserRow>(
+  const user = await queryOne<Omit<AdminUserRow, "online">>(
     `SELECT u.id, u.role, u.blocked, u.email, u.phone, u.first_name, u.last_name, u.class_level,
-            s.name AS serie_name, u.xp, u.streak, u.last_active, u.created_at,
+            u.serie_id, s.name AS serie_name, u.gender, u.commune, u.xp, u.streak, u.last_active, u.created_at,
             (SELECT COUNT(*) FROM quiz_attempts a WHERE a.user_id = u.id) AS quiz_attempts,
             (SELECT COUNT(*) FROM exam_attempts a WHERE a.user_id = u.id) AS exam_attempts,
             (SELECT COUNT(*) FROM forum_posts p WHERE p.user_id = u.id) AS forum_posts
@@ -713,14 +766,16 @@ export function getUserDetail(userId: number): UserDetail {
     userId,
   );
 
-  const badges = query<UserBadge>(
-    `SELECT b.id, b.name, b.icon, b.description, ub.earned_at
-     FROM user_badges ub JOIN badges b ON b.id = ub.badge_id
-     WHERE ub.user_id = ? ORDER BY ub.earned_at DESC`,
-    userId,
+  const badges = (
+    await query<UserBadge>(
+      `SELECT b.id, b.name, b.icon, b.description, ub.earned_at
+       FROM user_badges ub JOIN badges b ON b.id = ub.badge_id
+       WHERE ub.user_id = ? ORDER BY ub.earned_at DESC`,
+      userId,
+    )
   ).map((b) => ({ ...b, relative: relativeTime(b.earned_at) }));
 
-  const quiz = query<{
+  const quiz = await query<{
     id: number;
     title: string;
     subject_name: string;
@@ -737,7 +792,7 @@ export function getUserDetail(userId: number): UserDetail {
      WHERE a.user_id = ? ORDER BY a.completed_at DESC LIMIT 40`,
     userId,
   );
-  const exam = query<{
+  const exam = await query<{
     id: number;
     title: string;
     subject_name: string;
@@ -788,40 +843,49 @@ export function getUserDetail(userId: number): UserDetail {
     })),
   ].sort((a, b) => (a.completed_at < b.completed_at ? 1 : -1));
 
-  const notifications = query<UserNotif>(
-    `SELECT id, title, body, icon, read, created_at FROM notifications
-     WHERE user_id = ? ORDER BY created_at DESC LIMIT 40`,
-    userId,
+  const notifications = (
+    await query<UserNotif>(
+      `SELECT id, title, body, icon, read, created_at FROM notifications
+       WHERE user_id = ? ORDER BY created_at DESC LIMIT 40`,
+      userId,
+    )
   ).map((n) => ({ ...n, relative: relativeTime(n.created_at) }));
 
   const totals = {
-    quizzes: queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM quiz_attempts WHERE user_id = ?", userId)?.c ?? 0,
-    exams: queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM exam_attempts WHERE user_id = ?", userId)?.c ?? 0,
+    quizzes: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM quiz_attempts WHERE user_id = ?", userId))?.c ?? 0,
+    exams: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM exam_attempts WHERE user_id = ?", userId))?.c ?? 0,
     forum_posts: user?.forum_posts ?? 0,
     badges: badges.length,
-    notifications_unread: queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM notifications WHERE user_id = ? AND read = 0", userId)?.c ?? 0,
+    notifications_unread:
+      (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM notifications WHERE user_id = ? AND read = 0", userId))?.c ?? 0,
   };
 
-  return { user: user ? { ...user, online: !!user.last_active && user.last_active.slice(0, 10) === today } : null, badges, attempts, notifications, totals };
+  return {
+    user: user ? { ...user, online: !!user.last_active && user.last_active.slice(0, 10) === today } : null,
+    badges,
+    attempts,
+    notifications,
+    totals,
+  };
 }
 
-export function resetUserPassword(
+export async function resetUserPassword(
   targetId: number,
   newPassword: string,
   actorId: number,
-): { ok: true } | { error: string } {
+): Promise<{ ok: true } | { error: string }> {
   if (!newPassword || newPassword.length < 6) {
     return { error: "Le mot de passe doit contenir au moins 6 caractères" };
   }
   if (targetId === actorId) return { error: "Vous ne pouvez pas réinitialiser votre propre mot de passe" };
-  const target = queryOne<{ id: number; first_name: string; last_name: string }>(
+  const target = await queryOne<{ id: number; first_name: string; last_name: string }>(
     "SELECT id, first_name, last_name FROM users WHERE id = ?",
     targetId,
   );
   if (!target) return { error: "Utilisateur introuvable" };
-  run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(newPassword), targetId);
-  run("DELETE FROM sessions WHERE user_id = ?", targetId);
-  logAudit(actorId, "mot_de_passe", `Mot de passe de « ${target.first_name} ${target.last_name} » (#${targetId}) réinitialisé`);
+  await run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(newPassword), targetId);
+  await run("DELETE FROM sessions WHERE user_id = ?", targetId);
+  await logAudit(actorId, "mot_de_passe", `Mot de passe de « ${target.first_name} ${target.last_name} » (#${targetId}) réinitialisé`);
   return { ok: true };
 }
 
@@ -847,15 +911,15 @@ export interface ReferredRow {
   last_active: string | null;
 }
 
-export function getReferralStats(): {
+export async function getReferralStats(): Promise<{
   totals: { referrers: number; referred: number; active_week: number };
   top: ReferrerRow[];
   list: ReferredRow[];
-} {
+}> {
   const today = new Date().toISOString().slice(0, 10);
   const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
 
-  const top = query<ReferrerRow>(
+  const top = await query<ReferrerRow>(
     `SELECT r.id AS user_id, r.first_name || ' ' || r.last_name AS name, r.referral_code,
             COUNT(u.id) AS count,
             SUM(CASE WHEN u.last_active >= ? THEN 1 ELSE 0 END) AS active_week,
@@ -867,13 +931,14 @@ export function getReferralStats(): {
     weekAgo,
   );
 
-  const list = query<ReferredRow>(
+  const rows = await query<Omit<ReferredRow, "relative" | "online">>(
     `SELECT u.id AS user_id, u.first_name || ' ' || u.last_name AS name, u.email, u.class_level,
             r.first_name || ' ' || r.last_name AS referrer_name, r.referral_code,
             u.created_at, u.last_active
      FROM users u JOIN users r ON r.id = u.referred_by
      ORDER BY u.id`,
-  ).map((u) => ({
+  );
+  const list = rows.map((u) => ({
     ...u,
     relative: relativeTime(u.created_at),
     online: !!u.last_active && u.last_active.slice(0, 10) === today,
@@ -881,13 +946,218 @@ export function getReferralStats(): {
 
   return {
     totals: {
-      referrers: queryOne<{ c: number }>(
-        "SELECT COUNT(DISTINCT referred_by) AS c FROM users WHERE referred_by IS NOT NULL",
-      )?.c ?? 0,
+      referrers:
+        (await queryOne<{ c: number }>(
+          "SELECT COUNT(DISTINCT referred_by) AS c FROM users WHERE referred_by IS NOT NULL",
+        ))?.c ?? 0,
       referred: list.length,
       active_week: list.filter((u) => u.last_active && u.last_active.slice(0, 10) >= weekAgo).length,
     },
     top,
     list,
   };
+}
+
+export async function getDefisOverview(): Promise<{
+  challenges: Awaited<ReturnType<typeof getAdminChallenges>>;
+  league_challenges: Awaited<ReturnType<typeof getAdminLeagueChallenges>>;
+  totals: { challenges: number; league_challenges: number; active_challenges: number; upcoming_challenges: number };
+}> {
+  const [challenges, league_challenges] = await Promise.all([getAdminChallenges(), getAdminLeagueChallenges()]);
+  return {
+    challenges,
+    league_challenges,
+    totals: {
+      challenges: challenges.length,
+      league_challenges: league_challenges.length,
+      active_challenges: challenges.filter((c) => c.status === "active").length,
+      upcoming_challenges: challenges.filter((c) => c.status === "upcoming").length,
+    },
+  };
+}
+
+export const SUB_STATUSES = ["incomplete", "trial", "active", "past_due", "cancelled", "unpaid"] as const;
+export type SubscriptionStatus = (typeof SUB_STATUSES)[number];
+
+export interface SubscriptionRow {
+  id: number;
+  user_id: number;
+  user_name: string;
+  email: string;
+  phone: string;
+  class_level: string | null;
+  plan_id: number;
+  plan_name: string;
+  interval: string;
+  price_cents: number;
+  provider: string;
+  provider_subscription_id: string | null;
+  status: string;
+  started_at: string | null;
+  end_at: string | null;
+  cancel_at_period_end: number;
+  created_at: string | null;
+}
+
+export interface SubscriptionListResult {
+  subs: SubscriptionRow[];
+  total: number;
+  page: number;
+  pages: number;
+  pageSize: number;
+  stats: {
+    total: number;
+    active: number;
+    past_due: number;
+    cancelled: number;
+    expiring_30d: number;
+    monthly_recurring: number;
+  };
+}
+
+export async function getSubscriptionsPage(filters: {
+  q?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+} = {}): Promise<SubscriptionListResult> {
+  const q = filters.q?.trim() ?? "";
+  const status = filters.status ?? "all";
+  const pageSize = filters.pageSize ?? 20;
+  const today = new Date().toISOString().slice(0, 10);
+  const in30 = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+
+  const where: string[] = [];
+  const params: (string | number)[] = [];
+  if (q) {
+    where.push("(u.first_name LIKE ? OR u.last_name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)");
+    for (let i = 0; i < 4; i++) params.push(`%${q}%`);
+  }
+  if (status && status !== "all") {
+    where.push("s.status = ?");
+    params.push(status);
+  }
+  const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
+
+  const base = `
+    FROM subscriptions s
+    JOIN users u ON u.id = s.user_id
+    JOIN subscription_plans p ON p.id = s.plan_id
+  `;
+
+  const total =
+    Number((await queryOne<{ c: number }>(`SELECT COUNT(*) AS c ${base} ${whereSql}`, ...params))?.c ?? 0);
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(Math.max(1, filters.page ?? 1), pages);
+
+  const rows = await query<SubscriptionRow>(
+    `SELECT s.id, s.user_id, s.plan_id, s.provider, s.provider_subscription_id, s.status,
+            s.started_at, s.end_at, s.cancel_at_period_end, s.created_at,
+            u.first_name || ' ' || u.last_name AS user_name, u.email, u.phone, u.class_level,
+            p.name AS plan_name, p.interval, COALESCE(s.price_cents, p.price_cents) AS price_cents
+     ${base}
+     ${whereSql}
+     ORDER BY s.id DESC LIMIT ? OFFSET ?`,
+    ...params,
+    pageSize,
+    (page - 1) * pageSize,
+  );
+  const subs = rows.map((r) => ({ ...r }));
+
+  const counts = await query<{ status: string; c: number }>(
+    "SELECT s.status, COUNT(*) AS c FROM subscriptions s GROUP BY s.status",
+  );
+  const countOf = (st: string) => Number(counts.find((x) => x.status === st)?.c ?? 0);
+
+  const expiring_30d =
+    Number((await queryOne<{ c: number }>(
+      `SELECT COUNT(*) AS c FROM subscriptions s WHERE s.status = 'active' AND s.end_at IS NOT NULL AND s.end_at >= ? AND s.end_at < ?`,
+      `${today}T00:00:00`,
+      `${in30}T23:59:59`,
+    ))?.c ?? 0);
+
+  const activePlans = await query<{ interval: string; price_cents: number }>(
+    `SELECT p.interval, COALESCE(s.price_cents, p.price_cents) AS price_cents FROM subscriptions s JOIN subscription_plans p ON p.id = s.plan_id WHERE s.status = 'active'`,
+  );
+  const monthlyRecurring = activePlans.reduce((sum, p) => {
+    const divisor = p.interval === "year" ? 12 : p.interval === "quarter" ? 3 : 1;
+    return sum + Math.round(p.price_cents / divisor);
+  }, 0);
+
+  return {
+    subs,
+    total,
+    page,
+    pages,
+    pageSize,
+    stats: {
+      total,
+      active: countOf("active"),
+      past_due: countOf("past_due") + countOf("unpaid"),
+      cancelled: countOf("cancelled"),
+      expiring_30d,
+      monthly_recurring: monthlyRecurring,
+    },
+  };
+}
+
+export async function setSubscriptionStatus(
+  subId: number,
+  status: string,
+  actorId: number,
+): Promise<{ ok: true } | { error: string }> {
+  if (!SUB_STATUSES.includes(status as SubscriptionStatus)) return { error: "Statut invalide" };
+
+  const sub = await queryOne<{ id: number; status: string; plan_name: string; user_name: string }>(
+    `SELECT s.id, s.status, p.name AS plan_name, u.first_name || ' ' || u.last_name AS user_name
+     FROM subscriptions s JOIN subscription_plans p ON p.id = s.plan_id JOIN users u ON u.id = s.user_id
+     WHERE s.id = ?`,
+    subId,
+  );
+  if (!sub) return { error: "Abonnement introuvable" };
+
+  if (status === sub.status) return { ok: true };
+
+  const now = new Date().toISOString();
+  await run("UPDATE subscriptions SET status = ?, updated_at = ? WHERE id = ?", status, now, subId);
+  await logAudit(
+    actorId,
+    "abonnement",
+    `Abonnement #${subId} (${sub.user_name}, plan « ${sub.plan_name} ») : statut « ${sub.status} » → « ${status} »`,
+  );
+  return { ok: true };
+}
+
+export async function extendSubscription(
+  subId: number,
+  days: number,
+  actorId: number,
+): Promise<{ ok: true; end_at: string } | { error: string }> {
+  const d = Math.round(Number(days));
+  if (!Number.isFinite(d) || d < 1 || d > 3650) return { error: "Durée invalide" };
+
+  const sub = await queryOne<{ id: number; status: string; plan_name: string; user_name: string; end_at: string | null }>(
+    `SELECT s.id, s.status, s.end_at, p.name AS plan_name, u.first_name || ' ' || u.last_name AS user_name
+     FROM subscriptions s JOIN subscription_plans p ON p.id = s.plan_id JOIN users u ON u.id = s.user_id
+     WHERE s.id = ?`,
+    subId,
+  );
+  if (!sub) return { error: "Abonnement introuvable" };
+
+  const base = sub.end_at && sub.end_at > new Date().toISOString() ? new Date(sub.end_at).getTime() : Date.now();
+  const endAt = new Date(base + d * 86400000).toISOString();
+  const now = new Date().toISOString();
+
+  await run(
+    "UPDATE subscriptions SET status = 'active', end_at = ?, updated_at = ? WHERE id = ?",
+    endAt,
+    now,
+    subId,
+  );
+  await logAudit(
+    actorId,
+    "abonnement",
+    `Abonnement #${subId} (${sub.user_name}, plan « ${sub.plan_name} ») prolongé de ${d} jours (fin : ${endAt.slice(0, 10)})`,
+  );
+  return { ok: true, end_at: endAt };
 }

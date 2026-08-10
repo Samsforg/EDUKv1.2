@@ -1,8 +1,9 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { deleteMessage } from "@/lib/live-prof";
 
-export async function DELETE(
+async function DELETEHandler(
   _req: Request,
   { params }: { params: Promise<{ id: string; mid: string }> },
 ) {
@@ -11,7 +12,9 @@ export async function DELETE(
     return NextResponse.json({ error: "Accès réservé aux professeurs" }, { status: 403 });
 
   const { id, mid } = await params;
-  const r = deleteMessage(Number(id), user.id, Number(mid));
+  const r = await deleteMessage(Number(id), user.id, Number(mid));
   if (r === null) return NextResponse.json({ error: "Session introuvable ou non autorisée" }, { status: 404 });
   return NextResponse.json(r);
 }
+
+export const DELETE = guardApi("DELETE /api/prof/lives/[id]/messages/[mid]", DELETEHandler);

@@ -12,7 +12,7 @@ export default async function Page() {
   if (!user) redirect("/connexion-edukora");
   if (user.role !== "admin") redirect("/accueil-edukora");
 
-  const posts = getForumPosts();
+  const posts = await getForumPosts();
 
   return (
     <AdminShell active="moderation">

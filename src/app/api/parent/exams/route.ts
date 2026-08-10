@@ -1,10 +1,11 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { getRecentResults, getSubjectStats, resolveLinkedChild } from "@/lib/parents";
 
 const MONTHS_FR = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sept", "Oct", "Nov", "Déc"];
 
-export async function GET(req: NextRequest) {
+async function GETHandler(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
   if (user.role !== "parent") {
@@ -12,14 +13,14 @@ export async function GET(req: NextRequest) {
   }
 
   const requested = req.nextUrl.searchParams.get("child");
-  const child = resolveLinkedChild(user.id, requested ? Number(requested) : null);
+  const child = await resolveLinkedChild(user.id, requested ? Number(requested) : null);
   if (!child) {
     return NextResponse.json({ error: "Aucun enfant lié" }, { status: 404 });
   }
   const childId = child.child_id;
 
-  const allResults = getRecentResults(childId, 100);
-  const subjects = getSubjectStats(childId);
+  const allResults = await getRecentResults(childId, 100);
+  const subjects = await getSubjectStats(childId);
   const estimated =
     subjects.length > 0
       ? Math.round((subjects.reduce((s, x) => s + x.avg_over_20, 0) / subjects.length) * 10) / 10
@@ -83,3 +84,5 @@ export async function GET(req: NextRequest) {
     recommendation,
   });
 }
+
+export const GET = guardApi("GET /api/parent/exams", GETHandler);

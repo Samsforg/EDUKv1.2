@@ -1,15 +1,16 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 
-export async function GET() {
+async function GETHandler() {
   try {
-    const count = queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM users");
+    const count = await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM users");
     const warnings: string[] = [];
     if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
       warnings.push("SESSION_SECRET non défini : sessions désactivées par sécurité (fail-closed).");
     }
-    if (!process.env.GENIUSPAY_API_KEY) {
-      warnings.push("GENIUSPAY_API_KEY non défini : abonnements premium indisponibles.");
+    if (!process.env.GENIUSPAY_API_KEY || !process.env.GENIUSPAY_API_SECRET) {
+      warnings.push("GENIUSPAY_API_KEY / GENIUSPAY_API_SECRET non définis : abonnements premium indisponibles.");
     }
     return NextResponse.json({
       ok: true,
@@ -22,3 +23,5 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
   }
 }
+
+export const GET = guardApi("GET /api/health", GETHandler);

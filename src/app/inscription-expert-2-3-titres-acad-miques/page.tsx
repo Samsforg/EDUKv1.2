@@ -16,7 +16,7 @@ export default function Page() {
 
 <div className="md:w-1/3 flex flex-col gap-6">
 <div className="relative rounded-xl overflow-hidden aspect-square shadow-lg hidden md:block">
-<img className="object-cover w-full h-full" src="/images/ecran-191.png" alt="A focused academic professor in a modern library setting in Abidjan, Côte d'Ivoire. The lighting is bright and professional, with hints of academic blue and national orange in the background decor. The professor is holding a tablet, looking optimistic and authoritative, representing academic excellence and trustworthy technology." />
+<img  className="object-cover w-full h-full" src="/images/ecran-191.webp" alt="A focused academic professor in a modern library setting in Abidjan, Côte d'Ivoire. The lighting is bright and professional, with hints of academic blue and national orange in the background decor. The professor is holding a tablet, looking optimistic and authoritative, representing academic excellence and trustworthy technology." loading="lazy" />
 <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent flex flex-col justify-end p-6">
 <p className="text-white font-headline text-lg">"Rejoignez l'excellence académique ivoirienne."</p>
 </div>

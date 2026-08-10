@@ -1,13 +1,14 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne, run } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { refreshBadges } from "@/lib/badges";
 
-export async function GET() {
+async function GETHandler() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
-  const favorites = query<{
+  const favorites = await query<{
     item_type: string;
     item_id: number;
     title: string;
@@ -32,7 +33,9 @@ export async function GET() {
   return NextResponse.json({ favorites });
 }
 
-export async function POST(req: NextRequest) {
+export const GET = guardApi("GET /api/favorites", GETHandler);
+
+async function POSTHandler(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
@@ -41,7 +44,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
   }
 
-  const exists = queryOne<{ id: number }>(
+  const exists = await queryOne<{ id: number }>(
     "SELECT id FROM favorites WHERE user_id = ? AND item_type = ? AND item_id = ?",
     user.id,
     body.item_type,
@@ -49,11 +52,13 @@ export async function POST(req: NextRequest) {
   );
 
   if (exists) {
-    run("DELETE FROM favorites WHERE id = ?", exists.id);
+    await run("DELETE FROM favorites WHERE id = ?", exists.id);
     return NextResponse.json({ favorite: false });
   }
 
-  run("INSERT INTO favorites (user_id, item_type, item_id) VALUES (?, ?, ?)", user.id, body.item_type, body.item_id);
-  refreshBadges(user.id);
+  await run("INSERT INTO favorites (user_id, item_type, item_id) VALUES (?, ?, ?)", user.id, body.item_type, body.item_id);
+  await refreshBadges(user.id);
   return NextResponse.json({ favorite: true });
 }
+
+export const POST = guardApi("POST /api/favorites", POSTHandler);

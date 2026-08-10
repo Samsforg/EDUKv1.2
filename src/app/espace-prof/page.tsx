@@ -33,6 +33,37 @@ interface ProfPaper {
   status: string;
 }
 
+interface ProfChapter {
+  id: number;
+  subject_code: string;
+  subject_name: string;
+  subject_icon: string;
+  subject_color: string;
+  grade_name: string | null;
+  code: string;
+  title: string;
+  order_index: number;
+  lesson_count: number;
+  status: string;
+}
+
+interface ProfLesson {
+  id: number;
+  chapter_id: number;
+  chapter_title: string;
+  subject_name: string;
+  subject_icon: string;
+  subject_color: string;
+  grade_name: string | null;
+  title: string;
+  summary: string;
+  duration_min: number;
+  difficulty: number;
+  is_premium: number;
+  exercise_count: number;
+  status: string;
+}
+
 interface ProfInfo {
   id: number;
   first_name: string;
@@ -45,6 +76,8 @@ export default function TeacherDashboardPage() {
   const [prof, setProf] = useState<ProfInfo | null>(null);
   const [quizzes, setQuizzes] = useState<ProfQuiz[]>([]);
   const [papers, setPapers] = useState<ProfPaper[]>([]);
+  const [chapters, setChapters] = useState<ProfChapter[]>([]);
+  const [lessons, setLessons] = useState<ProfLesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
 
@@ -67,7 +100,13 @@ export default function TeacherDashboardPage() {
       .then((d) => setQuizzes(d.quizzes ?? []));
     fetch("/api/prof/paper")
       .then((r) => r.json())
-      .then((d) => setPapers(d.papers ?? []))
+      .then((d) => setPapers(d.papers ?? []));
+    fetch("/api/prof/chapter")
+      .then((r) => r.json())
+      .then((d) => setChapters(d.chapters ?? []));
+    fetch("/api/prof/lesson")
+      .then((r) => r.json())
+      .then((d) => setLessons(d.lessons ?? []))
       .finally(() => setLoading(false));
   }, [router]);
 
@@ -81,7 +120,17 @@ export default function TeacherDashboardPage() {
     setPapers((prev) => prev.filter((p) => p.id !== id));
   }
 
-  const totalStudents = quizzes.reduce((acc, q) => acc + q.attempts, 0) + papers.reduce((acc, p) => acc + p.attempts, 0);
+  async function deleteChapter(id: number) {
+    await fetch("/api/prof/chapter", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    setChapters((prev) => prev.filter((c) => c.id !== id));
+    setLessons((prev) => prev.filter((l) => l.chapter_id !== id));
+  }
+
+  async function deleteLesson(id: number) {
+    await fetch("/api/prof/lesson", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    setLessons((prev) => prev.filter((l) => l.id !== id));
+  }
+
   const avgQuiz = quizzes.length > 0 && quizzes.some((q) => q.avg_percent !== null)
     ? Math.round(quizzes.filter((q) => q.avg_percent !== null).reduce((a, q) => a + (q.avg_percent ?? 0), 0) / Math.max(1, quizzes.filter((q) => q.avg_percent !== null).length))
     : null;
@@ -137,7 +186,7 @@ export default function TeacherDashboardPage() {
           </div>
         </div>
 
-        <section className="grid grid-cols-3 gap-3 mb-8">
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
             <p className="font-label-xs text-on-surface-variant uppercase tracking-wider">Quiz créés</p>
             <p className="font-headline-md text-headline-md text-primary mt-1">{quizzes.length}</p>
@@ -147,9 +196,96 @@ export default function TeacherDashboardPage() {
             <p className="font-headline-md text-headline-md text-secondary mt-1">{papers.length}</p>
           </div>
           <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
-            <p className="font-label-xs text-on-surface-variant uppercase tracking-wider">Tentatives élèves</p>
-            <p className="font-headline-md text-headline-md text-on-surface mt-1">{totalStudents}</p>
+            <p className="font-label-xs text-on-surface-variant uppercase tracking-wider">Chapitres</p>
+            <p className="font-headline-md text-headline-md text-tertiary mt-1">{chapters.length}</p>
           </div>
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
+            <p className="font-label-xs text-on-surface-variant uppercase tracking-wider">Leçons</p>
+            <p className="font-headline-md text-headline-md text-on-surface mt-1">{lessons.length}</p>
+          </div>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="font-title-md text-title-md text-on-surface mb-3">Mes chapitres ({chapters.length})</h2>
+          {chapters.length === 0 ? (
+            <p className="bg-surface border border-outline-variant rounded-xl p-4 text-center font-body-sm text-on-surface-variant">Aucun chapitre créé pour l&apos;instant. Crée un chapitre qui sera validé par l&apos;administration.</p>
+          ) : (
+            <div className="space-y-3">
+              {chapters.map((c) => (
+                <div key={c.id} className="bg-surface border border-outline-variant rounded-xl p-4 flex items-center gap-4">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: c.subject_color + "22", color: c.subject_color }}>
+                    <span className="material-symbols-outlined">{c.subject_icon}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-label-xs font-bold uppercase tracking-wider" style={{ color: c.subject_color }}>{c.subject_name}</span>
+                      {c.grade_name && <span className="font-label-xs text-on-surface-variant">{c.grade_name}</span>}
+                      {statusBadge(c.status)}
+                    </div>
+                    <h3 className="font-label-md font-semibold text-on-surface truncate">{c.title}</h3>
+                    <p className="font-label-xs text-on-surface-variant">
+                      {c.code} · {c.lesson_count} leçon{c.lesson_count > 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/espace-prof/creer-lecon?chapter=${c.id}`}
+                    className="w-9 h-9 rounded-full text-primary hover:bg-primary-container/15 flex items-center justify-center shrink-0"
+                    aria-label="Ajouter une leçon à ce chapitre"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">add</span>
+                  </Link>
+                  <Link
+                    href={`/espace-prof/creer-chapitre?id=${c.id}`}
+                    className="w-9 h-9 rounded-full text-on-surface-variant hover:bg-surface-container-high flex items-center justify-center shrink-0"
+                    aria-label="Modifier ce chapitre"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">edit</span>
+                  </Link>
+                  <button onClick={() => setConfirm({ title: "Supprimer ce chapitre ?", message: `« ${c.title} » et ses leçons seront supprimés.`, onConfirm: () => deleteChapter(c.id) })} aria-label="Supprimer" className="w-9 h-9 rounded-full text-error hover:bg-error-container/20 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[20px]">delete</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="mb-8">
+          <h2 className="font-title-md text-title-md text-on-surface mb-3">Mes leçons ({lessons.length})</h2>
+          {lessons.length === 0 ? (
+            <p className="bg-surface border border-outline-variant rounded-xl p-4 text-center font-body-sm text-on-surface-variant">Aucune leçon créée pour l&apos;instant.</p>
+          ) : (
+            <div className="space-y-3">
+              {lessons.map((l) => (
+                <div key={l.id} className="bg-surface border border-outline-variant rounded-xl p-4 flex items-center gap-4">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: l.subject_color + "22", color: l.subject_color }}>
+                    <span className="material-symbols-outlined">{l.subject_icon}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-label-xs font-bold uppercase tracking-wider" style={{ color: l.subject_color }}>{l.subject_name}</span>
+                      <span className="font-label-xs text-on-surface-variant">{l.chapter_title}</span>
+                      {statusBadge(l.status)}
+                    </div>
+                    <h3 className="font-label-md font-semibold text-on-surface truncate">{l.title}</h3>
+                    <p className="font-label-xs text-on-surface-variant">
+                      {l.duration_min} min · niveau {l.difficulty}{l.is_premium === 1 ? " · premium" : ""} · {l.exercise_count} exercice{l.exercise_count > 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/espace-prof/creer-lecon?id=${l.id}`}
+                    className="w-9 h-9 rounded-full text-on-surface-variant hover:bg-surface-container-high flex items-center justify-center shrink-0"
+                    aria-label="Modifier cette leçon"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">edit</span>
+                  </Link>
+                  <button onClick={() => setConfirm({ title: "Supprimer cette leçon ?", message: `« ${l.title} » sera supprimée.`, onConfirm: () => deleteLesson(l.id) })} aria-label="Supprimer" className="w-9 h-9 rounded-full text-error hover:bg-error-container/20 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[20px]">delete</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="mb-8">
@@ -236,12 +372,24 @@ export default function TeacherDashboardPage() {
         )}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-outline-variant px-4 py-3">
+<nav className="fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-outline-variant px-4 py-3">
         <div className="max-w-4xl mx-auto grid grid-cols-2 gap-3">
-          <Link href="/espace-prof/creer-quiz" className="h-12 rounded-full bg-primary text-on-primary font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
+          <Link href="/espace-prof/classes" className="h-12 rounded-full bg-surface-container-high text-on-surface font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
+            <span className="material-symbols-outlined text-[18px]">groups</span> Mes classes
+          </Link>
+          <Link href="/espace-prof/tentatives" className="h-12 rounded-full bg-surface-container-high text-on-surface font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
+            <span className="material-symbols-outlined text-[18px]">assignment_turned_in</span> Tentatives
+          </Link>
+          <Link href="/espace-prof/creer-chapitre" className="h-12 rounded-full bg-tertiary text-on-tertiary font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
+            <span className="material-symbols-outlined text-[18px]">add</span> Nouveau chapitre
+          </Link>
+          <Link href="/espace-prof/creer-lecon" className="h-12 rounded-full bg-primary text-on-primary font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
+            <span className="material-symbols-outlined text-[18px]">add</span> Nouvelle leçon
+          </Link>
+          <Link href="/espace-prof/creer-quiz" className="h-12 rounded-full bg-secondary text-on-secondary font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
             <span className="material-symbols-outlined text-[18px]">add</span> Nouveau quiz
           </Link>
-          <Link href="/espace-prof/creer-sujet" className="h-12 rounded-full bg-secondary text-on-secondary font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
+          <Link href="/espace-prof/creer-sujet" className="h-12 rounded-full bg-surface-container text-on-surface font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
             <span className="material-symbols-outlined text-[18px]">add</span> Nouveau sujet
           </Link>
         </div>

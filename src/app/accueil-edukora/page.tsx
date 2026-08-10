@@ -11,6 +11,36 @@ interface SessionUser {
   xp: number;
   streak: number;
   serie_id: number | null;
+  class_level?: string | null;
+  goal?: string | null;
+}
+
+const GOAL_LABELS: Record<string, string> = {
+  bac: "Préparer le BAC",
+  bepc: "Préparer le BEPC",
+  notes: "Améliorer mes notes",
+  programme: "Suivre le programme",
+};
+
+const CYCLE_BY_CLASS_KEY: Record<string, "BAC" | "BEPC"> = {
+  "6eme": "BEPC",
+  "5eme": "BEPC",
+  "4eme": "BEPC",
+  "3eme": "BEPC",
+  "2nde": "BAC",
+  "1ere": "BAC",
+  "terminale": "BAC",
+};
+
+function examCycleOfClassLevel(raw: string | null): "BAC" | "BEPC" | null {
+  if (!raw) return null;
+  const key = raw
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+  const star = key.match(/^(6eme|5eme|4eme|3eme|2nde|1ere|terminale)/)?.[1];
+  return CYCLE_BY_CLASS_KEY[star ?? key] ?? null;
 }
 
 interface ProgressData {
@@ -30,10 +60,21 @@ interface ProgressData {
   badges: { code: string; name: string; icon: string; description: string; earned_at: string }[];
 }
 
+interface ReReadItem {
+  id: string;
+  reason: string;
+  href: string;
+  subject_name: string;
+  subject_icon: string;
+  subject_color: string;
+  chapter_title: string;
+}
+
 export default function Page() {
   const router = useRouter();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [progress, setProgress] = useState<ProgressData | null>(null);
+  const [reReads, setReReads] = useState<ReReadItem[]>([]);
   const [unread, setUnread] = useState(0);
   const [checking, setChecking] = useState(true);
 
@@ -58,12 +99,38 @@ export default function Page() {
       .then((r) => r.json())
       .then((d) => setUnread(d.unread ?? 0))
       .catch(() => {});
+    fetch("/api/parcours")
+      .then((r) => r.json())
+      .then((d) => {
+        const items: ReReadItem[] = (d.queue ?? [])
+          .filter(
+            (q: { type?: string; reason?: string }) =>
+              q.type === "lesson" && typeof q.reason === "string" && q.reason.startsWith("Relire"),
+          )
+          .map((q: Record<string, unknown>) => ({
+            id: q.id,
+            reason: q.reason,
+            href: q.href,
+            subject_name: q.subject_name ?? "",
+            subject_icon: q.subject_icon ?? "menu_book",
+            subject_color: q.subject_color ?? "#0047ab",
+            chapter_title: q.chapter_title ?? "",
+          }));
+        setReReads(items);
+      })
+      .catch(() => {});
   }, [user]);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.replace("/connexion-edukora");
   }
+
+  const exam =
+    user?.goal === "bac" || user?.goal === "bepc"
+      ? user.goal.toUpperCase()
+      : examCycleOfClassLevel(user?.class_level ?? null);
+  const goalLabel = user?.goal ? GOAL_LABELS[user.goal] : null;
 
   if (checking) {
     return (
@@ -78,9 +145,9 @@ export default function Page() {
 <header className="fixed top-0 w-full z-50 bg-surface border-b border-outline-variant flex justify-between items-center px-margin-mobile h-16">
 <div className="flex items-center gap-3">
 <div className="w-10 h-10 rounded-full overflow-hidden border border-primary-fixed bg-surface-container">
-<img className="w-full h-full object-cover" src="/images/ecran-001.png" alt="A professional headshot of a young Ivorian student in a bright, modern learning environment." />
+<img className="w-full h-full object-cover" src="/images/ecran-001.webp" alt="A professional headshot of a young Ivorian student in a bright, modern learning environment." />
 </div>
-<img alt="Edukora Logo" className="h-8 object-contain" src="/images/logo-edukora.png" />
+<img  alt="Edukora Logo" className="h-8 object-contain" src="/images/logo-edukora.webp" loading="lazy" />
 </div>
 <div className="flex items-center gap-1">
 <ThemeToggle />
@@ -98,12 +165,19 @@ export default function Page() {
 <main className="pt-20 px-margin-mobile space-y-stack-lg">
 <section className="mt-4">
 <h1 className="font-headline-md text-headline-md text-on-surface">Salut, {user?.first_name ?? "Élève"} 👋</h1>
-<p className="text-on-surface-variant font-body-md mt-1">Prêt pour tes révisions du BAC aujourd'hui ?</p>
+<p className="text-on-surface-variant font-body-md mt-1">Prêt pour tes révisions {exam ? `du ${exam} ` : ""}aujourd&apos;hui ?</p>
+{goalLabel && (
+<a href="/bienvenue?edit=1" className="inline-flex items-center gap-1.5 mt-2 bg-primary/10 text-primary rounded-full px-3 py-1 text-label-sm font-label-sm">
+<span className="material-symbols-outlined text-[14px]">flag</span>
+{goalLabel}
+<span className="material-symbols-outlined text-[14px]">edit</span>
+</a>
+)}
 </section>
 <section className="grid grid-cols-2 gap-gutter">
 <div className="col-span-2 bg-surface-container-lowest p-5 rounded-xl border border-outline-variant flex items-center justify-between shadow-sm">
 <div className="space-y-1">
-<p className="text-label-sm font-label-sm text-on-surface-variant">Score Global BAC 2024</p>
+<p className="text-label-sm font-label-sm text-on-surface-variant">Score Global {exam ?? "Edukora"}</p>
 <p className="text-display-lg-mobile font-display-lg-mobile text-primary">{progress?.global_score != null ? `${progress.global_score}%` : "—"}</p>
 <div className="flex gap-2">
 <p className="text-label-xs font-label-xs text-secondary-container bg-secondary-container/10 px-2 py-0.5 rounded-full flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">local_fire_department</span> {progress?.streak ?? 0} jour{progress?.streak && progress.streak > 1 ? "s" : ""}</p>
@@ -120,6 +194,26 @@ export default function Page() {
 </div>
 </div>
 </div>
+{reReads.length > 0 && (
+<section className="space-y-stack-md">
+<div className="flex justify-between items-center">
+<h2 className="font-headline-md text-headline-md text-on-surface">À revoir</h2>
+<a href="/parcours" className="text-primary font-label-sm">Tout voir</a>
+</div>
+{reReads.map((item) => (
+<a key={item.id} href={item.href} className="bg-surface-container-high border border-outline-variant rounded-xl p-4 flex items-center gap-4 hover:bg-surface-container-low transition-colors cursor-pointer">
+<div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: item.subject_color + "1A", color: item.subject_color }}>
+<span className="material-symbols-outlined">{item.subject_icon}</span>
+</div>
+<div className="flex-1 min-w-0">
+<p className="font-label-sm text-on-surface truncate">{item.reason}</p>
+<p className="text-label-xs text-on-surface-variant truncate">{item.chapter_title}</p>
+</div>
+<span className="material-symbols-outlined text-primary shrink-0">chevron_right</span>
+</a>
+))}
+</section>
+)}
 <a href="/simulateur" className="col-span-2 bento-card relative overflow-hidden bg-primary p-5 rounded-xl text-on-primary flex flex-col justify-between h-40 shadow-md active:scale-95 duration-200" style={{ transform: "scale(1)" }}>
 <div className="absolute top-0 right-0 w-32 h-32 bg-on-primary/10 rounded-bl-full -mr-8 -mt-8"></div>
 <div className="z-10 text-left">
@@ -131,6 +225,16 @@ export default function Page() {
 Lancer un sujet <span className="material-symbols-outlined text-[18px]">play_circle</span>
 </span>
 </div>
+</a>
+<a href="/mes-classes" className="col-span-2 bento-card bg-surface-container-high border border-outline-variant p-4 rounded-xl flex items-center gap-4 group active:bg-inverse-surface active:text-inverse-on-surface transition-colors">
+<div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-secondary shadow-sm">
+<span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+</div>
+<div className="text-left">
+<p className="font-label-sm font-label-sm text-primary">Mes classes</p>
+<h4 className="text-label-xs text-label-xs text-on-surface-variant">Rejoins la classe de ton professeur avec son code d&apos;invitation</h4>
+</div>
+<span className="material-symbols-outlined ml-auto text-primary shrink-0">chevron_right</span>
 </a>
 <a href="/tuteur-ia" className="col-span-2 bento-card bg-surface-container-high border border-outline-variant p-4 rounded-xl flex items-center gap-4 group active:bg-inverse-surface active:text-inverse-on-surface transition-colors">
 <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-on-primary shadow-sm">

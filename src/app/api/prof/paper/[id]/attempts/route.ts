@@ -1,8 +1,9 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
-export async function GET(
+async function GETHandler(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -11,14 +12,14 @@ export async function GET(
   if (user.role !== "teacher") return NextResponse.json({ error: "Réservé aux professeurs" }, { status: 403 });
 
   const { id } = await params;
-  const paper = queryOne<{ id: number; title: string; created_by: number | null }>(
+  const paper = await queryOne<{ id: number; title: string; created_by: number | null }>(
     "SELECT id, title, created_by FROM exam_papers WHERE id = ?",
     Number(id),
   );
   if (!paper) return NextResponse.json({ error: "Sujet introuvable" }, { status: 404 });
   if (paper.created_by !== user.id) return NextResponse.json({ error: "Pas ton sujet" }, { status: 403 });
 
-  const attempts = query<{
+  const attempts = await query<{
     id: number;
     student_first: string;
     student_last: string;
@@ -48,3 +49,5 @@ export async function GET(
     },
   });
 }
+
+export const GET = guardApi("GET /api/prof/paper/[id]/attempts", GETHandler);

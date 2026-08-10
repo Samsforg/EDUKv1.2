@@ -1,8 +1,9 @@
+import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
-export async function GET(
+async function GETHandler(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -12,13 +13,13 @@ export async function GET(
   const { id } = await params;
   const categoryId = Number(id);
 
-  const category = queryOne<{ id: number; name: string; icon: string; color: string; description: string }>(
+  const category = await queryOne<{ id: number; name: string; icon: string; color: string; description: string }>(
     "SELECT id, name, icon, color, description FROM forum_categories WHERE id = ?",
     categoryId,
   );
   if (!category) return NextResponse.json({ error: "Catégorie introuvable" }, { status: 404 });
 
-  const posts = query<{
+  const posts = await query<{
     id: number;
     title: string;
     content: string;
@@ -53,6 +54,8 @@ export async function GET(
     })),
   });
 }
+
+export const GET = guardApi("GET /api/forum/categories/[id]", GETHandler);
 
 function timeAgo(date: string) {
   const s = Math.floor((Date.now() - new Date(date + "Z").getTime()) / 1000);

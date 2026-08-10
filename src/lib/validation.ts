@@ -15,12 +15,17 @@ export const RegisterSchema = z.object({
   referral_code: z.string().optional(),
   role: z.enum(["student", "teacher", "parent"]).optional().default("student"),
   serie_id: z.number().int().positive().nullable().optional(),
+  gender: z.enum(["M", "F"]).nullable().optional(),
+  commune: z.string().max(80).nullable().optional(),
+  class_level: z.string().max(60).nullable().optional(),
+  grade: z.string().max(60).nullable().optional(),
+  accept_privacy: z.boolean().optional().default(false),
 }).refine((d) => d.email || d.phone, { message: "Email ou téléphone requis" });
 
 // ===== QUIZ =====
 export const QuizSubmitSchema = z.object({
   quiz_id: z.number().int().positive(),
-  answers: z.array(z.number().int().min(0).max(3)).min(1),
+  answers: z.array(z.number().int().min(-1).max(5)).min(1),
   duration_seconds: z.number().int().min(0).max(7200).optional(),
 });
 

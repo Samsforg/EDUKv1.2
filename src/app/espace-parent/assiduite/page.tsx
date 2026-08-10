@@ -17,13 +17,13 @@ export default async function Page({
   if (user.role !== "parent") redirect("/accueil-edukora");
 
   const sp = await searchParams;
-  const children = getParentChildren(user.id);
+  const children = await getParentChildren(user.id);
   if (children.length === 0) redirect("/espace-parent/jumelage");
-  const active = resolveLinkedChild(user.id, sp.child ? Number(sp.child) : null) ?? children[0];
+  const active = await resolveLinkedChild(user.id, sp.child ? Number(sp.child) : null) ?? children[0];
   const childId = active.child_id;
 
-  const week = getWeeklyActivity(childId);
-  const peak = getPeakHours(childId);
+  const week = await getWeeklyActivity(childId);
+  const peak = await getPeakHours(childId);
   const sortedDays = [...week.days].sort((a, b) => b.hours - a.hours);
   const bestDay = sortedDays[0];
   const maxHours = Math.max(...week.days.map((d) => d.hours), 0.01);
