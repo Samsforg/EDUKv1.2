@@ -17,7 +17,8 @@ type ActiveTab =
   | "profile"
   | "defis"
   | "tarifs"
-  | "abonnes";
+  | "abonnes"
+  | "ads";
 
 const TABS: { key: ActiveTab; href: string; icon: string; label: string; mobileLabel: string }[] = [
   { key: "overview", href: "/espace-admin", icon: "dashboard", label: "Overview", mobileLabel: "Overview" },
@@ -34,6 +35,7 @@ const TABS: { key: ActiveTab; href: string; icon: string; label: string; mobileL
   { key: "defis", href: "/espace-admin/defis", icon: "emoji_events", label: "Défis", mobileLabel: "Défis" },
   { key: "tarifs", href: "/espace-admin/tarifs", icon: "sell", label: "Tarifs", mobileLabel: "Tarifs" },
   { key: "abonnes", href: "/espace-admin/abonnes", icon: "subscriptions", label: "Abonnés", mobileLabel: "Abonnés" },
+  { key: "ads", href: "/espace-admin/pub", icon: "campaign", label: "Espace pub", mobileLabel: "Pub" },
 ];
 
 export async function AdminShell({ active, children }: { active: ActiveTab; children: ReactNode }) {

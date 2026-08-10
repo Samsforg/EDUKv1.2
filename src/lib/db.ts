@@ -678,6 +678,18 @@ CREATE TABLE IF NOT EXISTS newsletter_subscribers (
 );
 
 CREATE INDEX IF NOT EXISTS idx_newsletter_created ON newsletter_subscribers (created_at);
+
+CREATE TABLE IF NOT EXISTS site_ads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  subtitle TEXT,
+  image_url TEXT,
+  link_url TEXT,
+  background TEXT,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now'))
+);
 `;
 
 export function getDb() {
@@ -899,6 +911,28 @@ CREATE TABLE IF NOT EXISTS newsletter_subscribers (
   created_at TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_newsletter_created ON newsletter_subscribers (created_at);
+`).split(";");
+        for (const stmt of pieces) {
+          const trimmed = stmt.trim();
+          if (trimmed) await pool.query(trimmed);
+        }
+      }
+      const hasAds = await withPgRetry(() =>
+        pool.query("SELECT to_regclass('public.site_ads') IS NOT NULL AS exists"),
+      );
+      if (!hasAds.rows[0].exists) {
+        const pieces = toPgSchema(`
+CREATE TABLE IF NOT EXISTS site_ads (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  subtitle TEXT,
+  image_url TEXT,
+  link_url TEXT,
+  background TEXT,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `).split(";");
         for (const stmt of pieces) {
           const trimmed = stmt.trim();

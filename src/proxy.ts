@@ -5,6 +5,7 @@ const PUBLIC_ROUTES = [
   "/blog",
   "/fonctionnalites",
   "/resultats",
+  "/parrainage",
   "/tarifs",
   "/landing-page-edukora-marketing",
   "/tuteur-ia-edukora",
@@ -41,6 +42,7 @@ const PUBLIC_ROUTES = [
   "/api/premium/plans",
   "/api/warmup",
   "/api/cron/reminders",
+  "/api/ads",
 ];
 
 const TEACHER_ROUTES = ["/prof", "/api/prof"];

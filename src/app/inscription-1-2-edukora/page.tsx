@@ -25,6 +25,7 @@ export default function Page() {
   const [role, setRole] = useState<"student" | "teacher">("student");
   const [showPassword, setShowPassword] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -75,6 +76,7 @@ export default function Page() {
           password,
           role,
           accept_privacy: acceptPrivacy,
+          referral_code: referralCode.trim() || undefined,
           ...(role === "student"
             ? {
                 serie_id: showSerie ? serieId : null,
@@ -296,6 +298,25 @@ export default function Page() {
               {error}
             </p>
           )}
+
+          <div className="space-y-1.5">
+            <label htmlFor="referralCode" className="block text-sm font-semibold text-on-surface">Code de parrainage (optionnel)</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+                <span className="material-symbols-outlined text-lg">diversity_3</span>
+              </span>
+              <input
+                id="referralCode"
+                type="text"
+                autoComplete="off"
+                placeholder="EDK-XXXXXX"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                className={`${inputClass} pl-11`}
+              />
+            </div>
+            <p className="text-xs text-on-surface-variant">Un ami t&apos;a parrainé ? Saisis son code pour l&apos;en remercier et rejoindre sa communauté.</p>
+          </div>
 
           <div className="flex items-start gap-3">
             <input

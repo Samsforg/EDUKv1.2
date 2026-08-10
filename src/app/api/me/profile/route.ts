@@ -74,6 +74,11 @@ async function GETHandler() {
     user.id,
   );
 
+  const referral = await queryOne<{ filleuls: number }>(
+    "SELECT COUNT(*) AS filleuls FROM users WHERE referred_by = ?",
+    user.id,
+  );
+
   return NextResponse.json({
     user: {
       id: user.id,
@@ -86,6 +91,8 @@ async function GETHandler() {
       class_level: user.class_level,
       xp: user.xp,
       streak: user.streak,
+      referral_code: user.referral_code,
+      filleuls: referral?.filleuls ?? 0,
     },
     stats: {
       global_score: globalScore,

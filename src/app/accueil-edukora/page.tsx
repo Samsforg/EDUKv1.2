@@ -286,6 +286,16 @@ Lancer un sujet <span className="material-symbols-outlined text-[18px]">play_cir
 </div>
 <span className="material-symbols-outlined ml-auto text-tertiary">chevron_right</span>
 </a>
+<a href="/parrainage" className="col-span-2 bento-card bg-surface-container-high border border-outline-variant p-4 rounded-xl flex items-center gap-4 group active:scale-95 transition-transform duration-100">
+<div className="w-12 h-12 rounded-full bg-tertiary-container/30 flex items-center justify-center text-tertiary shadow-sm">
+<span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>diversity_3</span>
+</div>
+<div className="text-left">
+<p className="font-label-sm text-on-surface">Parrainage</p>
+<p className="text-label-xs text-on-surface-variant">Partager ton code et monter au classement</p>
+</div>
+<span className="material-symbols-outlined ml-auto text-tertiary">chevron_right</span>
+</a>
 <a href="/ligues" className="col-span-2 bento-card bg-surface-container-high border border-outline-variant p-4 rounded-xl flex items-center gap-4 group active:scale-95 transition-transform duration-100">
 <div className="w-12 h-12 rounded-full bg-secondary-container/40 flex items-center justify-center text-secondary shadow-sm">
 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>

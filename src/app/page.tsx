@@ -2,6 +2,7 @@ import Link from "next/link";
 import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
 import NewsletterSection from "@/components/NewsletterSection";
+import { HomeAds } from "@/components/HomeAds";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -167,6 +168,8 @@ export default function Page() {
           </div>
         </section>
 
+        <HomeAds />
+
         <section className="py-24 px-4 md:px-8 bg-surface-container-low">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
@@ -288,6 +291,53 @@ export default function Page() {
         </section>
 
         <NewsletterSection source="home" />
+
+        <section className="py-24 px-4 md:px-8">
+          <div className="max-w-7xl mx-auto bg-surface-container-low rounded-[32px] md:rounded-[40px] p-8 md:p-16 border border-outline-variant/40">
+            <div className="grid md:grid-cols-2 gap-10 items-center">
+              <div>
+                <p className="text-label-sm font-bold uppercase tracking-wider text-secondary-container mb-3">Parrainage</p>
+                <h2 className="text-[28px] md:text-[36px] font-extrabold text-primary mb-4">Réviser ensemble, réussir ensemble</h2>
+                <p className="text-body-md text-on-surface-variant leading-relaxed mb-8">
+                  Invite tes amis et camarades de classe à rejoindre Edukora avec ton code personnel.
+                  Chaque filleul inscrit fait grimper ta place dans le classement Ambassadeurs,
+                  et tu es notifié à chaque nouvelle inscription.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link
+                    href="/parrainage"
+                    className="inline-flex bg-primary text-on-primary text-body-md font-bold px-8 py-4 rounded-[16px] items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                  >
+                    <span className="material-symbols-outlined">diversity_3</span>
+                    Découvrir le parrainage
+                  </Link>
+                  <Link
+                    href="/classement?view=ambassadeurs"
+                    className="inline-flex bg-surface-container-high text-primary text-body-md font-semibold px-8 py-4 rounded-[16px] items-center justify-center gap-2 border border-outline-variant hover:bg-surface-container-highest transition-colors"
+                  >
+                    <span className="material-symbols-outlined">leaderboard</span>
+                    Classement Ambassadeurs
+                  </Link>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { icon: "badge", value: "EDK-XXXXXX", label: "Ton code unique" },
+                  { icon: "group_add", value: "Filleuls", label: "Chaque inscription compte" },
+                  { icon: "leaderboard", value: "Novice → Élite", label: "3 paliers d'Ambassadeur" },
+                ].map((c) => (
+                  <div key={c.label} className="bg-white/80 backdrop-blur-md rounded-[20px] p-5 border border-outline-variant/40 text-center hover:shadow-md transition-shadow">
+                    <div className="w-10 h-10 mx-auto bg-primary rounded-[12px] flex items-center justify-center mb-3">
+                      <span className="material-symbols-outlined text-on-primary" style={{ fontVariationSettings: "'FILL' 1" }}>{c.icon}</span>
+                    </div>
+                    <p className="text-label-sm font-bold text-on-surface mb-1">{c.value}</p>
+                    <p className="text-label-xs text-on-surface-variant leading-tight">{c.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
 
         <section className="pb-24 px-4 md:px-8">
           <div className="max-w-7xl mx-auto bg-primary rounded-[32px] md:rounded-[40px] p-8 md:p-16 text-center text-white relative overflow-hidden">

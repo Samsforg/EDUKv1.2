@@ -19,6 +19,8 @@ interface ProfileData {
     class_level: string | null;
     xp: number;
     streak: number;
+    referral_code: string | null;
+    filleuls: number;
   };
   stats: {
     global_score: number | null;
@@ -49,6 +51,30 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", serie_id: "", class_level: "" as string });
   const [pw, setPw] = useState({ current_password: "", new_password: "", confirm: "" });
+  const [copied, setCopied] = useState(false);
+
+  const shareReferral = () => {
+    if (!data?.user.referral_code) return;
+    const code = data.user.referral_code;
+    const msg = `Rejoins-moi sur Edukora pour réviser le BAC et le BEPC en Côte d'Ivoire ! Inscris-toi avec mon code de parrainage : ${code}`;
+    const link = "https://edukora.net/inscription-1-2-edukora";
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      navigator.share({ title: "Parrainage Edukora", text: msg, url: link }).catch(() => {});
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(`${msg} — ${link}`)}`, "_blank", "noopener");
+    }
+  };
+
+  const copyCode = async () => {
+    if (!data?.user.referral_code) return;
+    try {
+      await navigator.clipboard.writeText(data.user.referral_code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  };
 
   useEffect(() => {
     fetch("/api/me/profile")
@@ -403,6 +429,56 @@ export default function ProfilePage() {
             <p className="font-label-xs text-on-surface-variant uppercase tracking-wider">Meilleur examen</p>
             <p className="font-headline-md text-headline-md text-on-surface mt-1">{stats.best_exam != null ? `${stats.best_exam}/20` : "—"}</p>
           </div>
+        </section>
+
+        <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-11 h-11 rounded-full bg-tertiary-container/30 flex items-center justify-center text-tertiary shrink-0">
+              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>diversity_3</span>
+            </div>
+            <div className="flex-1">
+              <p className="font-label-md font-semibold text-on-surface">Parrainage</p>
+              <p className="font-label-xs text-on-surface-variant">Fais inscrire des amis avec ton code et monte dans le classement Ambassadeurs.</p>
+            </div>
+          </div>
+          {user.referral_code ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <code className="flex-1 bg-surface border border-outline-variant rounded-lg px-3 py-2.5 font-mono font-semibold text-primary tracking-wider text-sm">{user.referral_code}</code>
+                <button
+                  type="button"
+                  onClick={copyCode}
+                  className="w-11 h-11 bg-primary/10 text-primary rounded-lg flex items-center justify-center active:scale-95 transition-transform duration-150"
+                  aria-label="Copier le code de parrainage"
+                >
+                  <span className="material-symbols-outlined">{copied ? "check" : "content_copy"}</span>
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={shareReferral}
+                  className="flex-1 bg-primary text-on-primary rounded-lg py-2.5 font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-150"
+                >
+                  <span className="material-symbols-outlined text-lg">share</span>
+                  Partager mon code
+                </button>
+                <Link
+                  href="/classement?view=ambassadeurs"
+                  className="flex-1 bg-surface border border-outline-variant rounded-lg py-2.5 font-label-md font-semibold text-on-surface flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-150"
+                >
+                  <span className="material-symbols-outlined text-lg">leaderboard</span>
+                  Ambassadeurs
+                </Link>
+              </div>
+              <p className="font-label-xs text-on-surface-variant flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-base">group_add</span>
+                {user.filleuls} filleul{user.filleuls > 1 ? "s" : ""} inscrit{user.filleuls > 1 ? "s" : ""} avec ton code
+              </p>
+            </div>
+          ) : (
+            <p className="font-body-sm text-on-surface-variant">Ton code de parrainage est indisponible pour le moment.</p>
+          )}
         </section>
 
         <Link
