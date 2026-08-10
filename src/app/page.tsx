@@ -1,7 +1,6 @@
 import Link from "next/link";
 import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
-import NewsletterSection from "@/components/NewsletterSection";
 import { HomeAds } from "@/components/HomeAds";
 import type { Metadata } from "next";
 
@@ -289,8 +288,6 @@ export default function Page() {
             </div>
           </div>
         </section>
-
-        <NewsletterSection source="home" />
 
         <section className="py-24 px-4 md:px-8">
           <div className="max-w-7xl mx-auto bg-surface-container-low rounded-[32px] md:rounded-[40px] p-8 md:p-16 border border-outline-variant/40">
