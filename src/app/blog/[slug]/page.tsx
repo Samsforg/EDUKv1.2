@@ -108,6 +108,11 @@ export default async function Page({ params }: { params: Promise<Params> }) {
     mainEntityOfPage: `https://edukora.net/blog/${post.slug}`,
   };
 
+  const related = getAllPosts()
+    .filter((p) => p.slug !== post.slug)
+    .sort((a, b) => (a.category === post.category ? -1 : 1) - (b.category === post.category ? -1 : 1))
+    .slice(0, 3);
+
   return (
     <div className="bg-background text-on-background min-h-screen font-body">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
@@ -162,6 +167,37 @@ export default async function Page({ params }: { params: Promise<Params> }) {
             </Link>
           </div>
         </div>
+
+        {related.length > 0 && (
+          <section className="mt-16">
+            <h2 className="text-headline-md font-bold text-on-surface mb-6">À lire aussi</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {related.map((r) => (
+                <Link
+                  key={r.slug}
+                  href={`/blog/${r.slug}`}
+                  className="group bg-surface rounded-2xl border border-outline-variant p-5 flex flex-col transition-all duration-300 hover:shadow-lg hover:border-primary/40"
+                >
+                  <span className="px-3 py-1 self-start bg-primary-container text-primary text-label-sm font-bold rounded-full mb-3">
+                    {r.category}
+                  </span>
+                  <h3 className="text-body-md font-bold text-on-surface mb-2 leading-snug group-hover:text-primary transition-colors">
+                    {r.title}
+                  </h3>
+                  <p className="text-body-sm text-on-surface-variant leading-relaxed flex-1 line-clamp-3">
+                    {r.description}
+                  </p>
+                  <span className="mt-4 inline-flex items-center gap-2 text-primary font-bold text-body-sm">
+                    Lire
+                    <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
+                      arrow_forward
+                    </span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </article>
 
       <MarketingFooter />

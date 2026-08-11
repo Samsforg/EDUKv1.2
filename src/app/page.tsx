@@ -3,6 +3,7 @@ import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
 import { HomeAds } from "@/components/HomeAds";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { getAllPosts, formatPostDate } from "@/lib/blog";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -92,6 +93,82 @@ export default function Page() {
         name: "Edukora",
         inLanguage: "fr-CI",
         publisher: { "@id": "https://edukora.net/#organization" },
+      },
+      {
+        "@type": "Course",
+        "@id": "https://edukora.net/#course",
+        name: "Préparation au BAC et au BEPC en Côte d'Ivoire",
+        description:
+          "Fiches de révision certifiées par des professeurs, tuteur IA Kora disponible 24h/24 et simulateur d'examen chronométré pour réussir le BAC et le BEPC.",
+        provider: { "@id": "https://edukora.net/#organization" },
+        inLanguage: "fr-CI",
+        educationalLevel: "Collège et lycée",
+        hasCourseInstance: {
+          "@type": "CourseInstance",
+          courseMode: "online",
+          inLanguage: "fr-CI",
+          offers: {
+            "@type": "Offer",
+            category: "Paid",
+            price: "4900",
+            priceCurrency: "XOF",
+            availability: "https://schema.org/InStock",
+          },
+        },
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://edukora.net/#faq",
+        mainEntity: [
+          {
+            "@type": "Question",
+            name: "Edukora est-il gratuit ?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Oui. Le plan Découverte est entièrement gratuit : fiches de révision, quiz et accès limité au simulateur d'examen. Les plans payants (Réussite, Trimestriel, Annuel) débloquent l'accès illimité et le tuteur IA.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Le contenu suit-il le programme officiel ivoirien ?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Oui, toutes les fiches sont alignées sur les programmes officiels ivoiriens du BAC (séries C, D, A, A1, B, E) et du BEPC, et certifiées par des professeurs.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Comment fonctionne le tuteur IA Kora ?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Kora est un tuteur IA disponible 24h/24 : posez-lui une question sur une leçon ou un exercice, il vous explique pas à pas et vous propose des exercices de remédiation ciblés.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Sur quels appareils puis-je réviser ?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Edukora fonctionne sur ordinateur, tablette et téléphone, même avec une connexion limitée. L'application est installable sur mobile et les leçons lues sont disponibles hors ligne.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Comment payer l'abonnement premium ?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Le paiement se fait par Mobile Money (Orange Money, MTN MoMo, Wave) via GeniusPay. L'abonnement est récurrent et peut être résilié à tout moment.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Comment le simulateur d'examen aide-t-il à réussir ?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Le simulateur reproduit les conditions réelles de l'épreuve : chronomètre, notation sur 20, correction détaillée et analyse de votre niveau par le tuteur IA pour cibler vos révisions.",
+            },
+          },
+        ],
       },
     ],
   };
@@ -331,6 +408,113 @@ export default function Page() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="pb-24 px-4 md:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-12">
+              <p className="text-label-sm uppercase tracking-widest text-primary font-bold mb-3">
+                Conseils d'experts
+              </p>
+              <h2 className="text-[28px] md:text-[40px] font-extrabold text-primary mb-4">
+                Nos articles pour réussir
+              </h2>
+              <p className="text-body-md text-on-surface-variant max-w-2xl mx-auto">
+                Méthodes de révision, plans jour par jour et astuces d'élèves pour aborder le BAC et le BEPC avec confiance.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {getAllPosts()
+                .slice(0, 3)
+                .map((post) => (
+                  <Link
+                    key={post.slug}
+                    href={`/blog/${post.slug}`}
+                    className="group bg-surface rounded-2xl border border-outline-variant p-6 flex flex-col transition-all duration-300 hover:shadow-lg hover:border-primary/40"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="px-3 py-1 bg-primary-container text-primary text-label-sm font-bold rounded-full">
+                        {post.category}
+                      </span>
+                      <span className="text-label-sm text-on-surface-variant">{formatPostDate(post.publishedAt)}</span>
+                    </div>
+                    <h3 className="text-headline-sm font-bold text-on-surface mb-2 group-hover:text-primary transition-colors leading-snug">
+                      {post.title}
+                    </h3>
+                    <p className="text-body-sm text-on-surface-variant leading-relaxed flex-1 line-clamp-3">
+                      {post.description}
+                    </p>
+                    <span className="mt-5 inline-flex items-center gap-2 text-primary font-bold text-body-sm">
+                      Lire l'article
+                      <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </span>
+                  </Link>
+                ))}
+            </div>
+            <div className="text-center mt-10">
+              <Link
+                href="/blog"
+                className="inline-flex items-center gap-2 text-primary font-semibold text-body-md hover:underline"
+              >
+                Voir tous les articles
+                <span className="material-symbols-outlined text-lg">arrow_forward</span>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="pb-24 px-4 md:px-8">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-12">
+              <p className="text-label-sm uppercase tracking-widest text-primary font-bold mb-3">
+                Questions fréquentes
+              </p>
+              <h2 className="text-[28px] md:text-[40px] font-extrabold text-primary">
+                Vos questions, nos réponses
+              </h2>
+            </div>
+            <div className="space-y-4">
+              {[
+                {
+                  q: "Edukora est-il gratuit ?",
+                  a: "Oui. Le plan Découverte est entièrement gratuit : fiches de révision, quiz et accès limité au simulateur d'examen. Les plans payants (Réussite, Trimestriel, Annuel) débloquent l'accès illimité et le tuteur IA.",
+                },
+                {
+                  q: "Le contenu suit-il le programme officiel ivoirien ?",
+                  a: "Oui, toutes les fiches sont alignées sur les programmes officiels ivoiriens du BAC (séries C, D, A, A1, B, E) et du BEPC, et certifiées par des professeurs.",
+                },
+                {
+                  q: "Comment fonctionne le tuteur IA Kora ?",
+                  a: "Kora est un tuteur IA disponible 24h/24 : posez-lui une question sur une leçon ou un exercice, il vous explique pas à pas et vous propose des exercices de remédiation ciblés.",
+                },
+                {
+                  q: "Sur quels appareils puis-je réviser ?",
+                  a: "Edukora fonctionne sur ordinateur, tablette et téléphone, même avec une connexion limitée. L'application est installable sur mobile et les leçons lues sont disponibles hors ligne.",
+                },
+                {
+                  q: "Comment payer l'abonnement premium ?",
+                  a: "Le paiement se fait par Mobile Money (Orange Money, MTN MoMo, Wave) via GeniusPay. L'abonnement est récurrent et peut être résilié à tout moment.",
+                },
+                {
+                  q: "Comment le simulateur d'examen aide-t-il à réussir ?",
+                  a: "Le simulateur reproduit les conditions réelles de l'épreuve : chronomètre, notation sur 20, correction détaillée et analyse de votre niveau par le tuteur IA pour cibler vos révisions.",
+                },
+              ].map((faq) => (
+                <details
+                  key={faq.q}
+                  className="group bg-surface rounded-2xl border border-outline-variant overflow-hidden"
+                >
+                  <summary className="flex items-center justify-between gap-4 cursor-pointer list-none px-6 py-5 font-bold text-on-surface hover:bg-surface-container-low transition-colors">
+                    <span className="text-body-md">{faq.q}</span>
+                    <span className="material-symbols-outlined text-primary transition-transform group-open:rotate-180 shrink-0">
+                      expand_more
+                    </span>
+                  </summary>
+                  <p className="px-6 pb-6 text-body-md text-on-surface-variant leading-relaxed">{faq.a}</p>
+                </details>
+              ))}
             </div>
           </div>
         </section>
