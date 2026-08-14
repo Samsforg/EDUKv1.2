@@ -74,7 +74,7 @@ export default function SimulatorTakePage() {
       setSubmitError(result.error ?? "Erreur lors de la correction. Réessaie.");
       return;
     }
-    sessionStorage.setItem(`edukora-exam-result-${id}`, JSON.stringify({ ...result, exam_id: id, questions: data.questions, userAnswers: answers }));
+    sessionStorage.setItem(`edukora-exam-result-${id}`, JSON.stringify({ ...result, exam_id: id, exam_title: data.paper.title, questions: data.questions, userAnswers: answers }));
     router.push(`/simulateur/${id}/resultat`);
   }
 

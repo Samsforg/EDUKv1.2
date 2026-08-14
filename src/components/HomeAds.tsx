@@ -67,12 +67,12 @@ export function HomeAds() {
           >
             Publicité
           </p>
-          <h3
+          <h2
             className="text-[24px] md:text-[32px] font-extrabold leading-tight mb-2"
             style={a.background ? { color: textOn(a.background) } : undefined}
           >
             {a.title}
-          </h3>
+          </h2>
           {a.subtitle && (
             <p
               className="text-body-md leading-relaxed"
@@ -158,16 +158,21 @@ export function HomeAds() {
           </div>
         </div>
         {ads.length > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-4">
+          <div className="flex items-center justify-center gap-1.5 mt-4">
             {ads.map((a, i) => (
               <button
                 key={a.id}
                 onClick={() => goTo(i)}
                 aria-label={`Aller à la pub ${i + 1}`}
-                className={`h-2 rounded-[999px] transition-all ${
-                  i === index ? "w-8 bg-primary" : "w-2 bg-outline-variant hover:bg-on-surface-variant"
-                }`}
-              />
+                aria-current={i === index}
+                className="group flex h-6 w-6 items-center justify-center"
+              >
+                <span
+                  className={`block h-2 rounded-[999px] transition-all ${
+                    i === index ? "w-8 bg-primary" : "w-2 bg-outline-variant group-hover:bg-on-surface-variant"
+                  }`}
+                />
+              </button>
             ))}
           </div>
         )}

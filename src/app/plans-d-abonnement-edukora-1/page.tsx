@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { getCachedPremiumPlans, planFeatures, formatPlanPrice, type PlanRow } from "@/lib/plans";
+import { getPremiumPlans, planFeatures, formatPlanPrice, type PlanRow } from "@/lib/plans";
+import PromoRentreeBanner from "@/components/PromoRentreeBanner";
+import { isRentreePromoActive } from "@/lib/promo";
 
 export const metadata: Metadata = {
   title: "Abonnement Premium",
@@ -8,30 +10,37 @@ export const metadata: Metadata = {
   alternates: { canonical: "/plans-d-abonnement-edukora-1" },
 };
 
-export const revalidate = 300;
+// Rendu à la volée : le pré-rendu au build s'exécute sans DATABASE_URL (SQLite local),
+// ce qui figerait l'état « plans indisponibles » au déploiement. Ne jamais mettre en cache.
+export const dynamic = "force-dynamic";
 
-const FALLBACK_MONTH: PlanRow = {
-  id: 0,
-  name: "Réussite",
-  interval: "month",
-  price_cents: 4900,
-  currency: "XOF",
-  features:
-    "Accès illimité à toutes les fiches\n30 questions par mois à Kora IA\nSimulateur complet + Correction détaillée\nSupport prioritaire par nos professeurs",
-  sort_order: 1,
-};
+async function fetchPlansRobustly(): Promise<PlanRow[]> {
+  // Pas de fallback silencieux et pas de cache figé : au cold start la base Neon
+  // (autosuspend) peut mettre 5-15 s à se réveiller et chaque tentative échoue
+  // vite (ECONNREFUSED / ETIMEDOUT). On étale les retries sur ~25 s avant de conclure.
+  const delays = [0, 1000, 2500, 4500, 7000, 10000];
+  for (let attempt = 0; attempt < delays.length; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, delays[attempt]));
+    try {
+      return await getPremiumPlans();
+    } catch (err) {
+      console.error(`[plans] tentative ${attempt + 1} échouée :`, err);
+    }
+  }
+  return [];
+}
 
 export default async function Page() {
-  const plans = await getCachedPremiumPlans().catch(() => []);
-  const month =
-    plans.find((p) => p.price_cents > 0 && p.interval === "month") ?? FALLBACK_MONTH;
-  const realQuarter =
+  const plans = await fetchPlansRobustly();
+  const monthPlan = plans.find((p) => p.price_cents > 0 && p.interval === "month") ?? null;
+  const quarterPlan =
     plans.find((p) => p.price_cents > 0 && p.interval === "quarter" && p.name.includes("Trimestriel")) ??
-    plans.find((p) => p.price_cents > 0 && p.interval === "quarter");
-  const quarter = realQuarter ?? { ...month, interval: "quarter", price_cents: 0, id: 0 } as PlanRow;
-  const monthFeatures = planFeatures(month);
-  const quarterFeatures = realQuarter?.features
-    ? planFeatures(realQuarter)
+    plans.find((p) => p.price_cents > 0 && p.interval === "quarter") ??
+    null;
+  const quarterDisplay = quarterPlan ?? (monthPlan ? { ...monthPlan, id: 0, interval: "quarter" as const, price_cents: 0 } : null);
+  const monthFeatures = monthPlan ? planFeatures(monthPlan) : [];
+  const quarterFeatures = quarterPlan?.features
+    ? planFeatures(quarterPlan)
     : monthFeatures.map((f) => (f.includes("Kora IA") ? "100 questions par trimestre à Kora IA" : f));
 
   return (
@@ -54,6 +63,8 @@ export default async function Page() {
 <h2 className="text-3xl font-bold text-primary mb-2">Passez au niveau supérieur</h2>
 <p className="text-on-surface-variant max-w-md mx-auto">Débloquez tout le potentiel de votre réussite scolaire avec nos outils d'apprentissage avancés.</p>
 </section>
+
+{isRentreePromoActive() && <div className="max-w-4xl mx-auto mb-8"><PromoRentreeBanner /></div>}
 
 <div className="flex justify-center mb-8">
 <div className="bg-surface-container-high p-1 rounded-xl flex gap-1">
@@ -96,7 +107,8 @@ export default async function Page() {
 </div>
 
 <div className="relative bg-primary text-on-primary rounded-xl p-8 flex flex-col shadow-xl transition-transform hover:scale-[1.02] overflow-hidden">
-
+{monthPlan ? (
+<>
 <div className="absolute top-4 right-4 bg-secondary-container text-on-secondary-container text-[10px] uppercase tracking-widest font-bold px-3 py-1 rounded-full">
                     Le plus populaire
                 </div>
@@ -105,8 +117,8 @@ export default async function Page() {
 <p className="text-sm text-on-primary-container/80">L'expérience complète pour réussir votre examen.</p>
 </div>
 <div className="mb-8">
-<div id="price-container" data-price-month={`${month.price_cents}`} data-price-quarter={`${quarter.price_cents}`} data-plan-month={`${month.id}`} data-plan-quarter={`${quarter.id}`}>
-<span className="text-4xl font-extrabold" id="price-value">{formatPlanPrice(month.price_cents).replace(/ FCFA$/, "")}</span>
+<div id="price-container" data-price-month={`${monthPlan.price_cents}`} data-price-quarter={`${quarterDisplay?.id ? quarterDisplay.price_cents : 0}`} data-plan-month={`${monthPlan.id}`} data-plan-quarter={`${quarterDisplay?.id ?? 0}`}>
+<span className="text-4xl font-extrabold" id="price-value">{formatPlanPrice(monthPlan.price_cents).replace(/ FCFA$/, "")}</span>
 <span className="text-xl font-bold ml-1">FCFA</span>
 <span className="text-sm font-normal opacity-80" id="price-period">/ mois</span>
 </div>
@@ -135,6 +147,17 @@ export default async function Page() {
 >
   S&apos;abonner maintenant
 </button>
+<div id="promo-box" className="mt-4 space-y-2">
+<div className="flex gap-2">
+<input id="promo-input" type="text" placeholder="Code promo (ex. RENTREE30)" autoComplete="off"
+       className="flex-1 min-w-0 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors" />
+<button id="promo-apply" type="button"
+        className="px-4 py-3 rounded-lg bg-surface-container-high text-on-surface font-bold text-sm transition-colors active:scale-95">
+Appliquer
+</button>
+</div>
+<p id="promo-status" className="hidden text-xs rounded-lg px-3 py-2"></p>
+</div>
 <div id="phone-required" className="hidden mt-4 rounded-xl bg-surface-container-low p-4 space-y-3">
 <p className="text-sm font-bold text-on-surface">Ajoutez votre numéro Mobile Money</p>
 <p className="text-xs text-on-surface-variant">Indispensable pour recevoir le paiement d&apos;abonnement (Orange, MTN, Moov, Wave).</p>
@@ -147,6 +170,14 @@ Enregistrer et continuer
 <p id="phone-error" className="hidden text-xs text-error bg-error-container/30 rounded-lg px-3 py-2"></p>
 </div>
 <p className="mt-4 text-[10px] text-center opacity-60">Sans engagement. Annulez à tout moment.</p>
+</>
+) : (
+<div className="flex flex-col items-center justify-center text-center py-16">
+<span className="material-symbols-outlined text-5xl mb-4 opacity-90">hourglass_empty</span>
+<h3 className="text-xl font-bold mb-2">Plans temporairement indisponibles</h3>
+<p className="text-sm text-on-primary-container/80 max-w-xs">Veuillez recharger la page dans quelques instants pour souscrire à Réussite.</p>
+</div>
+)}
 </div>
 </div>
 
@@ -220,10 +251,18 @@ Enregistrer et continuer
         const pc = document.getElementById('price-container');
 
         let currentPlanId = pc.getAttribute('data-plan-month');
+        let appliedPromo = null;
+        let promoDiscount = 0;
+
+        const effectivePrice = (monthly) =&gt; &#123;
+            const base = Number(pc.getAttribute(monthly ? 'data-price-month' : 'data-price-quarter'));
+            return promoDiscount &gt; 0 ? Math.max(0, Math.round((base * (100 - promoDiscount)) / 100)) : base;
+        &#125;;
+
         const renderPrice = (monthly) =&gt; &#123;
             currentPlanId = pc.getAttribute(monthly ? 'data-plan-month' : 'data-plan-quarter');
             pc.setAttribute('data-current-plan', currentPlanId);
-            priceVal.innerText = pc.getAttribute(monthly ? 'data-price-month' : 'data-price-quarter');
+            priceVal.innerText = String(effectivePrice(monthly));
             pricePeriod.innerText = monthly ? '/ mois' : '/ trimestre';
             savingsBadge.classList.toggle('hidden', monthly);
             const fm = document.getElementById('features-month');
@@ -239,6 +278,43 @@ Enregistrer et continuer
         if (!hasQuarter) &#123;
             btnTrim.disabled = true;
             btnTrim.classList.add('opacity-40', 'cursor-not-allowed');
+        &#125;
+
+        const promoInput = document.getElementById('promo-input');
+        const promoApply = document.getElementById('promo-apply');
+        const promoStatus = document.getElementById('promo-status');
+        const promoBox = document.getElementById('promo-box');
+
+        if (promoApply && promoInput && promoStatus) &#123;
+            const setStatus = (msg, ok) =&gt; &#123;
+                promoStatus.textContent = msg;
+                promoStatus.classList.remove('hidden', 'bg-error-container/30', 'bg-tertiary-container/40', 'text-error', 'text-tertiary');
+                promoStatus.classList.add(ok ? 'bg-tertiary-container/40 text-tertiary' : 'bg-error-container/30 text-error');
+            &#125;;
+            promoApply.addEventListener('click', () =&gt; &#123;
+                const code = (promoInput.value || '').trim().toUpperCase();
+                if (!code) &#123; setStatus('Saisissez un code promo.', false); return; &#125;
+                promoApply.disabled = true;
+                promoApply.innerHTML = '...';
+                fetch('/api/promo/check?code=' + encodeURIComponent(code), &#123; credentials: 'same-origin' &#125;)
+                    .then((r) =&gt; r.json().catch(() =&gt; (&#123; valid: false &#125;)))
+                    .then((d) =&gt; &#123;
+                        if (d &amp;&amp; d.valid &amp;&amp; d.discount_type === 'percent') &#123;
+                            appliedPromo = d.code;
+                            promoDiscount = Number(d.discount_value) || 0;
+                            renderPrice(!btnTrim.classList.contains('bg-surface-container-lowest'));
+                            setStatus('Code appliqué : -' + promoDiscount + ' %. Le prix affiché est votre prix final.', true);
+                        &#125; else &#123;
+                            promoDiscount = 0;
+                            setStatus((d &amp;&amp; d.message) || 'Ce code promo ne peut pas être utilisé ici.', false);
+                        &#125;
+                    &#125;)
+                    .catch(() =&gt; &#123; setStatus('Erreur réseau. Réessayez.', false); &#125;)
+                    .finally(() =&gt; &#123; promoApply.disabled = false; promoApply.innerHTML = 'Appliquer'; &#125;);
+            &#125;);
+            if (promoInput) &#123;
+                promoInput.addEventListener('keydown', (e) =&gt; &#123; if (e.key === 'Enter') promoApply.click(); &#125;);
+            &#125;
         &#125;
 
         btnMonthly.addEventListener('click', () =&gt; &#123;
@@ -268,13 +344,24 @@ Enregistrer et continuer
           function doCheckout() &#123;
             var pc = document.getElementById('price-container');
             var planId = pc ? pc.getAttribute('data-current-plan') || pc.getAttribute('data-plan-month') : null;
+            var pid = Number(planId || 0);
+            if (!pid || pid &lt;= 0) &#123;
+              btn.disabled = false;
+              btn.innerHTML = "S'abonner maintenant";
+              phoneError.textContent = 'Le plan est en cours de chargement. Rechargez la page dans quelques instants.';
+              phoneError.classList.remove('hidden');
+              return;
+            &#125;
             btn.disabled = true;
             btn.innerHTML = 'Redirection vers le paiement...';
+            var ctrl = new AbortController();
+            var guard = setTimeout(function () &#123; ctrl.abort(); &#125;, 25000);
             return fetch('/api/premium/checkout', &#123;
               method: 'POST',
               headers: &#123; 'Content-Type': 'application/json' &#125;,
               credentials: 'same-origin',
-              body: JSON.stringify(&#123; plan_id: Number(planId || 0) &#125;)
+              signal: ctrl.signal,
+              body: JSON.stringify(&#123; plan_id: pid, promo: appliedPromo &#125;)
             &#125;)
                 .then(function(r) &#123;
                   return r.json().then(function(d) &#123; return &#123; status: r.status, d: d &#125;; &#125;);
@@ -291,9 +378,21 @@ Enregistrer et continuer
                     phoneInput.focus();
                     return;
                   &#125;
+                  if (d.code === 'PROMO_INVALID') &#123;
+                    appliedPromo = null;
+                    promoDiscount = 0;
+                    var ps = document.getElementById('promo-status');
+                    if (ps) &#123; ps.textContent = d.error || 'Code promo invalide.'; ps.classList.remove('hidden'); &#125;
+                  &#125;
                   btn.disabled = false; btn.innerHTML = d.error || 'Erreur';
                 &#125;)
-              .catch(function() &#123; btn.disabled = false; btn.innerHTML = 'Erreur réseau'; &#125;);
+                .catch(function() &#123;
+                  btn.disabled = false;
+                  btn.innerHTML = 'Erreur réseau. Réessayez.';
+                  phoneError.textContent = 'Le paiement a echoue. Verifiez votre connexion puis reessayez.';
+                  phoneError.classList.remove('hidden');
+                &#125;)
+                .finally(function() &#123; clearTimeout(guard); &#125;);
           &#125;
 
           btn.addEventListener('click', doCheckout);

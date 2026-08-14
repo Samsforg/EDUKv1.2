@@ -207,7 +207,10 @@ function ConnexionPage() {
         <div className="mt-8 text-center">
           <p className="text-sm text-on-surface-variant">
             Pas encore de compte ?{" "}
-            <Link href="/inscription-1-2-edukora" className="font-semibold text-primary hover:text-primary-container transition-colors ml-1">
+            <Link
+              href={`/inscription-1-2-edukora${from ? `?from=${encodeURIComponent(from)}` : ""}`}
+              className="font-semibold text-primary hover:text-primary-container transition-colors ml-1"
+            >
               S'inscrire
             </Link>
           </p>

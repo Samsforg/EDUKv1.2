@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/session";
 import { getLigueLadder, getLigueStatus, LIGUE_ORDER, LIGUES } from "@/lib/rank";
 import PageHeader from "@/components/PageHeader";
+import ShareLeagueButton from "@/components/ShareLeagueButton";
 
 export const metadata = { title: "Ligues Académiques - Edukora" };
 
@@ -80,6 +81,12 @@ export default async function LiguesPage() {
           {reachedMax && (
             <p className="mt-3 font-label-xs text-impact-emerald font-semibold">Tu as atteint le sommet de la hiérarchie académique !</p>
           )}
+          <ShareLeagueButton
+            ligueName={me.ligue.name.replace("Ligue ", "")}
+            rankInLigue={me.rank_in_ligue}
+            xp={me.xp}
+            nextLigueName={nextLigue?.name.replace("Ligue ", "") ?? null}
+          />
         </div>
 
         <Link

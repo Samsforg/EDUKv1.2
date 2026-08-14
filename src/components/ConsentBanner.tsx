@@ -30,8 +30,8 @@ export default function ConsentBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[60] p-3 md:p-4">
-      <div className="mx-auto max-w-2xl bg-surface text-on-surface rounded-2xl border border-outline-variant shadow-lg p-4 md:p-5">
+    <div className="fixed inset-x-0 bottom-0 z-[60] p-3 md:p-4 pointer-events-none">
+      <div className="mx-auto max-w-2xl bg-surface text-on-surface rounded-2xl border border-outline-variant shadow-lg p-4 md:p-5 pointer-events-auto">
         <div className="flex items-start gap-3 mb-2">
           <span className="material-symbols-outlined text-primary mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>
             cookie

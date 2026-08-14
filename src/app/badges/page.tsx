@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
+import ShareBadgeButton from "@/components/ShareBadgeButton";
 
 interface BadgeItem {
   code: string;
@@ -128,6 +129,7 @@ export default function BadgesPage() {
                       </div>
                       <p className="font-label-sm font-semibold text-on-surface leading-tight">{b.name}</p>
                       <p className="font-label-xs text-on-surface-variant mt-0.5">Obtenu le {b.earned_at ? formatDate(b.earned_at) : ""}</p>
+                      <ShareBadgeButton name={b.name} icon={b.icon} earnedCount={data.earned_count} totalCount={data.total} />
                     </div>
                   ))}
                 </div>

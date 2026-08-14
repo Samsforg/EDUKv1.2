@@ -2,7 +2,7 @@ import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb, queryOne, run } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
-import { createSession, setSessionCookie, notify } from "@/lib/session";
+import { createSession, setSessionCookie, notify, addXp } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { RegisterSchema, validate } from "@/lib/validation";
 import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
@@ -153,6 +153,22 @@ async function POSTHandler(req: NextRequest) {
       "redeem",
     );
     await logAudit(referredBy, "inscription", `${first_name} ${last_name} (#${userId}) inscrit via le code ${(referral_code ?? "").trim().toUpperCase()}`);
+
+    // Récompense immédiate des deux côtés : pas besoin d'attendre un paiement.
+    await addXp(referredBy, 150);
+    await notify(
+      referredBy,
+      "+150 XP de parrainage !",
+      `${first_name} ${last_name} vient de s'inscrire avec ton code : +150 XP bonus.`,
+      "redeem",
+    );
+    await addXp(userId, 50);
+    await notify(
+      userId,
+      "+50 XP de bienvenue !",
+      "Inscrit·e grâce à un code de parrainage : +50 XP bonus pour bien démarrer.",
+      "redeem",
+    );
   }
 
   let token: string;

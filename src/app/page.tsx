@@ -1,6 +1,7 @@
 import Link from "next/link";
 import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
+import WelcomeSplash from "@/components/WelcomeSplash";
 import { HomeAds } from "@/components/HomeAds";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { getAllPosts, formatPostDate } from "@/lib/blog";
@@ -220,7 +221,7 @@ export default function Page() {
                     </div>
                   ))}
                 </div>
-                <span>Rejoins +50,000 étudiants ivoiriens</span>
+                <span>Une communauté d'élèves du BAC &amp; BEPC en Côte d'Ivoire</span>
               </div>
             </div>
             <div className="relative">
@@ -260,7 +261,7 @@ export default function Page() {
                 { num: "03", icon: "emoji_events", title: "Réussis ton examen", text: "Arrive confiant le jour J et décroche ton diplôme avec mention." },
               ].map((s) => (
                 <div key={s.num} className="relative bg-white/80 backdrop-blur-md rounded-[24px] p-8 border border-outline-variant/40 hover:shadow-lg transition-shadow">
-                  <span className="absolute top-6 right-8 text-[48px] font-extrabold text-primary/10">{s.num}</span>
+                  <span className="absolute top-6 right-8 text-[48px] font-extrabold text-primary/40">{s.num}</span>
                   <div className="w-12 h-12 bg-primary rounded-[12px] flex items-center justify-center mb-6">
                     <span className="material-symbols-outlined text-on-primary" style={{ fontVariationSettings: "'FILL' 1" }}>{s.icon}</span>
                   </div>
@@ -340,13 +341,13 @@ export default function Page() {
                       {t.img ? (
                         <img className="w-full h-full object-cover" src={t.img} alt={t.name} fetchPriority="low" loading="lazy" />
                       ) : (
-                        <div className="w-full h-full bg-secondary-container/60 text-primary flex items-center justify-center text-label-sm font-extrabold">
+                        <div className="w-full h-full bg-secondary-container/60 text-on-secondary-container flex items-center justify-center text-label-sm font-extrabold">
                           {t.initials}
                         </div>
                       )}
                     </div>
                     <div>
-                      <h4 className="text-label-sm font-bold text-on-surface">{t.name}</h4>
+                      <h3 className="text-label-sm font-bold text-on-surface">{t.name}</h3>
                       <p className="text-label-xs text-on-surface-variant">{t.role}</p>
                     </div>
                   </div>
@@ -369,7 +370,7 @@ export default function Page() {
           <div className="max-w-7xl mx-auto bg-surface-container-low rounded-[32px] md:rounded-[40px] p-8 md:p-16 border border-outline-variant/40">
             <div className="grid md:grid-cols-2 gap-10 items-center">
               <div>
-                <p className="text-label-sm font-bold uppercase tracking-wider text-secondary-container mb-3">Parrainage</p>
+                <p className="text-label-sm font-bold uppercase tracking-wider text-secondary mb-3">Parrainage</p>
                 <h2 className="text-[28px] md:text-[36px] font-extrabold text-primary mb-4">Réviser ensemble, réussir ensemble</h2>
                 <p className="text-body-md text-on-surface-variant leading-relaxed mb-8">
                   Invite tes amis et camarades de classe à rejoindre Edukora avec ton code personnel.
@@ -549,6 +550,7 @@ export default function Page() {
       </main>
 
       <MarketingFooter />
+      <WelcomeSplash />
     </div>
   );
 }

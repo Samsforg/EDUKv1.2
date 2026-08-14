@@ -2,6 +2,7 @@ import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { generateTutorReply, isTutorAIConfigured, type TutorHistoryItem } from "@/lib/tutor-ai";
 import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
+import { checkAIRateLimit } from "@/lib/ai/rate-limit";
 
 const MAX_HISTORY = 8;
 const MAX_MESSAGE = 1000;
@@ -13,6 +14,15 @@ async function POSTHandler(req: NextRequest) {
   const ip = getClientIp(req);
   const rl = await rateLimit(`tutor_demo:${ip}`, "tutor_demo");
   if (!rl.allowed) return rateLimitResponse(rl.resetAt);
+
+  const aiRl = await checkAIRateLimit(`ip:${ip}`);
+  if (!aiRl.allowed) {
+    const retryAfter = Math.max(1, Math.ceil((aiRl.resetAtMinute - Date.now()) / 1000));
+    return NextResponse.json(
+      { error: `Trop de requêtes au tuteur. Réessayez dans ${retryAfter}s.`, code: "ai_rate_limit" },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } },
+    );
+  }
 
   const body = await req.json().catch(() => null);
   if (!body || typeof body.message !== "string" || !body.message.trim()) {

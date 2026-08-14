@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import ShareResultButton from "@/components/ShareResultButton";
 
 interface Result {
   score: number;
   max: number;
   pct: number;
   xp: number;
+  quiz_title?: string;
   details: { questionId: number; correct: boolean; answer_index: number; explanation: string | null }[];
   questions: { id: number; question: string; options: string[] }[];
   userAnswers?: Record<string, number>;
@@ -61,6 +63,17 @@ export default function QuizResultPage() {
             <span className="font-label-md font-semibold">+{result.xp} XP</span>
           </div>
         </section>
+
+        <div className="mb-8">
+          <ShareResultButton
+            variant="quiz"
+            title={result.quiz_title}
+            score={result.score}
+            max={result.max}
+            pct={result.pct}
+            xp={result.xp}
+          />
+        </div>
 
         <h2 className="font-title-md text-title-md text-on-surface mb-4">Corrigé détaillé</h2>
         <div className="space-y-4">

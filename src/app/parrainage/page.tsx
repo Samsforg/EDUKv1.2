@@ -46,7 +46,7 @@ export default function ParrainagePage() {
 
   const share = () => {
     if (!code) return;
-    const text = `Rejoins-moi sur Edukora pour réviser le BAC et le BEPC en Côte d'Ivoire ! Inscris-toi avec mon code de parrainage : ${code}`;
+    const text = `Rejoins-moi sur Edukora pour réviser le BAC et le BEPC en Côte d'Ivoire ! Inscris-toi avec mon code de parrainage et gagne +50 XP de bienvenue : ${code}`;
     const link = "https://edukora.net/inscription-1-2-edukora";
     if (navigator.share) {
       navigator
@@ -73,9 +73,10 @@ export default function ParrainagePage() {
           <h2 className="font-headline-md font-bold text-on-surface">Le parrainage Edukora</h2>
           <p className="font-body-sm text-on-surface-variant leading-relaxed">
             Partage ton code de parrainage avec tes amis, tes camarades de classe et ta famille.
-            Chaque filleul qui s&apos;inscrit avec ton code fait grimper ta place dans le
-            <span className="text-primary font-semibold"> classement Ambassadeurs</span> et tu es
-            notifié à chaque nouvelle inscription.
+            Chaque filleul qui s&apos;inscrit avec ton code te fait gagner
+            <span className="text-primary font-semibold"> +150 XP immédiatement</span> (sans attendre
+            de paiement), et ton filleul reçoit <span className="text-primary font-semibold">+50 XP de bienvenue</span>.
+            Tu grimpes aussi dans le <span className="text-primary font-semibold">classement Ambassadeurs</span>.
           </p>
         </section>
 
@@ -152,7 +153,7 @@ export default function ParrainagePage() {
             {[
               { icon: "badge", title: "1. Récupère ton code", text: "Ton code unique EDK-XXXXXX est généré automatiquement lors de ton inscription." },
               { icon: "send", title: "2. Partage-le autour de toi", text: "WhatsApp, Messenger, réseaux sociaux : chaque ami inscrit avec ton code devient ton filleul." },
-              { icon: "leaderboard", title: "3. Grimpe dans le classement", text: "Chaque filleul actif améliore ton rang d'Ambassadeur (Novice, Expert, Élite)." },
+              { icon: "leaderboard", title: "3. Grimpe dans le classement", text: "Chaque filleul inscrit = +150 XP pour toi et +50 XP pour lui, dès l'inscription. Continue de partager pour devenir Ambassadeur (Novice, Expert, Élite)." },
             ].map((s) => (
               <li key={s.title} className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">

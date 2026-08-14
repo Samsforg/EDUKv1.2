@@ -4,6 +4,7 @@ import { queryOne, run } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { gpCreateSubscription } from "@/lib/geniuspay";
 import { sendSubscriptionReceipt } from "@/lib/mailer";
+import { ensureRentreePromo, getRedeemablePromo, applyPromoDiscount, RENTREE_PROMO_CODE } from "@/lib/promo";
 
 function parseDateish(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -16,7 +17,7 @@ async function POSTHandler(req: Request) {
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
-  const { plan_id } = body;
+  const { plan_id, promo } = body;
   if (!plan_id) return NextResponse.json({ error: "plan_id requis" }, { status: 400 });
 
   const plan = await queryOne<{
@@ -28,6 +29,24 @@ async function POSTHandler(req: Request) {
   }>("SELECT id, name, interval, price_cents, currency FROM subscription_plans WHERE id = ?", plan_id);
 
   if (!plan) return NextResponse.json({ error: "Plan inconnu" }, { status: 400 });
+
+  let priceCents = Math.round(plan.price_cents);
+  if (promo) {
+    if (String(promo).trim().toUpperCase() === RENTREE_PROMO_CODE) await ensureRentreePromo();
+    const promoRow = await getRedeemablePromo(promo);
+    if (!promoRow) {
+      return NextResponse.json(
+        { error: "Code promo invalide ou expiré", code: "PROMO_INVALID" },
+        { status: 400 },
+      );
+    }
+    priceCents = applyPromoDiscount(promoRow, priceCents);
+    if (priceCents <= 0) {
+      return NextResponse.json({ error: "Cette remise ne s'applique pas à ce plan" }, { status: 400 });
+    }
+    await run("UPDATE promo_codes SET used_count = used_count + 1 WHERE id = ?", promoRow.id);
+    console.log(`[checkout] code promo « ${promoRow.code} » appliqué : ${plan.price_cents} -> ${priceCents} F (user ${user.id})`);
+  }
 
   const existing = await queryOne<{ id: number }>(
     "SELECT id FROM subscriptions WHERE user_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1",
@@ -55,7 +74,7 @@ async function POSTHandler(req: Request) {
       phone,
       name: `${user.first_name} ${user.last_name}`.trim(),
       planName: plan.name,
-      amount: Math.round(plan.price_cents),
+      amount: priceCents,
       billingCycle,
     });
   } catch (err: any) {
@@ -70,7 +89,7 @@ async function POSTHandler(req: Request) {
     plan.id,
     gpSub.id,
     phone,
-    Math.round(plan.price_cents),
+    priceCents,
     isActive ? "active" : "incomplete",
     now,
     parseDateish(gpSub.next_billing_date),
@@ -79,7 +98,7 @@ async function POSTHandler(req: Request) {
   if (isActive) {
     const okMail = await sendSubscriptionReceipt(user.id, {
       planName: plan.name,
-      amount: Math.round(plan.price_cents),
+      amount: priceCents,
       currency: plan.currency,
       endAt: gpSub.next_billing_date ?? null,
       reference: gpSub.id,

@@ -54,7 +54,7 @@ export default function QuizTakePage() {
       setSubmitError(result.error ?? "Erreur lors de la soumission du quiz.");
       return;
     }
-    sessionStorage.setItem(`edukora-quiz-result-${id}`, JSON.stringify({ ...result, quiz_id: id, questions: data.questions, userAnswers: answers }));
+    sessionStorage.setItem(`edukora-quiz-result-${id}`, JSON.stringify({ ...result, quiz_id: id, quiz_title: data.quiz.title, questions: data.questions, userAnswers: answers }));
     router.push(`/quiz/${id}/resultat`);
   }
 

@@ -92,7 +92,7 @@ export default function Page() {
 { num: "03", icon: "emoji_events", title: "Réussis ton examen", text: "Arrive confiant le jour J et décroche ton diplôme avec mention." },
 ].map((s) => (
 <div key={s.num} className="relative glass-card rounded-3xl p-8 border border-outline-variant/40 hover:shadow-lg transition-shadow">
-<span className="absolute top-6 right-8 text-[48px] font-extrabold text-primary/10">{s.num}</span>
+<span className="absolute top-6 right-8 text-[48px] font-extrabold text-primary/40">{s.num}</span>
 <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-6">
 <span className="material-symbols-outlined text-white" style={{ fontVariationSettings: "'FILL' 1" }}>{s.icon}</span>
 </div>
@@ -130,7 +130,7 @@ Voir nos résultats
 <img  className="w-full h-full object-cover" src="/images/ecran-208.webp" alt="Portrait of a young Ivorian woman, smiling brightly, dressed in a neat high school uniform. She has an aura of confidence and success. High-quality portrait photography, bright background, light-mode design consistency." loading="lazy" />
 </div>
 <div>
-<h4 className="text-label-sm font-bold text-on-surface">Mariam K.</h4>
+<h3 className="text-label-sm font-bold text-on-surface">Mariam K.</h3>
 <p className="text-label-xs text-on-surface-variant">Admise au BAC D (Mention Bien)</p>
 </div>
 </div>
@@ -256,7 +256,7 @@ Voir nos résultats
 <p className="mt-6 text-label-xs text-on-surface-variant">📍 09 BP 989 Abidjan 09, Côte d'Ivoire</p>
 </div>
 </div>
-<div className="pt-8 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-4 text-label-xs text-outline">
+<div className="pt-8 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-4 text-label-xs text-on-surface-variant">
 <p>© {new Date().getFullYear()} Edukora. Tous droits réservés. Fait avec passion en Côte d'Ivoire 🇨🇮</p>
 <div className="flex gap-6">
 <Link className="hover:text-primary" href="/mentions-l-gales">Mentions légales</Link>

@@ -1,5 +1,46 @@
 import { query, queryOne, run } from "./db";
 import { logAudit } from "./audit";
+import {
+  RENTREE_PROMO_CODE,
+  RENTREE_PROMO_PERCENT,
+  RENTREE_PROMO_MAX_USES,
+  RENTREE_PROMO_ENDS_AT,
+} from "./rentree";
+
+export { RENTREE_PROMO_CODE, RENTREE_PROMO_PERCENT, RENTREE_PROMO_ENDS_AT, isRentreePromoActive } from "./rentree";
+
+export async function ensureRentreePromo(): Promise<void> {
+  await run(
+    "INSERT INTO promo_codes (code, discount_type, discount_value, max_uses, starts_at, expires_at, active, created_by) VALUES (?, 'percent', ?, ?, NULL, ?, 1, NULL) ON CONFLICT(code) DO NOTHING",
+    RENTREE_PROMO_CODE,
+    RENTREE_PROMO_PERCENT,
+    RENTREE_PROMO_MAX_USES,
+    RENTREE_PROMO_ENDS_AT,
+  );
+}
+
+export async function getRedeemablePromo(code: string | null | undefined): Promise<PromoRow | null> {
+  const clean = (code ?? "").trim().toUpperCase();
+  if (!/^[A-Z0-9]{3,20}$/.test(clean)) return null;
+  const row = await queryOne<PromoRow>(
+    `SELECT id, code, discount_type, discount_value, max_uses, used_count,
+            starts_at, expires_at, active, created_at
+     FROM promo_codes WHERE code = ?`,
+    clean,
+  );
+  if (!row) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  let status: PromoRow["status"] = "active";
+  if (!row.active) status = "disabled";
+  else if (row.expires_at && row.expires_at.slice(0, 10) < today) status = "expired";
+  else if (row.max_uses > 0 && row.used_count >= row.max_uses) status = "exhausted";
+  return status === "active" ? { ...row, status, remaining: Math.max(0, row.max_uses - row.used_count) } : null;
+}
+
+export function applyPromoDiscount(promo: PromoRow, priceCents: number): number {
+  if (promo.discount_type === "fixed") return Math.max(0, priceCents - Math.round(promo.discount_value));
+  return Math.max(0, Math.round((priceCents * (100 - promo.discount_value)) / 100));
+}
 
 export interface PromoRow {
   id: number;

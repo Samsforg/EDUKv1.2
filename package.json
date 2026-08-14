@@ -8,6 +8,8 @@
     "start": "next start",
     "convert": "node scripts/convert.mjs",
     "optimize-icons": "node scripts/optimize-images.mjs",
+    "ai:index-courses": "node scripts/ai-index-courses.mjs",
+    "ai:watch-index": "node scripts/ai-watch-index.mjs",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "deploy": "bash scripts/deploy-vercel.sh"

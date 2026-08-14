@@ -53,6 +53,7 @@ export const BADGE_DEFS: BadgeDef[] = [
   { code: "streak_3", name: "Série de 3", icon: "local_fire_department", category: "Assiduité", goal: 3, description: "3 jours d'activité consécutifs", hint: "Reviens 3 jours de suite" },
   { code: "streak_7", name: "Série de 7", icon: "local_fire_department", category: "Assiduité", goal: 7, description: "7 jours d'activité consécutifs", hint: "Reviens 7 jours de suite" },
   { code: "streak_30", name: "Imbattable", icon: "whatshot", category: "Assiduité", goal: 30, description: "30 jours d'activité consécutifs", hint: "Reviens 30 jours de suite" },
+  { code: "daily_steel", name: "Série d'acier", icon: "flag", category: "Assiduité", goal: 7, description: "Relever le Défi du jour 7 jours", hint: "Termine le Défi du jour 7 jours" },
   // XP
   { code: "xp_100", name: "Expérimenté", icon: "stars", category: "XP", goal: 100, description: "Atteins 100 XP", hint: "Gagne 100 XP au total" },
   { code: "xp_500", name: "Expert", icon: "stars", category: "XP", goal: 500, description: "Atteins 500 XP", hint: "Gagne 500 XP au total" },
@@ -80,6 +81,7 @@ export interface BadgeContext {
   savedCount: number;
   streak: number;
   xp: number;
+  dailyDays: number;
 }
 
 export async function computeContext(userId: number): Promise<BadgeContext >{
@@ -98,6 +100,10 @@ export async function computeContext(userId: number): Promise<BadgeContext >{
     userId,
     userId,
   ))!.c;
+  const dailyDays = (await queryOne<{ c: number }>(
+    "SELECT COUNT(*) AS c FROM daily_challenges WHERE user_id = ?",
+    userId,
+  ))!.c;
   return {
     quizCount,
     perfectCount,
@@ -108,6 +114,7 @@ export async function computeContext(userId: number): Promise<BadgeContext >{
     savedCount,
     streak: u?.streak ?? 0,
     xp: u?.xp ?? 0,
+    dailyDays,
   };
 }
 
@@ -137,6 +144,8 @@ function measure(code: string, ctx: BadgeContext): number {
     case "streak_7":
     case "streak_30":
       return ctx.streak;
+    case "daily_steel":
+      return ctx.dailyDays;
     case "xp_100":
     case "xp_500":
     case "xp_1000":

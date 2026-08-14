@@ -5,6 +5,9 @@ export const KORA_MONTHLY_LIMIT = 30;
 export const KORA_QUARTERLY_LIMIT = 100;
 export const KORA_DECOUVERTE_LIMIT = 5;
 export const FICHE_MONTHLY_LIMIT = 10;
+export const DISSERTATION_DECOUVERTE_LIMIT = 1;
+export const DISSERTATION_MONTHLY_LIMIT = 5;
+export const DISSERTATION_QUARTERLY_LIMIT = 15;
 
 export interface QuotaInfo {
   used: number;
@@ -114,4 +117,47 @@ export async function getFicheQuota(userId: number): Promise<QuotaInfo> {
       ))?.c ?? 0,
     );
   return { used, limit: FICHE_MONTHLY_LIMIT, isPremium: false, planName: null, windowLabel: "ce mois-ci" };
+}
+
+async function countDissertationsSince(userId: number, sinceIso: string): Promise<number> {
+  return Number(
+    (await queryOne<{ c: number }>(
+      "SELECT COUNT(*) AS c FROM dissertation_corrections WHERE user_id = ? AND created_at >= ?",
+      userId,
+      sinceIso,
+    ))?.c ?? 0,
+  );
+}
+
+const DISSERTATION_PLAN_LIMITS: Record<string, { limit: number; label: string }> = {
+  month: { limit: DISSERTATION_MONTHLY_LIMIT, label: "ce mois-ci" },
+  quarter: { limit: DISSERTATION_QUARTERLY_LIMIT, label: "ce trimestre" },
+};
+
+export async function getDissertationQuota(userId: number): Promise<QuotaInfo> {
+  const sub = await getActiveSubscription(userId);
+  if (!sub) {
+    const now = new Date();
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+    return {
+      used: await countDissertationsSince(userId, monthStart),
+      limit: DISSERTATION_DECOUVERTE_LIMIT,
+      isPremium: false,
+      planName: null,
+      windowLabel: "ce mois-ci",
+    };
+  }
+  const quota = DISSERTATION_PLAN_LIMITS[sub.interval];
+  if (!quota) {
+    return { used: 0, limit: null, isPremium: true, planName: sub.name, windowLabel: null };
+  }
+  const startedAt = sub.startedAt ?? new Date().toISOString();
+  const used = await countDissertationsSince(userId, billingPeriodStart(startedAt, sub.interval));
+  return {
+    used,
+    limit: quota.limit,
+    isPremium: true,
+    planName: sub.name,
+    windowLabel: quota.label,
+  };
 }

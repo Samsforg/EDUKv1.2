@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-11T09:46:05.245Z",
+  "generatedAt": "2026-08-14T14:05:27.095Z",
   "site": "https://edukora.net/",
   "results": [
     {
@@ -33,11 +33,11 @@
     },
     {
       "url": "https://edukora.net/resultats",
-      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
-      "coverageState": "URL is unknown to Google",
+      "status": "indexée",
+      "coverageState": "Discovered - currently not indexed",
       "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
       "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
-      "sitemap": ""
+      "sitemap": "https://edukora.net/sitemap.xml"
     },
     {
       "url": "https://edukora.net/tarifs",
@@ -47,15 +47,15 @@
       "robotsTxtState": "ALLOWED",
       "googleCanonical": "https://edukora.net/tarifs",
       "lastCrawlTime": "2026-08-06T22:15:33Z",
-      "sitemap": "https://edukora.net/sitemap.xml"
+      "sitemap": ""
     },
     {
       "url": "https://edukora.net/plans-d-abonnement-edukora-1",
-      "status": "indexée",
-      "coverageState": "Discovered - currently not indexed",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
       "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
       "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
-      "sitemap": "https://edukora.net/sitemap.xml"
+      "sitemap": ""
     },
     {
       "url": "https://edukora.net/tuteur-ia-edukora",
@@ -65,7 +65,7 @@
       "robotsTxtState": "ALLOWED",
       "googleCanonical": "https://edukora.net/simulateur-d-examen-bac-bepc",
       "lastCrawlTime": "2026-08-06T22:13:16Z",
-      "sitemap": ""
+      "sitemap": "https://edukora.net/sitemap.xml"
     },
     {
       "url": "https://edukora.net/simulateur-d-examen-bac-bepc",
@@ -89,11 +89,11 @@
     },
     {
       "url": "https://edukora.net/inscription-parent-edukora",
-      "status": "indexée",
-      "coverageState": "Discovered - currently not indexed",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
       "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
       "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
-      "sitemap": "https://edukora.net/sitemap.xml"
+      "sitemap": ""
     },
     {
       "url": "https://edukora.net/parrainage",
@@ -111,7 +111,7 @@
       "robotsTxtState": "ALLOWED",
       "googleCanonical": "https://edukora.net/connexion-edukora",
       "lastCrawlTime": "2026-08-06T22:13:14Z",
-      "sitemap": "https://edukora.net/sitemap.xml"
+      "sitemap": ""
     },
     {
       "url": "https://edukora.net/mentions-l-gales",
@@ -145,11 +145,11 @@
     },
     {
       "url": "https://edukora.net/politique-de-confidentialit",
-      "status": "indexée",
-      "coverageState": "Discovered - currently not indexed",
+      "status": "URL is unknown to Google | fetch:PAGE_FETCH_STATE_UNSPECIFIED robots:ROBOTS_TXT_STATE_UNSPECIFIED",
+      "coverageState": "URL is unknown to Google",
       "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
       "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
-      "sitemap": "https://edukora.net/sitemap.xml"
+      "sitemap": ""
     },
     {
       "url": "https://edukora.net/pr-f-rences-de-cookies-et-donn-es",

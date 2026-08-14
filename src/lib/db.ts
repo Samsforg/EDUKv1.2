@@ -690,13 +690,56 @@ CREATE TABLE IF NOT EXISTS site_ads (
   sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS document_chunks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  source_type TEXT NOT NULL,
+  source_id INTEGER NOT NULL,
+  lesson_id INTEGER,
+  chapter_id INTEGER,
+  subject_id INTEGER,
+  grade_id INTEGER,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  position INTEGER NOT NULL DEFAULT 0,
+  embedding TEXT DEFAULT '',
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_document_chunks_source ON document_chunks (source_type, source_id);
+CREATE INDEX IF NOT EXISTS idx_document_chunks_lesson ON document_chunks (lesson_id);
+CREATE INDEX IF NOT EXISTS idx_document_chunks_subject ON document_chunks (subject_id);
+CREATE INDEX IF NOT EXISTS idx_document_chunks_grade ON document_chunks (grade_id);
+
+CREATE TABLE IF NOT EXISTS daily_challenges (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  day TEXT NOT NULL,
+  quiz_id INTEGER NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, day)
+);
+
+CREATE TABLE IF NOT EXISTS dissertation_corrections (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  exam TEXT NOT NULL DEFAULT 'BAC' CHECK (exam IN ('BAC','BEPC')),
+  subject TEXT NOT NULL DEFAULT 'Français',
+  input_text TEXT NOT NULL,
+  note INTEGER,
+  criteria TEXT,
+  feedback TEXT,
+  provider TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_dissertation_corrections_user ON dissertation_corrections (user_id, created_at);
 `;
 
 export function getDb() {
   return db;
 }
 
-export type SqlParam = string | number | null | bigint | Uint8Array;
+export type SqlParam = string | number | null | bigint | Uint8Array | number[];
 
 export function toPgPlaceholders(sql: string): string {
   let out = "";
@@ -933,6 +976,78 @@ CREATE TABLE IF NOT EXISTS site_ads (
   sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+`).split(";");
+        for (const stmt of pieces) {
+          const trimmed = stmt.trim();
+          if (trimmed) await pool.query(trimmed);
+        }
+      }
+      const hasChunks = await withPgRetry(() =>
+        pool.query("SELECT to_regclass('public.document_chunks') IS NOT NULL AS exists"),
+      );
+      if (!hasChunks.rows[0].exists) {
+        await withPgRetry(() => pool.query("CREATE EXTENSION IF NOT EXISTS vector"));
+        const pieces = toPgSchema(`
+CREATE TABLE IF NOT EXISTS document_chunks (
+  id SERIAL PRIMARY KEY,
+  source_type TEXT NOT NULL,
+  source_id INTEGER NOT NULL,
+  lesson_id INTEGER,
+  chapter_id INTEGER,
+  subject_id INTEGER,
+  grade_id INTEGER,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  position INTEGER NOT NULL DEFAULT 0,
+  embedding vector(768),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_document_chunks_source ON document_chunks (source_type, source_id);
+CREATE INDEX IF NOT EXISTS idx_document_chunks_lesson ON document_chunks (lesson_id);
+CREATE INDEX IF NOT EXISTS idx_document_chunks_subject ON document_chunks (subject_id);
+CREATE INDEX IF NOT EXISTS idx_document_chunks_grade ON document_chunks (grade_id);
+`).split(";");
+        for (const stmt of pieces) {
+          const trimmed = stmt.trim();
+          if (trimmed) await pool.query(trimmed);
+        }
+      }
+      const hasDaily = await withPgRetry(() =>
+        pool.query("SELECT to_regclass('public.daily_challenges') IS NOT NULL AS exists"),
+      );
+      if (!hasDaily.rows[0].exists) {
+        const pieces = toPgSchema(`
+CREATE TABLE IF NOT EXISTS daily_challenges (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  day TEXT NOT NULL,
+  quiz_id INTEGER NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, day)
+);
+`).split(";");
+        for (const stmt of pieces) {
+          const trimmed = stmt.trim();
+          if (trimmed) await pool.query(trimmed);
+        }
+      }
+      const hasDissertation = await withPgRetry(() =>
+        pool.query("SELECT to_regclass('public.dissertation_corrections') IS NOT NULL AS exists"),
+      );
+      if (!hasDissertation.rows[0].exists) {
+        const pieces = toPgSchema(`
+CREATE TABLE IF NOT EXISTS dissertation_corrections (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  exam TEXT NOT NULL DEFAULT 'BAC' CHECK (exam IN ('BAC','BEPC')),
+  subject TEXT NOT NULL DEFAULT 'Français',
+  input_text TEXT NOT NULL,
+  note INTEGER,
+  criteria TEXT,
+  feedback TEXT,
+  provider TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_dissertation_corrections_user ON dissertation_corrections (user_id, created_at);
 `).split(";");
         for (const stmt of pieces) {
           const trimmed = stmt.trim();

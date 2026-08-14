@@ -5,6 +5,7 @@ import { getCurrentUser, applyActivity, addXp, notify } from "@/lib/session";
 import { notifyOnActivity } from "@/lib/proactive";
 import { refreshBadges } from "@/lib/badges";
 import { creditLigueChallenges } from "@/lib/ligue";
+import { getDailyQuiz, creditDailyChallenge, DAILY_BONUS_XP } from "@/lib/daily";
 import { validate, QuizSubmitSchema } from "@/lib/validation";
 import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
 
@@ -62,7 +63,16 @@ async function POSTHandler(
   await applyActivity(user.id);
   await notifyOnActivity(user.id);
   const pct = max > 0 ? Math.round((score * 100) / max) : 0;
-  const xp = Math.max(1, Math.round(pct / 10));
+  let xp = Math.max(1, Math.round(pct / 10));
+
+  // Défi du jour : bonus XP une fois par jour sur le quiz mis en avant.
+  let dailyBonus = 0;
+  const daily = await getDailyQuiz(user.id);
+  if (daily && daily.id === Number(id) && !daily.done_today && (await creditDailyChallenge(user.id, Number(id)))) {
+    dailyBonus = DAILY_BONUS_XP;
+    xp += dailyBonus;
+  }
+
   await addXp(user.id, xp);
   await creditLigueChallenges(user.id, "quiz_done", 1);
   await creditLigueChallenges(user.id, "xp_total", xp);
@@ -76,6 +86,14 @@ async function POSTHandler(
     `Tu as obtenu ${score}/${max} (${pct}%) au quiz « ${quiz.title} » (+${xp} XP).`,
     "quiz",
   );
+  if (dailyBonus > 0) {
+    await notify(
+      user.id,
+      "Défi du jour relevé !",
+      `Bonus +${dailyBonus} XP pour ton quiz du jour. Reviens demain pour un nouveau défi !`,
+      "flag",
+    );
+  }
 
   return NextResponse.json({ score, max, pct, xp, details, badges });
 }

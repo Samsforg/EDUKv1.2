@@ -43,6 +43,7 @@ const PUBLIC_ROUTES = [
   "/api/warmup",
   "/api/cron/reminders",
   "/api/ads",
+  "/api/promo/check",
 ];
 
 const TEACHER_ROUTES = ["/prof", "/api/prof"];

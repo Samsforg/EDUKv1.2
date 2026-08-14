@@ -5,6 +5,7 @@ import { hashPassword, verifyPassword } from "./auth";
 import { seedProgressionMENAET } from "./progression-menaet";
 import { seedCollegeContent, seedCollegeQuizzes } from "./college-content";
 import { resolveUserGradeIds } from "./level";
+import { ensureRentreePromo } from "./promo";
 
 let readyPromise: Promise<void> | null = null;
 
@@ -490,6 +491,7 @@ async function seedReferrals() {
 }
 
 async function seedPromoCodes() {
+  await ensureRentreePromo();
   const count = await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM promo_codes");
   if (count && count.c > 0) return;
   const adminId = await queryOne<{ id: number }>("SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1");
@@ -1136,6 +1138,21 @@ async function ensureSubscriptionPlans() {
         "Réussite",
         REUSSITE_FEATURES,
       );
+    }
+  }
+
+  // Déduplication : retire les doublons mal-encodés du plan mensuel
+  // (ex: « Réussite é ») pour ne garder qu'UN plan « Réussite » canonique.
+  const canonicalReussiteId = reussite?.id ?? legacyMonthly?.id;
+  if (canonicalReussiteId) {
+    const dupes = await query<{ id: number; name: string }>(
+      "SELECT id, name FROM subscription_plans WHERE interval = 'month' AND price_cents = 4900 AND sort_order = 1 AND id != ?",
+      canonicalReussiteId,
+    );
+    for (const d of dupes) {
+      await run("UPDATE subscriptions SET plan_id = ? WHERE plan_id = ?", canonicalReussiteId, d.id);
+      await run("DELETE FROM subscription_plans WHERE id = ?", d.id);
+      console.log(`[init] plan doublon supprimé (${d.id}: ${JSON.stringify(d.name)}) — ré-orienté vers « Réussite » (#${canonicalReussiteId})`);
     }
   }
 

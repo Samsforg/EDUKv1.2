@@ -47,16 +47,21 @@ export function HeroCarousel() {
           }`}
         />
       ))}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5">
+      <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1">
         {SLIDES.map((slide, i) => (
           <button
             key={slide.src}
             onClick={() => setIndex(i)}
             aria-label={`Voir le visuel ${i + 1}`}
-            className={`h-1.5 rounded-[999px] transition-all ${
-              i === index ? "w-6 bg-primary" : "w-1.5 bg-white/60 hover:bg-white"
-            }`}
-          />
+            aria-current={i === index}
+            className="group flex h-6 w-6 items-center justify-center"
+          >
+            <span
+              className={`block h-1.5 rounded-[999px] transition-all ${
+                i === index ? "w-4 bg-primary" : "w-1.5 bg-white/60 group-hover:bg-white"
+              }`}
+            />
+          </button>
         ))}
       </div>
       <div

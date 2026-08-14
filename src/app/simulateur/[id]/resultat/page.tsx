@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import ShareResultButton from "@/components/ShareResultButton";
 
 interface ExamResult {
   score: number;
   max: number;
   score_over_20: number;
   xp: number;
+  exam_title?: string;
   details: { questionId: number; correct: boolean; answer_index: number; explanation: string | null }[];
   questions: { id: number; question: string; options: string[] }[];
   userAnswers?: Record<string, number>;
@@ -70,6 +72,17 @@ export default function SimulatorResultPage() {
             <span className="font-label-md font-semibold">+{result.xp} XP</span>
           </div>
         </section>
+
+        <div className="mb-8">
+          <ShareResultButton
+            variant="exam"
+            title={result.exam_title}
+            score={result.score}
+            max={result.max}
+            scoreOver20={result.score_over_20}
+            xp={result.xp}
+          />
+        </div>
 
         <h2 className="font-title-md text-title-md text-on-surface mb-4">Corrigé détaillé</h2>
         <div className="space-y-4">

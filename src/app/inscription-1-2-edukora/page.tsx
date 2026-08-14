@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 interface Serie {
   id: number;
@@ -10,8 +10,13 @@ interface Serie {
   name: string;
 }
 
-export default function Page() {
-  const router = useRouter();
+function InscriptionPage() {
+  const params = useSearchParams();
+  const from = params.get("from");
+  const destAfterSignup =
+    from && from.startsWith("/") && !from.startsWith("//") && !from.startsWith("/connexion") && !from.startsWith("/inscription")
+      ? from
+      : null;
   const [series, setSeries] = useState<Serie[]>([]);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -91,7 +96,9 @@ export default function Page() {
       if (!res.ok) {
         setError(data.error ?? "Une erreur est survenue.");
       } else {
-        router.push(role === "teacher" ? "/espace-prof" : "/bienvenue");
+        window.location.assign(
+          destAfterSignup ?? (role === "teacher" ? "/espace-prof" : "/bienvenue"),
+        );
       }
     } catch {
       setError("Erreur réseau. Réessayez.");
@@ -354,12 +361,23 @@ export default function Page() {
         <div className="mt-8 text-center">
           <p className="text-sm text-on-surface-variant">
             Vous avez déjà un compte ?{" "}
-            <Link href="/connexion-edukora" className="font-semibold text-primary hover:text-primary-container transition-colors ml-1">
+            <Link
+              href={`/connexion-edukora${destAfterSignup ? `?from=${encodeURIComponent(destAfterSignup)}` : ""}`}
+              className="font-semibold text-primary hover:text-primary-container transition-colors ml-1"
+            >
               Se connecter
             </Link>
           </p>
         </div>
       </main>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <InscriptionPage />
+    </Suspense>
   );
 }

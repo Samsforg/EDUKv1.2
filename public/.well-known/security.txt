@@ -1,0 +1,7 @@
+Contact: mailto:contact@edukora.net
+Contact: https://wa.me/2250709141545
+Expires: 2027-08-13T21:00:00.000Z
+Encryption: https://edukora.net (Let's Encrypt TLS 1.3)
+Preferred-Languages: fr, en
+Canonical: https://edukora.net/.well-known/security.txt
+Policy: https://edukora.net/mentions-l-gales

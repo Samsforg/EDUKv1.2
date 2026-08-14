@@ -1,6 +1,7 @@
 import Link from "next/link";
 import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
+import { getPlatformStats } from "@/lib/stats";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,12 +11,16 @@ export const metadata: Metadata = {
   alternates: { canonical: "/resultats" },
 };
 
-const stats = [
-  { value: "95%", label: "Taux de réussite" },
-  { value: "50,000+", label: "Étudiants actifs" },
-  { value: "500+", label: "Épreuves types" },
-  { value: "2,000+", label: "Fiches de cours" },
-];
+// Chiffres réels de la plateforme (base PostgreSQL) : pas de pré-rendu figé au build.
+export const dynamic = "force-dynamic";
+
+function formatStat(n: number, plus = true): string {
+  const formatted =
+    n >= 1_000_000
+      ? new Intl.NumberFormat("fr-FR", { notation: "compact", maximumFractionDigits: 1 }).format(n)
+      : n.toLocaleString("fr-FR");
+  return plus ? `${formatted}+` : formatted;
+}
 
 const testimonials = [
   {
@@ -41,7 +46,15 @@ const testimonials = [
   },
 ];
 
-export default function Page() {
+export default async function Page() {
+  const stats = await getPlatformStats();
+  const statCells = [
+    { value: formatStat(stats.students), label: "Élèves inscrits" },
+    { value: formatStat(stats.quizzesCorrected, false), label: "Quiz corrigés" },
+    { value: formatStat(stats.lessonsRead, false), label: "Fiches lues" },
+    { value: formatStat(stats.xpEarned), label: "XP gagnés" },
+  ];
+
   return (
     <div className="bg-background text-on-background min-h-screen font-body">
       <MarketingHeader />
@@ -72,7 +85,7 @@ export default function Page() {
 
         <section className="bg-primary py-16 px-4 md:px-8">
           <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-10">
-            {stats.map((s) => (
+            {statCells.map((s) => (
               <div key={s.label} className="text-center lg:text-left flex flex-col items-center lg:items-start">
                 <span className="text-[40px] font-extrabold text-primary-fixed mb-1">{s.value}</span>
                 <span className="text-on-primary-container font-label-sm uppercase tracking-widest">{s.label}</span>
@@ -126,7 +139,7 @@ export default function Page() {
             <div className="relative z-10">
               <h2 className="text-[28px] md:text-[40px] font-extrabold mb-6">Ton succès commence aujourd'hui</h2>
               <p className="text-body-lg text-on-primary-container mb-10 max-w-2xl mx-auto">
-                Rejoins les 50,000+ étudiants qui révisent déjà avec Edukora.
+                Rejoins les {stats.students.toLocaleString("fr-FR")} élèves qui révisent déjà avec Edukora.
               </p>
               <Link
                 href="/inscription-1-2-edukora"

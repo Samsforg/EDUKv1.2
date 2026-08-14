@@ -1,7 +1,9 @@
 import Link from "next/link";
 import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
+import PromoRentreeBanner from "@/components/PromoRentreeBanner";
 import { getCachedPremiumPlans, planFeatures, formatPlanPrice, formatPlanInterval, type PlanRow } from "@/lib/plans";
+import { isRentreePromoActive } from "@/lib/promo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -86,6 +88,14 @@ export default async function Page() {
           </div>
         </section>
 
+        {isRentreePromoActive() && (
+          <section className="px-4 md:px-8 pb-10">
+            <div className="max-w-5xl mx-auto">
+              <PromoRentreeBanner />
+            </div>
+          </section>
+        )}
+
         <section className="px-4 md:px-8 pb-24">
           <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
             <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 border border-outline-variant relative overflow-hidden hover:border-primary/30 transition-all">
@@ -123,6 +133,11 @@ export default async function Page() {
                   <span className="text-[32px] font-bold text-primary-fixed">{formatPlanPrice(reussite.price_cents)}</span>
                   <span className="text-primary-container">{formatPlanInterval(reussite.interval)}</span>
                 </div>
+                {isRentreePromoActive() && (
+                  <p className="text-tertiary-fixed text-label-xs font-bold mt-1">
+                    -30 % avec le code RENTREE30 au paiement
+                  </p>
+                )}
                 <p className="text-on-primary-container text-label-sm mt-2">L'outil ultime pour le BAC &amp; BEPC</p>
               </div>
               <ul className="space-y-4 mb-10">

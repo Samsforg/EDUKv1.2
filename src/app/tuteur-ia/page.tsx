@@ -162,6 +162,20 @@ export default function TutorPage() {
       />
 
       <main className="flex-1 w-full max-w-lg mx-auto px-4 pt-4 pb-28 space-y-3">
+        <Link
+          href="/correction-dissertation"
+          className="flex items-center gap-3 rounded-2xl border border-outline-variant bg-surface px-4 py-3 active:scale-95 transition-transform"
+        >
+          <span className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-secondary-container text-xl">edit_document</span>
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block font-bold text-sm text-on-surface">Kora corrige ta dissertation</span>
+            <span className="block text-xs text-on-surface-variant truncate">Copie notée sur 20, barème BAC &amp; BEPC</span>
+          </span>
+          <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+        </Link>
+
         {messages.length === 0 && (
           <div className="text-center pt-10 space-y-4">
             <div className="w-16 h-16 rounded-full bg-primary-container/30 flex items-center justify-center mx-auto">

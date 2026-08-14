@@ -6,6 +6,7 @@ import { generateTutorReply, isTutorAIConfigured, type TutorHistoryItem } from "
 import { creditLigueChallenges } from "@/lib/ligue";
 import { getKoraQuota } from "@/lib/quotas";
 import { getPremiumPlans } from "@/lib/plans";
+import { checkAIRateLimit } from "@/lib/ai/rate-limit";
 
 const FALLBACK_ANSWERS: { match: RegExp; reply: string }[] = [
   { match: /bonjour|salut|hello|yo/i, reply: "Bonjour ! Je suis Kora, ton tuteur IA Edukora. Je peux t'expliquer une leçon, te corriger ou t'entraîner. Qu'est-ce qu'on révise aujourd'hui ?" },
@@ -62,6 +63,19 @@ async function POSTHandler(req: NextRequest) {
     );
   }
 
+  const aiRl = await checkAIRateLimit(`user:${user.id}`);
+  if (!aiRl.allowed) {
+    const retryAfter = Math.max(1, Math.ceil((aiRl.resetAtMinute - Date.now()) / 1000));
+    return NextResponse.json(
+      {
+        error: `Vous posez des questions trop vite. Attendez ${retryAfter}s avant de continuer.`,
+        code: "ai_rate_limit",
+        retryAfter,
+      },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } },
+    );
+  }
+
   const chatId = body.chatId
     ? Number(body.chatId)
     : await (async () => {
@@ -104,6 +118,9 @@ async function POSTHandler(req: NextRequest) {
       studentName: user.first_name,
       serieName: serie,
       classLevel: user.class_level,
+      userId: user.id,
+      subjectId: body.subjectId ? Number(body.subjectId) : null,
+      lessonId: body.lessonId ? Number(body.lessonId) : null,
     });
   }
   if (!reply) reply = localReply(message);
