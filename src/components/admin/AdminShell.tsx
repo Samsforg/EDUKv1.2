@@ -5,6 +5,7 @@ import { LogoutButton } from "@/components/parent/LogoutButton";
 
 type ActiveTab =
   | "overview"
+  | "conversion"
   | "users"
   | "content"
   | "approval"
@@ -22,6 +23,7 @@ type ActiveTab =
 
 const TABS: { key: ActiveTab; href: string; icon: string; label: string; mobileLabel: string }[] = [
   { key: "overview", href: "/espace-admin", icon: "dashboard", label: "Overview", mobileLabel: "Overview" },
+  { key: "conversion", href: "/espace-admin/conversion", icon: "trending_up", label: "Conversion", mobileLabel: "Conversion" },
   { key: "users", href: "/espace-admin/utilisateurs", icon: "group", label: "Utilisateurs", mobileLabel: "Utilisateurs" },
   { key: "content", href: "/espace-admin/cours", icon: "auto_stories", label: "Contenu", mobileLabel: "Contenu" },
   { key: "approval", href: "/espace-admin/approbation", icon: "approval", label: "Approbation", mobileLabel: "Approbation" },
