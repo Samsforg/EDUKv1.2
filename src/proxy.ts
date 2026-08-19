@@ -42,6 +42,7 @@ const PUBLIC_ROUTES = [
   "/api/premium/plans",
   "/api/warmup",
   "/api/cron/reminders",
+  "/api/cron/report",
   "/api/ads",
   "/api/promo/check",
 ];
