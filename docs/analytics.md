@@ -2,8 +2,9 @@
 
 ## Vue d'ensemble
 
-- **GA4** : `NEXT_PUBLIC_GA_ID` (15460357341) via gtag.js côté client + Measurement Protocol côté serveur (`sendGa4Purchase`).
+- **GA4** : `NEXT_PUBLIC_GA_ID=G-TQ3KSRHL9B` (format `G-XXXXXXX` obligatoire — un ID de flux numérique ne charge pas de conteneur et rien n'est collecté) via gtag.js côté client + Measurement Protocol côté serveur (`sendGa4Purchase`).
 - **Clarity** : `NEXT_PUBLIC_CLARITY_ID` (y4hyfds0yh) — session replay, heatmaps, automatique après consentement.
+- **CSP (`next.config.mjs`)** : `script-src` doit autoriser `https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms` et `connect-src` les domaines de collecte GA4 (`google-analytics.com`, `region1.google-analytics.com`, `analytics.google.com`, `stats.g.doubleclick.net`) + `*.clarity.ms`. Sans cela les scripts se chargent mais sont **bloqués silencieusement** (erreur `a[c] is not a function`, aucun `g/collect`).
 - **Respect du consentement (RGPD)** : aucun script ne charge tant que `edukora_consent.analytics !== true`. `ConsentBanner` émet `edukora-consent-updated` → `EdukoraAnalytics` (monté dans `layout.tsx`) charge gtag.js + clarity puis définit le cookie `edukora_gacid` (2 ans, `cid.gid`).
 - **Déduplication** : `trackEvent` ignore les doublons par `name:params` par vue (Set `sentThisView`).
 - **Dimension plan** : événements enrichis avec `plan` (free|premium, cache sessionStorage `edukora_plan`, alimenté par `/api/auth/me` via `attachGlobalTracker`).
