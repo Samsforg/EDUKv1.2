@@ -81,6 +81,7 @@ async function doInit() {
     await migrate("subscriptions", "provider_customer_id", "TEXT");
     await migrate("subscriptions", "price_cents", "INTEGER");
     await migrate("subscriptions", "ga_client_id", "TEXT");
+    await migrate("subscriptions", "reminder_sent_at", "TEXT");
     await migrate("notifications", "type", "TEXT");
   });
   await safeAsync("backfillUserGrades", backfillUserGrades);

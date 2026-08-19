@@ -19,6 +19,18 @@
     {
       "path": "/api/cron/report",
       "schedule": "45 7 * * *"
+    },
+    {
+      "path": "/api/cron/abandoned",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/abandoned",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/abandoned",
+      "schedule": "0 18 * * *"
     }
   ]
 }
