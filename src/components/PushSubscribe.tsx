@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 
 export default function PushSubscribe() {
   const [status, setStatus] = useState<"unsupported" | "denied" | "granted" | "pending">("pending");
@@ -12,9 +13,15 @@ export default function PushSubscribe() {
   }, []);
 
   const subscribe = async () => {
-    if (Notification.permission === "denied") return alert("Activez les notifications dans les paramètres du navigateur");
+    if (Notification.permission === "denied") {
+      trackEvent(EVENTS.pushPermissionDenied, { context: "banner" });
+      return alert("Activez les notifications dans les paramètres du navigateur");
+    }
     const perm = await Notification.requestPermission();
-    if (perm !== "granted") return;
+    if (perm !== "granted") {
+      trackEvent(EVENTS.pushPermissionDenied, { context: "prompt" });
+      return;
+    }
 
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.subscribe({
@@ -29,6 +36,7 @@ export default function PushSubscribe() {
       credentials: "include",
     });
     setStatus("granted");
+    trackEvent(EVENTS.pushPermissionGranted);
   };
 
   function urlB64ToUint8Array(base64: string) {

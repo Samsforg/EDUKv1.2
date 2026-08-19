@@ -164,6 +164,12 @@ export default function Page() {
             const originalContent = btn.innerHTML;
             btn.innerHTML = '&lt;span class="material-symbols-outlined animate-spin"&gt;sync&lt;/span&gt; Initialisation...';
             btn.classList.add('opacity-80', 'pointer-events-none');
+            try &#123;
+              if (window.edukoraTrack) &#123;
+                var ex = document.querySelector('input[name="examen"]:checked');
+                window.edukoraTrack('signup_step_2_completed', &#123; examen: ex ? ex.value : null &#125;);
+              &#125;
+            &#125; catch (_e) &#123;&#125;
             
             setTimeout(() =&gt; &#123;
                 alert('Félicitations ! Votre profil est prêt. Redirection vers votre tableau de bord expert...');

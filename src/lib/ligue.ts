@@ -114,12 +114,12 @@ export async function getLigueChallengesFor(userId: number) {
 
   const defs = await query<Row>(`SELECT ${COLUMNS} FROM league_challenges ORDER BY id`);
 
-  const mine = defs.filter(async (d) => d.ligue === ligue.key).map(async (d) => await toView(userId, d));
+  const mine = await Promise.all(defs.filter((d) => d.ligue === ligue.key).map((d) => toView(userId, d)));
   const locked = nextKey
     ? {
         ligue: nextKey,
         name: LIGUE_ORDER_NAMES[nextKey] ?? "Ligue suivante",
-        challenges: defs.filter(async (d) => d.ligue === nextKey).map(async (d) => await toView(userId, d, false)),
+        challenges: await Promise.all(defs.filter((d) => d.ligue === nextKey).map((d) => toView(userId, d, false))),
       }
     : null;
 

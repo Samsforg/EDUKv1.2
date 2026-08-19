@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 
 interface Chapter {
   id: number;
@@ -27,6 +28,11 @@ export default function ChapitrePage({ params: _params }: { params: Promise<{ su
         if (!r.ok) throw new Error();
         const d = await r.json();
         setChapters(d.chapters ?? []);
+        trackEvent(EVENTS.courseOpened, {
+          subject_code: subjectCode,
+          grade_code: gradeCode,
+          chapters_count: (d.chapters ?? []).length,
+        });
       } catch {
         setError(true);
       }
@@ -88,7 +94,7 @@ export default function ChapitrePage({ params: _params }: { params: Promise<{ su
               >
                 <div className="flex items-center gap-3">
                   <div className="bg-primary/10 text-primary w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined">chapter_add</span>
+                    <span className="material-symbols-outlined">playlist_add</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-label-md font-semibold text-on-surface truncate">

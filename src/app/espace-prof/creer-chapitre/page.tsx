@@ -52,14 +52,22 @@ function CreateChapterPage() {
       });
 
     Promise.all([
+      fetch("/api/prof/subjects").then((r) => r.json()),
+      fetch("/api/prof/grades").then((r) => r.json()),
       fetch("/api/subjects").then((r) => r.json()),
       fetch("/api/grades").then((r) => r.json()),
     ])
-      .then(([sub, gr]) => {
-        setSubjects(sub.subjects ?? []);
-        setGrades(gr.grades ?? []);
-        setSubjectId(sub.subjects?.[0]?.id ?? null);
-        setGradeId(gr.grades?.[0]?.id?.toString() ?? "");
+      .then(([mine, myGrades, sub, gr]) => {
+        const d = mine.subjects ?? [];
+        const all = (sub.subjects ?? []) as Subject[];
+        const list = d.length > 0 ? all.filter((x) => d.some((m: { subject_id: number }) => m.subject_id === x.id)) : all;
+        const gd = (gr.grades ?? []) as Grade[];
+        const myG = (myGrades.grades ?? []) as Array<{ grade_id: number; name: string }>;
+        const gradeList = myG.length > 0 ? gd.filter((x) => myG.some((m) => m.grade_id === x.id)) : gd;
+        setSubjects(list);
+        setGrades(gradeList);
+        setSubjectId(list[0]?.id ?? null);
+        setGradeId(gradeList[0]?.id?.toString() ?? "");
         if (editId) {
           fetch(`/api/prof/chapter/${editId}`)
             .then((r) => (r.ok ? r.json() : null))
@@ -82,6 +90,7 @@ function CreateChapterPage() {
     setError(null);
     if (!title.trim()) return setError("Donne un titre au chapitre.");
     if (!subjectId) return setError("Choisis une matière.");
+    if (!gradeId) return setError("Choisis un niveau.");
     setSaving(true);
 
     const payload = {

@@ -33,6 +33,13 @@ SENTRY_VARS=(
   "NEXT_PUBLIC_SENTRY_RELEASE"
 )
 
+# --- Variables Analytics gerees par ce script ---
+ANALYTICS_VARS=(
+  "NEXT_PUBLIC_GA_ID"
+  "NEXT_PUBLIC_CLARITY_ID"
+  "GA4_API_SECRET"
+)
+
 # --- Charger les valeurs depuis .env.local / .env.prod.pull si non exportees ---
 if [ -f .env.prod.pull ]; then
   set -a; source .env.prod.pull 2>/dev/null || true; set +a
@@ -53,10 +60,11 @@ if [ ${#missing[@]} -gt 0 ]; then
   exit 1
 fi
 
-# --- Pousser les variables Sentry vers Vercel (idempotent) ---
-for var in "${SENTRY_VARS[@]}"; do
-  value="${!var:-}"
-  [ -z "$value" ] && continue
+# --- Pousser les variables vers Vercel (idempotent) ---
+push_env() {
+  local var="$1"
+  local value="${!var:-}"
+  [ -z "$value" ] && return
   for env in "${ENVS[@]}"; do
     if vercel env ls "$env" 2>/dev/null | grep -qE "[[:space:]]$var[[:space:]]"; then
       echo "==> $var ($env): deja presente"
@@ -65,7 +73,10 @@ for var in "${SENTRY_VARS[@]}"; do
       printf '%s' "$value" | vercel env add "$var" "$env" --yes || { echo "!! echec ajout $var ($env)"; exit 1; }
     fi
   done
-done
+}
+
+for var in "${SENTRY_VARS[@]}"; do push_env "$var"; done
+for var in "${ANALYTICS_VARS[@]}"; do push_env "$var"; done
 
 echo "==> Build + deploy production..."
 vercel deploy --prod --yes

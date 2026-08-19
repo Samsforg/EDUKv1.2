@@ -36,6 +36,9 @@ const NO_ID_TABLES = new Set([
   "parent_notification_settings",
   "class_students",
   "assignment_submissions",
+  "daily_challenges",
+  "teacher_subjects",
+  "teacher_grades",
 ]);
 
 const UNIT_MAP: Record<string, string> = {
@@ -621,10 +624,26 @@ CREATE TABLE IF NOT EXISTS assignment_submissions (
   PRIMARY KEY (assignment_id, student_id)
 );
 
+CREATE TABLE IF NOT EXISTS teacher_subjects (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  assigned_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, subject_id)
+);
+
+CREATE TABLE IF NOT EXISTS teacher_grades (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  grade_id INTEGER NOT NULL REFERENCES grades(id) ON DELETE CASCADE,
+  assigned_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, grade_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_class_assignments_class ON class_assignments (class_id);
 CREATE INDEX IF NOT EXISTS idx_assignment_submissions_student ON assignment_submissions (student_id);
 CREATE INDEX IF NOT EXISTS idx_classes_teacher ON classes (teacher_id);
 CREATE INDEX IF NOT EXISTS idx_class_students_user ON class_students (user_id);
+CREATE INDEX IF NOT EXISTS idx_teacher_subjects_user ON teacher_subjects (user_id);
+CREATE INDEX IF NOT EXISTS idx_teacher_grades_user ON teacher_grades (user_id);
 
  CREATE TABLE IF NOT EXISTS push_subscriptions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -939,6 +958,56 @@ CREATE INDEX IF NOT EXISTS idx_class_students_user ON class_students (user_id);
             if (trimmed) await pool.query(trimmed);
           }
         });
+      }
+      const hasTeacherSubjects = await withPgRetry(() =>
+        pool.query("SELECT to_regclass('public.teacher_subjects') IS NOT NULL AS exists"),
+      );
+      if (!hasTeacherSubjects.rows[0].exists) {
+        const pieces = toPgSchema(`
+CREATE TABLE IF NOT EXISTS teacher_subjects (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  assigned_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, subject_id)
+);
+CREATE INDEX IF NOT EXISTS idx_teacher_subjects_user ON teacher_subjects (user_id);
+`).split(";");
+        for (const stmt of pieces) {
+          const trimmed = stmt.trim();
+          if (trimmed) await pool.query(trimmed);
+        }
+        await withPgRetry(() =>
+          pool.query(`
+INSERT INTO teacher_subjects (user_id, subject_id)
+SELECT DISTINCT teacher_id, subject_id FROM classes
+WHERE teacher_id IS NOT NULL AND subject_id IS NOT NULL
+ON CONFLICT DO NOTHING`),
+        );
+      }
+      const hasTeacherGrades = await withPgRetry(() =>
+        pool.query("SELECT to_regclass('public.teacher_grades') IS NOT NULL AS exists"),
+      );
+      if (!hasTeacherGrades.rows[0].exists) {
+        const pieces = toPgSchema(`
+CREATE TABLE IF NOT EXISTS teacher_grades (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  grade_id INTEGER NOT NULL REFERENCES grades(id) ON DELETE CASCADE,
+  assigned_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, grade_id)
+);
+CREATE INDEX IF NOT EXISTS idx_teacher_grades_user ON teacher_grades (user_id);
+`).split(";");
+        for (const stmt of pieces) {
+          const trimmed = stmt.trim();
+          if (trimmed) await pool.query(trimmed);
+        }
+        await withPgRetry(() =>
+          pool.query(`
+INSERT INTO teacher_grades (user_id, grade_id)
+SELECT DISTINCT teacher_id, grade_id FROM classes
+WHERE teacher_id IS NOT NULL AND grade_id IS NOT NULL
+ON CONFLICT DO NOTHING`),
+        );
       }
       const hasNewsletter = await withPgRetry(() =>
         pool.query("SELECT to_regclass('public.newsletter_subscribers') IS NOT NULL AS exists"),

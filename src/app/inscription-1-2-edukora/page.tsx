@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 
 interface Serie {
   id: number;
@@ -69,6 +70,7 @@ function InscriptionPage() {
       return;
     }
     setLoading(true);
+    trackEvent(EVENTS.signupStarted, { role, method: email.trim() ? "email" : "phone" });
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
@@ -96,6 +98,13 @@ function InscriptionPage() {
       if (!res.ok) {
         setError(data.error ?? "Une erreur est survenue.");
       } else {
+        trackEvent(EVENTS.signupCompleted, {
+          role,
+          method: email.trim() ? "email" : "phone",
+          campaign: params.get("utm_campaign") ?? from ?? null,
+          medium: params.get("utm_medium") ?? null,
+          source: params.get("utm_source") ?? null,
+        });
         window.location.assign(
           destAfterSignup ?? (role === "teacher" ? "/espace-prof" : "/bienvenue"),
         );

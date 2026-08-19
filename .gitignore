@@ -38,6 +38,13 @@ next-env.d.ts
 data/*.db
 data/*.db-wal
 data/*.db-shm
+edukora.db
+edukora.db-wal
+edukora.db-shm
+
+# playwright
+playwright-report/
+test-results/
 
 # temp
 /tmp/

@@ -4,6 +4,7 @@ import MarketingFooter from "@/components/MarketingFooter";
 import PromoRentreeBanner from "@/components/PromoRentreeBanner";
 import { getCachedPremiumPlans, planFeatures, formatPlanPrice, formatPlanInterval, type PlanRow } from "@/lib/plans";
 import { isRentreePromoActive } from "@/lib/promo";
+import SubscriptionCta from "@/components/SubscriptionCta";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -148,12 +149,7 @@ export default async function Page() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href="/plans-d-abonnement-edukora-1"
-                className="w-full block text-center py-4 rounded-[16px] bg-secondary-container text-on-secondary-fixed font-bold hover:shadow-lg transition-all active:scale-95"
-              >
-                S'abonner maintenant
-              </Link>
+              <SubscriptionCta />
             </div>
           </div>
           <p className="text-center text-label-sm text-on-surface-variant mt-8">
@@ -213,13 +209,12 @@ export default async function Page() {
                     </Link>
                   </div>
                   <div className="p-5 md:p-6 flex justify-center bg-primary-fixed/40">
-                    <Link
-                      href="/plans-d-abonnement-edukora-1"
+                    <SubscriptionCta
+                      label="Choisir Réussite"
+                      cta="comparatif"
+                      icon="verified"
                       className="inline-flex items-center gap-2 px-6 py-3 rounded-[16px] bg-primary text-on-primary text-label-sm font-bold hover:bg-primary/90 transition-all active:scale-95"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">verified</span>
-                      Choisir Réussite
-                    </Link>
+                    />
                   </div>
                 </div>
               </div>

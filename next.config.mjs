@@ -1,7 +1,29 @@
 /** @type {import('next').NextConfig} */
 import { withSentryConfig } from "@sentry/nextjs";
+import { fileURLToPath } from "node:url";
+
+const polyfillLoaderPath = fileURLToPath(
+  new URL("./scripts/polyfill-module-loader.cjs", import.meta.url)
+);
 
 const nextConfig = {
+  experimental: {
+    inlineCss: true,
+  },
+  turbopack: {
+    rules: {
+      // Next.js bundles its own polyfill-module (trimStart/trimEnd, Symbol.description,
+      // flat/flatMap, Promise.finally, fromEntries, Array.prototype.at, Object.hasOwn,
+      // URL.canParse) into every client entry via next/dist/client/app-globals.js.
+      // All of them are Baseline and supported since Chrome/Edge 111, Firefox 111 and
+      // Safari 16.4 (our browserslist targets), except URL.canParse (Safari 17+),
+      // which this loader keeps. This drops ~1.4 kB of legacy polyfills per page.
+      "**/polyfills/polyfill-module.js": {
+        loaders: [polyfillLoaderPath],
+        as: "*.js",
+      },
+    },
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200],
@@ -47,6 +69,15 @@ const nextConfig = {
       },
     ];
     return [
+      {
+        source: "/fonts/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
       {
         source: "/:path*",
         headers: securityHeaders,

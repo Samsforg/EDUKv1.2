@@ -2,6 +2,7 @@ import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne, run } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
+import { canTeachSubject, canTeachGrade, ensureProfSubject, ensureProfGrade } from "@/lib/prof-subjects";
 
 export const dynamic = "force-dynamic";
 
@@ -67,12 +68,30 @@ async function POSTHandler(req: NextRequest) {
   }
 
   if (body.subject_id !== undefined && body.subject_id !== null) {
-    const subject = await queryOne<{ id: number }>("SELECT id FROM subjects WHERE id = ?", Number(body.subject_id));
+    const subjectId = Number(body.subject_id);
+    const subject = await queryOne<{ id: number }>("SELECT id FROM subjects WHERE id = ?", subjectId);
     if (!subject) return NextResponse.json({ error: "Matière introuvable" }, { status: 400 });
+    const teach = await canTeachSubject(user!.id, subjectId);
+    if (teach === "no") {
+      return NextResponse.json(
+        { error: "Cette matière n'est pas dans tes disciplines. Ajoute-la dans « Mes disciplines » avant de créer la classe." },
+        { status: 403 },
+      );
+    }
+    if (teach === "first") await ensureProfSubject(user!.id, subjectId);
   }
   if (body.grade_id !== undefined && body.grade_id !== null) {
-    const grade = await queryOne<{ id: number }>("SELECT id FROM grades WHERE id = ?", Number(body.grade_id));
+    const gradeId = Number(body.grade_id);
+    const grade = await queryOne<{ id: number }>("SELECT id FROM grades WHERE id = ?", gradeId);
     if (!grade) return NextResponse.json({ error: "Niveau introuvable" }, { status: 400 });
+    const teachGrade = await canTeachGrade(user!.id, gradeId);
+    if (teachGrade === "no") {
+      return NextResponse.json(
+        { error: "Ce niveau n'est pas dans tes niveaux d'enseignement. Ajoute-le dans « Mes disciplines & niveaux » avant de créer la classe." },
+        { status: 403 },
+      );
+    }
+    if (teachGrade === "first") await ensureProfGrade(user!.id, gradeId);
   }
 
   let code = makeInviteCode();

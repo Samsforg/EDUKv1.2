@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { queryOne, run, query } from "@/lib/db";
 import { canonicalPhone } from "@/lib/geniuspay";
 import { sendSubscriptionReceipt } from "@/lib/mailer";
+import { sendGa4Purchase } from "@/lib/ga4-ssr";
 
 async function sendReceiptIfActive(reference: string | null) {
   if (!reference) return;
@@ -16,9 +17,10 @@ async function sendReceiptIfActive(reference: string | null) {
     end_at: string | null;
     status: string;
     provider_subscription_id: string;
+    ga_client_id: string | null;
   }>(
     `SELECT s.id, s.user_id, p.name AS plan_name, COALESCE(s.price_cents, p.price_cents) AS price_cents,
-            p.currency, s.end_at, s.status, s.provider_subscription_id
+            p.currency, s.end_at, s.status, s.provider_subscription_id, s.ga_client_id
      FROM subscriptions s JOIN subscription_plans p ON p.id = s.plan_id
      WHERE s.provider = 'geniuspay' AND s.provider_subscription_id = ?
      ORDER BY s.id DESC LIMIT 1`,
@@ -33,6 +35,16 @@ async function sendReceiptIfActive(reference: string | null) {
     reference: sub.provider_subscription_id,
   });
   console.log(`[webhook] reçu ${okMail ? "envoyé" : "ENVOI ÉCHOUÉ"} -> user ${sub.user_id} (${sub.plan_name})`);
+
+  // Fire-and-forget : ne bloque jamais la réponse du webhook (GeniusPay attend un 200 rapide).
+  void sendGa4Purchase({
+    clientId: sub.ga_client_id,
+    value: sub.price_cents,
+    currency: sub.currency,
+    planName: sub.plan_name,
+    transactionId: sub.provider_subscription_id,
+    userId: sub.user_id,
+  });
 }
 
 const TIMESTAMP_TOLERANCE_SECONDS = 300;
@@ -168,8 +180,8 @@ async function handleTransactionEvent(event: string, data: any): Promise<string 
         user,
         plan.id,
         String(reference ?? ""),
-        amount,
         phone ?? null,
+        amount,
         now,
         endAt,
       );
@@ -243,8 +255,8 @@ async function handleSubscriptionEvent(event: string, sub: any): Promise<string 
       user,
       plan.id,
       sub.id,
-      amount,
       phone,
+      amount,
       nextStatus,
       now,
       endAt,

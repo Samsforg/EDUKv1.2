@@ -46,11 +46,13 @@ export default function CreatePaperPage() {
       .then((d) => {
         if (!d.user || d.user.role !== "teacher") router.replace("/connexion-edukora");
       });
-    fetch("/api/subjects")
-      .then((r) => r.json())
-      .then((d) => {
-        setSubjects(d.subjects ?? []);
-        setSubjectId((d.subjects?.[0]?.id) ?? null);
+    Promise.all([fetch("/api/prof/subjects").then((r) => r.json()), fetch("/api/subjects").then((r) => r.json())])
+      .then(([mineRes, allRes]) => {
+        const mine = mineRes.subjects ?? [];
+        const all = (allRes.subjects ?? []) as Subject[];
+        const list = mine.length > 0 ? all.filter((x) => mine.some((m: { subject_id: number }) => m.subject_id === x.id)) : all;
+        setSubjects(list);
+        setSubjectId(list[0]?.id ?? null);
       });
     fetch("/api/series")
       .then((r) => r.json())

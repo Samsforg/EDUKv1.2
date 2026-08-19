@@ -290,7 +290,7 @@ export async function createProfLesson(
   teacherId: number,
   input: { chapter_id: number; title: string; summary?: string; content_md?: string; video_url?: string; duration_min?: number; difficulty?: number; is_premium?: number; position?: number },
 ): Promise<{ ok: true; id: number } | { error: string }> {
-  const chapter = await queryOne<{ id: number; is_premium: number }>("SELECT id, is_premium FROM chapters WHERE id = ?", input.chapter_id);
+  const chapter = await queryOne<{ id: number }>("SELECT id FROM chapters WHERE id = ?", input.chapter_id);
   if (!chapter) return { error: "Chapitre introuvable" };
   const title = input.title.trim();
   if (!title) return { error: "Titre requis" };
@@ -321,7 +321,7 @@ export async function createProfLesson(
     input.video_url?.trim() ?? "",
     Math.max(1, input.duration_min ?? 15),
     Math.min(3, Math.max(1, input.difficulty ?? 1)),
-    input.is_premium !== undefined ? (input.is_premium ? 1 : 0) : chapter.is_premium,
+    input.is_premium !== undefined ? (input.is_premium ? 1 : 0) : 0,
     position,
     teacherId,
   );

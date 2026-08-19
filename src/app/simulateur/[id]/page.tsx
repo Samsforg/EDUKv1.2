@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 import { useRouter, useParams } from "next/navigation";
 
 interface Question {
@@ -40,6 +41,12 @@ export default function SimulatorTakePage() {
         }
         setData(d);
         setSecondsLeft(d.paper.duration_minutes * 60);
+        trackEvent(EVENTS.simulateurStarted, {
+          exam_id: String(id),
+          exam_title: d.paper.title,
+          duration_min: d.paper.duration_minutes,
+          subject: d.paper.subject_name ?? null,
+        });
       })
       .catch(() => setNotFound(true));
   }, [id]);
@@ -75,6 +82,15 @@ export default function SimulatorTakePage() {
       return;
     }
     sessionStorage.setItem(`edukora-exam-result-${id}`, JSON.stringify({ ...result, exam_id: id, exam_title: data.paper.title, questions: data.questions, userAnswers: answers }));
+    trackEvent(EVENTS.simulateurCompleted, {
+      exam_id: String(id),
+      exam_title: data.paper.title,
+      score: result.score,
+      max: result.max ?? result.total ?? null,
+      score_over_20: result.score_over_20 ?? null,
+      duration_seconds: payload.duration_seconds,
+      timed_out: timeout,
+    });
     router.push(`/simulateur/${id}/resultat`);
   }
 

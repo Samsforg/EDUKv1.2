@@ -1,24 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Hanken_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
 import RegisterSW from "@/components/RegisterSW";
-import MaterialSymbols from "@/components/MaterialSymbols";
 import VercelAnalytics from "@/components/VercelAnalytics";
+import EdukoraAnalytics from "@/components/EdukoraAnalytics";
 import ConsentBanner from "@/components/ConsentBanner";
-
-const hanken = Hanken_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
-  variable: "--font-hanken",
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-inter",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://edukora.net"),
@@ -77,8 +62,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`light ${hanken.variable} ${inter.variable}`}>
+    <html lang="fr" className="light">
       <head>
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/MaterialSymbols.woff2" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/HankenGrotesk-latin.woff2" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-latin.woff2" crossOrigin="anonymous" />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('edukora-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');}}catch(e){}})();`,
@@ -93,9 +81,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-background text-on-background">
         {children}
-        <MaterialSymbols />
         <RegisterSW />
         <VercelAnalytics />
+        <EdukoraAnalytics />
         <ConsentBanner />
       </body>
     </html>

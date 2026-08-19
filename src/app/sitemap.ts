@@ -9,8 +9,6 @@ const publicRoutes = [
   { url: "/fonctionnalites", changeFrequency: "monthly" as const, priority: 0.8 },
   { url: "/resultats", changeFrequency: "monthly" as const, priority: 0.8 },
   { url: "/tarifs", changeFrequency: "weekly" as const, priority: 0.9 },
-  { url: "/plans-d-abonnement-edukora-1", changeFrequency: "weekly" as const, priority: 0.8 },
-  { url: "/tuteur-ia-edukora", changeFrequency: "monthly" as const, priority: 0.7 },
   { url: "/simulateur-d-examen-bac-bepc", changeFrequency: "monthly" as const, priority: 0.7 },
   { url: "/inscription-1-2-edukora", changeFrequency: "monthly" as const, priority: 0.6 },
   { url: "/inscription-parent-edukora", changeFrequency: "monthly" as const, priority: 0.5 },

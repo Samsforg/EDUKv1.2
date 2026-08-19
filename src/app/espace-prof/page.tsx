@@ -71,9 +71,23 @@ interface ProfInfo {
   email: string;
 }
 
+interface ProfSubjectChip {
+  subject_id: number;
+  name: string;
+  icon: string | null;
+  color: string | null;
+}
+
+interface ProfGradeChip {
+  grade_id: number;
+  name: string;
+}
+
 export default function TeacherDashboardPage() {
   const router = useRouter();
   const [prof, setProf] = useState<ProfInfo | null>(null);
+  const [subjects, setSubjects] = useState<ProfSubjectChip[]>([]);
+  const [grades, setGrades] = useState<ProfGradeChip[]>([]);
   const [quizzes, setQuizzes] = useState<ProfQuiz[]>([]);
   const [papers, setPapers] = useState<ProfPaper[]>([]);
   const [chapters, setChapters] = useState<ProfChapter[]>([]);
@@ -106,7 +120,13 @@ export default function TeacherDashboardPage() {
       .then((d) => setChapters(d.chapters ?? []));
     fetch("/api/prof/lesson")
       .then((r) => r.json())
-      .then((d) => setLessons(d.lessons ?? []))
+      .then((d) => setLessons(d.lessons ?? []));
+    fetch("/api/prof/subjects")
+      .then((r) => r.json())
+      .then((d) => setSubjects(d.subjects ?? []));
+    fetch("/api/prof/grades")
+      .then((r) => r.json())
+      .then((d) => setGrades(d.grades ?? []))
       .finally(() => setLoading(false));
   }, [router]);
 
@@ -165,7 +185,7 @@ export default function TeacherDashboardPage() {
           <span className="font-headline-md text-headline-md font-bold text-on-primary">Edukora Pro</span>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/accueil-edukora" className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs hover:opacity-90">↗</Link>
+          <Link href="/" className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs hover:opacity-90">↗</Link>
           <button
             onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); location.href = "/connexion-edukora"; }}
             className="w-9 h-9 rounded-full bg-primary-container/30 text-on-primary flex items-center justify-center hover:opacity-90"
@@ -185,6 +205,76 @@ export default function TeacherDashboardPage() {
             <p className="font-label-sm text-on-surface-variant">Espace professeur — crée quiz et sujets pour tes élèves</p>
           </div>
         </div>
+
+        <section className="mb-8">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <h2 className="font-title-md text-title-md text-on-surface">Mon enseignement</h2>
+            <Link
+              href="/espace-prof/disciplines"
+              className="inline-flex items-center gap-1 rounded-full border border-outline-variant px-4 py-2 font-label-sm text-on-surface-variant hover:bg-surface-container-high active:scale-[0.98] transition-transform"
+            >
+              <span className="material-symbols-outlined text-[16px]">edit</span>
+              Changer
+            </Link>
+          </div>
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
+            {subjects.length === 0 && grades.length === 0 ? (
+              <div className="flex flex-col items-start gap-3">
+                <p className="font-body-sm text-on-surface-variant">
+                  Tu n&apos;as pas encore défini ton enseignement. Choisis les matières et les niveaux que
+                  tu enseignes pour créer tes classes, tes chapitres, tes leçons, tes quiz et tes sujets.
+                </p>
+                <Link
+                  href="/espace-prof/disciplines"
+                  className="inline-flex items-center gap-2 bg-primary text-on-primary font-label-md px-5 py-2.5 rounded-full active:scale-[0.98] transition-transform"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add</span>
+                  Définir mes disciplines & niveaux
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {subjects.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {subjects.map((s) => (
+                      <span
+                        key={`s${s.subject_id}`}
+                        className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface px-3 py-1.5 font-label-sm text-on-surface"
+                      >
+                        <span
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                          style={{ backgroundColor: s.color ?? "#7c4dff" }}
+                        >
+                          {s.icon ?? s.name.charAt(0)}
+                        </span>
+                        {s.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {grades.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {grades.map((g) => (
+                      <span
+                        key={`g${g.grade_id}`}
+                        className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-secondary-container/20 px-3 py-1.5 font-label-sm text-on-surface"
+                      >
+                        <span className="material-symbols-outlined text-[14px] text-secondary">school</span>
+                        {g.name}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+                <Link
+                  href="/espace-prof/disciplines"
+                  className="inline-flex items-center gap-1 rounded-full border border-outline-variant px-3.5 py-1.5 font-label-sm text-primary"
+                >
+                  Changer
+                </Link>
+              </div>
+            )}
+          </div>
+        </section>
 
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">

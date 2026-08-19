@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 
 export default function Page() {
   return <GeniusPayValidation />;
@@ -29,6 +30,13 @@ function GeniusPayValidation() {
         if (d.error) throw new Error(d.error);
         setAmount(d.amount);
         setPlanName(d.plan_name);
+        trackEvent(EVENTS.addPaymentInfo, {
+          ref,
+          value: d.amount,
+          currency: d.currency ?? "XOF",
+          plan: d.plan_name,
+          payment_type: "mobile_money",
+        });
         if (d.is_active) {
           setDone(true);
           setTimeout(() => { window.location.href = `/paiement-reussi-edukora-premium-geniuspay?ref=${encodeURIComponent(r)}`; }, 800);

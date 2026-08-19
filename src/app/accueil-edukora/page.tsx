@@ -92,7 +92,10 @@ export default function Page() {
       .then((r) => r.json())
       .then((d) => {
         if (!d.user) router.replace("/connexion-edukora");
-        else setUser(d.user);
+        else {
+          setUser(d.user);
+          if (d.user.role === "teacher") router.replace("/espace-prof");
+        }
       })
       .catch(() => router.replace("/connexion-edukora"))
       .finally(() => setChecking(false));

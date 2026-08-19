@@ -289,7 +289,7 @@ Enregistrer et continuer
             const setStatus = (msg, ok) =&gt; &#123;
                 promoStatus.textContent = msg;
                 promoStatus.classList.remove('hidden', 'bg-error-container/30', 'bg-tertiary-container/40', 'text-error', 'text-tertiary');
-                promoStatus.classList.add(ok ? 'bg-tertiary-container/40 text-tertiary' : 'bg-error-container/30 text-error');
+                promoStatus.classList.add(ok ? 'bg-tertiary-container/40' : 'bg-error-container/30', ok ? 'text-tertiary' : 'text-error');
             &#125;;
             promoApply.addEventListener('click', () =&gt; &#123;
                 const code = (promoInput.value || '').trim().toUpperCase();
@@ -345,6 +345,19 @@ Enregistrer et continuer
             var pc = document.getElementById('price-container');
             var planId = pc ? pc.getAttribute('data-current-plan') || pc.getAttribute('data-plan-month') : null;
             var pid = Number(planId || 0);
+            try &#123;
+              if (window.edukoraTrack) &#123;
+                var priceTxt = document.getElementById('price-value');
+                var priceVal = priceTxt ? Number(priceTxt.innerText.replace(/[^0-9]/g, '')) : 0;
+                window.edukoraTrack('begin_checkout', &#123;
+                  plan_id: pid,
+                  value: priceVal,
+                  currency: 'XOF',
+                  interval: btnTrim.classList.contains('bg-surface-container-lowest') ? 'quarter' : 'month',
+                  promo: appliedPromo || undefined
+                &#125;);
+              &#125;
+            &#125; catch (e) &#123;&#125;
             if (!pid || pid &lt;= 0) &#123;
               btn.disabled = false;
               btn.innerHTML = "S'abonner maintenant";

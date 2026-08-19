@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 
 interface ReferralProfile {
   referral_code: string | null;
@@ -37,6 +38,7 @@ export default function ParrainagePage() {
     if (!code) return;
     try {
       await navigator.clipboard.writeText(code);
+      trackEvent(EVENTS.referralCodeCopied, { code });
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -48,7 +50,8 @@ export default function ParrainagePage() {
     if (!code) return;
     const text = `Rejoins-moi sur Edukora pour réviser le BAC et le BEPC en Côte d'Ivoire ! Inscris-toi avec mon code de parrainage et gagne +50 XP de bienvenue : ${code}`;
     const link = "https://edukora.net/inscription-1-2-edukora";
-    if (navigator.share) {
+    trackEvent(EVENTS.referralLinkShared, { code, method: "share" in navigator ? "native" : "whatsapp" });
+    if ("share" in navigator) {
       navigator
         .share({ title: "Parrainage Edukora", text, url: link })
         .catch(() => {});

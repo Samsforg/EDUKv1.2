@@ -1,6 +1,8 @@
 import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
+import { queryOne } from "@/lib/db";
+import { canTeachSubject, ensureProfSubject } from "@/lib/prof-subjects";
 import {
   getProfLessons,
   createProfLesson,
@@ -33,6 +35,22 @@ async function POSTHandler(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body || !body.title || !body.chapter_id) {
     return NextResponse.json({ error: "Données invalides : titre et chapitre requis" }, { status: 400 });
+  }
+
+  const chapter = await queryOne<{ subject_id: number | null }>(
+    "SELECT subject_id FROM chapters WHERE id = ?",
+    Number(body.chapter_id),
+  );
+  if (!chapter) return NextResponse.json({ error: "Chapitre introuvable" }, { status: 400 });
+  if (chapter.subject_id != null) {
+    const teach = await canTeachSubject(user!.id, chapter.subject_id);
+    if (teach === "no") {
+      return NextResponse.json(
+        { error: "Ce chapitre n'appartient pas à tes disciplines. Ajoute-la dans « Mes disciplines » avant de créer une leçon." },
+        { status: 403 },
+      );
+    }
+    if (teach === "first") await ensureProfSubject(user!.id, chapter.subject_id);
   }
 
   const res = await createProfLesson(user!.id, {

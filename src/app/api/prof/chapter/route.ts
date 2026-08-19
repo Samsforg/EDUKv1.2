@@ -1,6 +1,7 @@
 import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
+import { canTeachSubject, canTeachGrade, ensureProfSubject, ensureProfGrade } from "@/lib/prof-subjects";
 import {
   getProfChapters,
   getSelectableProfChapters,
@@ -35,13 +36,35 @@ async function POSTHandler(req: NextRequest) {
   if (forbidden) return forbidden;
 
   const body = await req.json().catch(() => null);
-  if (!body || !body.title || !body.subject_id) {
-    return NextResponse.json({ error: "Données invalides : titre et matière requis" }, { status: 400 });
+  if (!body || !body.title || !body.subject_id || !body.grade_id) {
+    return NextResponse.json(
+      { error: "Données invalides : titre, matière et niveau requis" },
+      { status: 400 },
+    );
   }
 
+  const subjectId = Number(body.subject_id);
+  const gradeId = Number(body.grade_id);
+  const teach = await canTeachSubject(user!.id, subjectId);
+  if (teach === "no") {
+    return NextResponse.json(
+      { error: "Cette matière n'est pas dans tes disciplines. Ajoute-la dans « Mes disciplines & niveaux » avant de créer un chapitre." },
+      { status: 403 },
+    );
+  }
+  if (teach === "first") await ensureProfSubject(user!.id, subjectId);
+  const teachGrade = await canTeachGrade(user!.id, gradeId);
+  if (teachGrade === "no") {
+    return NextResponse.json(
+      { error: "Ce niveau n'est pas dans tes niveaux d'enseignement. Ajoute-le dans « Mes disciplines & niveaux » avant de créer un chapitre." },
+      { status: 403 },
+    );
+  }
+  if (teachGrade === "first") await ensureProfGrade(user!.id, gradeId);
+
   const res = await createProfChapter(user!.id, {
-    subject_id: Number(body.subject_id),
-    grade_id: body.grade_id ? Number(body.grade_id) : null,
+    subject_id: subjectId,
+    grade_id: gradeId,
     code: body.code,
     title: body.title,
     description: body.description,

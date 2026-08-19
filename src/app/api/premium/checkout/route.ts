@@ -83,8 +83,15 @@ async function POSTHandler(req: Request) {
 
   const now = new Date().toISOString();
   const isActive = gpSub.status === "active";
+
+  const gaClientId =
+    req.headers
+      .get("cookie")
+      ?.match(/(?:^|; )edukora_gacid=([^;]*)/)
+      ?.map((x) => decodeURIComponent(x))[1] ?? null;
+
   await run(
-    "INSERT INTO subscriptions (user_id, plan_id, provider, provider_subscription_id, provider_customer_id, price_cents, status, started_at, end_at) VALUES (?, ?, 'geniuspay', ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO subscriptions (user_id, plan_id, provider, provider_subscription_id, provider_customer_id, price_cents, status, started_at, end_at, ga_client_id) VALUES (?, ?, 'geniuspay', ?, ?, ?, ?, ?, ?, ?)",
     user.id,
     plan.id,
     gpSub.id,
@@ -93,6 +100,7 @@ async function POSTHandler(req: Request) {
     isActive ? "active" : "incomplete",
     now,
     parseDateish(gpSub.next_billing_date),
+    gaClientId,
   );
 
   if (isActive) {

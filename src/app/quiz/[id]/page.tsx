@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 
 interface Question {
   id: number;
@@ -28,7 +29,7 @@ export default function QuizTakePage() {
   useEffect(() => {
     fetch(`/api/quiz/${id}`)
       .then((r) => r.json())
-      .then((d) => (d.error ? setNotFound(true) : setData(d)))
+      .then((d) => (d.error ? setNotFound(true) : (setData(d), trackEvent(EVENTS.quizStarted, { quiz_id: id }))))
       .catch(() => setNotFound(true));
   }, [id]);
 

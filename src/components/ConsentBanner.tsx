@@ -15,6 +15,7 @@ function saveConsent(prefs: { essential: boolean; analytics: boolean; ia: boolea
   try {
     localStorage.setItem("edukora_cookie_prefs", JSON.stringify(prefs));
   } catch (e) {}
+  window.dispatchEvent(new CustomEvent("edukora-consent-updated", { detail: prefs }));
 }
 
 export default function ConsentBanner() {

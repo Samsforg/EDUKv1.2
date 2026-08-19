@@ -6,6 +6,7 @@ import PageHeader from "@/components/PageHeader";
 import { useParams } from "next/navigation";
 import SimpleMarkdown from "@/components/SimpleMarkdown";
 import { PremiumUpsell } from "@/components/PremiumUpsell";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 
 interface Lesson {
   id: number;
@@ -57,6 +58,12 @@ export default function LessonReader() {
         if (!r.ok) {
           const d = await r.json().catch(() => null);
           if (d?.code === "fiche_quota_exceeded") {
+            trackEvent(EVENTS.quotaExceeded, {
+              source: "fiche",
+              lesson_id: String(id),
+              plan: d.plan?.name ?? null,
+              plan_id: d.plan?.id ?? null,
+            });
             if (d.quota) setQuota(d.quota);
             if (d.plan) setPlan(d.plan);
             if (typeof d.decouverte_price === "number") setDecouvertePrice(d.decouverte_price);
@@ -73,7 +80,21 @@ export default function LessonReader() {
           setLesson(d.lesson);
           setPrev(d.prev);
           setNext(d.next);
-          if (!d.lesson.read) fetch(`/api/lessons/${id}/read`, { method: "POST" }).catch(() => {});
+          trackEvent(EVENTS.ficheOpened, {
+            fiche_id: String(id),
+            fiche_title: d.lesson.title,
+            subject: d.lesson.subject,
+            chapter: d.lesson.chapter,
+          });
+          if (!d.lesson.read) {
+            fetch(`/api/lessons/${id}/read`, { method: "POST" })
+              .then((r) => (r.ok ? trackEvent(EVENTS.ficheRead, {
+                fiche_id: String(id),
+                fiche_title: d.lesson.title,
+                subject: d.lesson.subject,
+              }) : undefined))
+              .catch(() => {});
+          }
         }
       })
       .finally(() => setLoading(false));
@@ -82,7 +103,13 @@ export default function LessonReader() {
   async function toggleSave() {
     if (!lesson) return;
     const res = await fetch(`/api/lessons/${id}/save`, { method: "POST" }).catch(() => null);
-    if (res) setLesson((l) => (l ? { ...l, saved: !l.saved } : l));
+    if (res) {
+      setLesson((l) => (l ? { ...l, saved: !l.saved } : l));
+      trackEvent(lesson.saved ? EVENTS.ficheUnsaved : EVENTS.ficheSaved, {
+        fiche_id: String(id),
+        fiche_title: lesson.title,
+      });
+    }
   }
 
   return (

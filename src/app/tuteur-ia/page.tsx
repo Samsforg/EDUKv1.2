@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import { PremiumUpsell } from "@/components/PremiumUpsell";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 
 interface Msg {
   id: number;
@@ -46,6 +47,7 @@ export default function TutorPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    trackEvent(EVENTS.aiTutorOpened);
     fetch("/api/tutor")
       .then((r) => r.json())
       .then((d) => {
@@ -86,6 +88,7 @@ export default function TutorPage() {
     }
     setInput("");
     setSending(true);
+    trackEvent(EVENTS.aiQuestionSent, { blocked: false });
     setMessages((prev) => [...prev, { id: Date.now(), role: "user", content: message }]);
     try {
       const res = await fetch("/api/tutor", {
@@ -95,6 +98,11 @@ export default function TutorPage() {
       });
       const data = await res.json();
       if (data.code === "quota_exceeded") {
+        trackEvent(EVENTS.quotaExceeded, {
+          source: "kora",
+          plan: data.plan?.name ?? null,
+          plan_id: data.plan?.id ?? null,
+        });
         if (data.quota) setQuota(data.quota);
         if (data.plan) setPlan(data.plan);
         setUpsell({ open: true, message: data.error });

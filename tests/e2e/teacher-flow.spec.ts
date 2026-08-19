@@ -19,6 +19,9 @@ async function registerViaUI(page: Page, email: string, firstName: string, lastN
   await page.fill('input#email', email);
   await page.fill('input#password', password);
 
+  // Politique de confidentialité (obligatoire depuis l'ajout du consentement)
+  await page.check('input#acceptPrivacy');
+
   if (role === "student") {
     await page.locator("select").nth(1).selectOption({ label: "3ème" });
   }
@@ -27,13 +30,13 @@ async function registerViaUI(page: Page, email: string, firstName: string, lastN
   await page.waitForURL((url) => role === "teacher" ? url.pathname === "/espace-prof" : ["/accueil-edukora", "/bienvenue"].includes(url.pathname), { timeout: 15000 });
 }
 
-async function loginViaUI(page: Page, email: string) {
+async function loginViaUI(page: Page, email: string, expected: RegExp = /\/accueil-edukora/) {
   await page.goto("/connexion-edukora");
   await page.waitForSelector('input#identifier', { state: "visible" });
   await page.fill('input#identifier', email);
   await page.fill('input#password', password);
   await page.click('button:has-text("Se connecter")');
-  await page.waitForURL(/\/accueil-edukora/);
+  await page.waitForURL(expected);
 }
 
 async function createClassViaUI(page: Page, name: string): Promise<number> {
@@ -130,7 +133,7 @@ test.describe("Parcours prof complet — E2E", () => {
     // 9. Déconnexion élève → reconnexion prof
     await page.context().clearCookies();
     await page.goto("/");
-    await loginViaUI(page, teacherEmail);
+    await loginViaUI(page, teacherEmail, /\/espace-prof/);
 
     // 10. Prof note le devoir
     await page.goto(`/espace-prof/classes/${classId}/devoirs/${assignmentId}`);

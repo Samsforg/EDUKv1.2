@@ -49,14 +49,23 @@ export default function TeacherClassesPage() {
   const [copied, setCopied] = useState<number | null>(null);
 
   async function load() {
-    const [c, s, g] = await Promise.all([
+    const [c, s, g, d, gd] = await Promise.all([
       fetchFresh("/api/prof/classes").then((r) => r.json()),
+      fetchFresh("/api/prof/subjects").then((r) => r.json()),
+      fetchFresh("/api/prof/grades").then((r) => r.json()),
       fetchFresh("/api/subjects").then((r) => r.json()),
       fetchFresh("/api/grades").then((r) => r.json()),
     ]);
+    const mine = (d.subjects ?? []) as Array<{ subject_id: number; name: string; icon: string; color: string }>;
+    const myGrades = (g.grades ?? []) as Array<{ grade_id: number; name: string }>;
+    const allGrades = (gd.grades ?? []) as Grade[];
     setClasses(c.classes ?? []);
-    setSubjects(s.subjects ?? []);
-    setGrades(g.grades ?? []);
+    setSubjects(mine.length > 0 ? mine.map((m) => ({ id: m.subject_id, name: m.name, icon: m.icon, color: m.color })) : (s.subjects ?? []));
+    setGrades(
+      myGrades.length > 0
+        ? allGrades.filter((x) => myGrades.some((m) => m.grade_id === x.id))
+        : allGrades,
+    );
     setLoading(false);
   }
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 
 interface Lesson {
   id: number;
@@ -47,7 +48,14 @@ export default function LessonPage({ params }: LessonPageProps) {
         const r = await fetch(`/api/cours/lecons/${p.lessonId}`);
         if (!r.ok) throw new Error();
         const d = await r.json();
-        if (d.lesson) setLesson(d.lesson);
+        if (d.lesson) {
+          setLesson(d.lesson);
+          trackEvent(EVENTS.lessonStarted, {
+            lesson_id: String(p.lessonId),
+            lesson_title: d.lesson.title,
+            is_premium: d.lesson.is_premium,
+          });
+        }
       } catch {
         setError(true);
       }
@@ -65,6 +73,11 @@ export default function LessonPage({ params }: LessonPageProps) {
       });
       if (!r.ok) throw new Error();
       setLesson({ ...lesson, progress: { ...lesson.progress, completed: 1 } });
+      trackEvent(EVENTS.lessonCompleted, {
+        lesson_id: String(lesson.id),
+        lesson_title: lesson.title,
+        duration_min: lesson.duration_min,
+      });
     } finally {
       setCompleting(false);
     }

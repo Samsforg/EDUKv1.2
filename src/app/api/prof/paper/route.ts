@@ -2,6 +2,7 @@ import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne, run } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
+import { canTeachSubject, ensureProfSubject } from "@/lib/prof-subjects";
 
 function requireTeacher(user: { role: string } | null): NextResponse | null {
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
@@ -63,6 +64,15 @@ async function POSTHandler(req: NextRequest) {
 
   const subject = await queryOne<{ id: number }>("SELECT id FROM subjects WHERE id = ?", Number(body.subject_id));
   if (!subject) return NextResponse.json({ error: "Matière introuvable" }, { status: 400 });
+
+  const teach = await canTeachSubject(user!.id, subject.id);
+  if (teach === "no") {
+    return NextResponse.json(
+      { error: "Cette matière n'est pas dans tes disciplines. Ajoute-la dans « Mes disciplines » avant de créer un sujet." },
+      { status: 403 },
+    );
+  }
+  if (teach === "first") await ensureProfSubject(user!.id, subject.id);
 
   const result = await run(
     "INSERT INTO exam_papers (category, series_id, subject_id, year, title, duration_minutes, created_by, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",

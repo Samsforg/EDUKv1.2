@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 
 function ConnexionPage() {
   const router = useRouter();
@@ -23,7 +24,9 @@ function ConnexionPage() {
           ? "/espace-parent"
           : role === "admin"
             ? "/espace-admin"
-            : "/accueil-edukora";
+            : role === "teacher"
+              ? "/espace-prof"
+              : "/accueil-edukora";
     window.location.assign(dest);
   }
 
@@ -57,6 +60,10 @@ function ConnexionPage() {
       if (!res.ok) {
         setError(data.error ?? "Identifiant ou mot de passe incorrect.");
       } else {
+        trackEvent(EVENTS.loginCompleted, {
+          method: /^\d[\d\s+()-]*$/.test(identifier) ? "phone" : "email",
+          role: data.user?.role ?? null,
+        });
         afterLogin(data.user?.role);
       }
     } catch {

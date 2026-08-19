@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import { PremiumUpsell } from "@/components/PremiumUpsell";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 
 interface QuotaInfo {
   used: number;
@@ -103,6 +104,11 @@ export default function DissertationPage() {
       });
       const data = await res.json();
       if (data.code === "quota_exceeded") {
+        trackEvent(EVENTS.quotaExceeded, {
+          source: "dissertation",
+          plan: data.plan?.name ?? null,
+          plan_id: data.plan?.id ?? null,
+        });
         if (data.quota) setQuota(data.quota);
         if (data.plan) setPlan(data.plan);
         openUpsell(data.error);

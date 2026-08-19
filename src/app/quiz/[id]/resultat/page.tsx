@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import ShareResultButton from "@/components/ShareResultButton";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 
 interface Result {
   score: number;
@@ -32,6 +33,7 @@ export default function QuizResultPage() {
       return;
     }
     setResult(data);
+    trackEvent(EVENTS.quizCompleted, { quiz_id: id, score: data.score, max: data.max, pct: data.pct });
   }, [router, id]);
 
   if (!result) {

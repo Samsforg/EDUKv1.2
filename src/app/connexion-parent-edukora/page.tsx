@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 
 export default function Page() {
   const router = useRouter();
@@ -42,6 +43,10 @@ export default function Page() {
       } else if (data.user?.role !== "parent") {
         setError("Ce compte n'est pas un compte parent.");
       } else {
+        trackEvent(EVENTS.loginCompleted, {
+          method: /^\d[\d\s+()-]*$/.test(identifier) ? "phone" : "email",
+          role: "parent",
+        });
         router.push("/espace-parent");
       }
     } catch {
