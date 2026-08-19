@@ -1,10 +1,14 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
 import PromoRentreeBanner from "@/components/PromoRentreeBanner";
 import { getCachedPremiumPlans, planFeatures, formatPlanPrice, formatPlanInterval, type PlanRow } from "@/lib/plans";
 import { isRentreePromoActive } from "@/lib/promo";
+import { RENTREE_PROMO_CODE, RENTREE_PROMO_PERCENT, RENTREE_PROMO_ENDS_AT } from "@/lib/rentree";
+import { AB_PRICING_COOKIE, isPricingAbEnabled, isValidPricingVariant, parsePricingVariant, type PricingVariant } from "@/lib/ab-test";
 import SubscriptionCta from "@/components/SubscriptionCta";
+import PricingVariantTracker from "@/components/PricingVariantTracker";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -13,8 +17,6 @@ export const metadata: Metadata = {
     "Tarifs Edukora en FCFA : plan Découverte gratuit, Premium Réussite et Premium Plus. Paiement Mobile Money (Orange, MTN, Moov), carte bancaire ou USSD. Sans engagement.",
   alternates: { canonical: "/tarifs" },
 };
-
-export const revalidate = 300;
 
 const faq = [
   {
@@ -55,7 +57,14 @@ const FALLBACK_REUSSITE: PlanRow = {
   sort_order: 1,
 };
 
-export default async function Page() {
+const PREMIUM_TRIMESTRIEL_TITLE = "Premium Réussite Trimestriel";
+
+export default async function Page({ searchParams }: { searchParams?: Promise<{ ab_variant?: string }> }) {
+  const sp = await searchParams;
+  const c = await cookies();
+  let variant: PricingVariant = parsePricingVariant(c.get(AB_PRICING_COOKIE)?.value, "A");
+  if (isPricingAbEnabled() && isValidPricingVariant(sp?.ab_variant)) variant = sp.ab_variant;
+
   let plans: PlanRow[] = [];
   try {
     plans = await getCachedPremiumPlans();
@@ -98,60 +107,11 @@ export default async function Page() {
         )}
 
         <section className="px-4 md:px-8 pb-24">
-          <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
-            <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 border border-outline-variant relative overflow-hidden hover:border-primary/30 transition-all">
-              <div className="mb-8">
-                <h3 className="text-headline-md text-on-surface mb-2">{decouverte.name}</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[32px] font-bold text-primary">{formatPlanPrice(decouverte.price_cents)}</span>
-                  <span className="text-on-surface-variant">{formatPlanInterval(decouverte.interval)}</span>
-                </div>
-                <p className="text-label-sm text-on-surface-variant mt-2">Idéal pour tester la plateforme</p>
-              </div>
-              <ul className="space-y-4 mb-10">
-                {decouverteFeatures.map((f) => (
-                  <li key={f} className="flex items-center gap-3 text-label-sm">
-                    <span className="material-symbols-outlined text-primary text-[20px]">check</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/inscription-1-2-edukora"
-                className="w-full block text-center py-4 rounded-[16px] border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-colors"
-              >
-                <span className="material-symbols-outlined text-[18px] align-middle mr-1">rocket_launch</span>
-                Essayer gratuitement
-              </Link>
-            </div>
-            <div className="bg-primary rounded-[32px] p-8 relative overflow-hidden shadow-2xl transform hover:-translate-y-1 transition-all">
-              <div className="absolute top-0 right-0 bg-secondary-container text-on-secondary-fixed px-6 py-2 rounded-bl-[24px] text-label-xs font-bold uppercase tracking-tighter">
-                Populaire
-              </div>
-              <div className="mb-8">
-                <h3 className="text-headline-md text-white mb-2">{reussite.name}</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[32px] font-bold text-primary-fixed">{formatPlanPrice(reussite.price_cents)}</span>
-                  <span className="text-primary-container">{formatPlanInterval(reussite.interval)}</span>
-                </div>
-                {isRentreePromoActive() && (
-                  <p className="text-tertiary-fixed text-label-xs font-bold mt-1">
-                    -30 % avec le code RENTREE30 au paiement
-                  </p>
-                )}
-                <p className="text-on-primary-container text-label-sm mt-2">L'outil ultime pour le BAC &amp; BEPC</p>
-              </div>
-              <ul className="space-y-4 mb-10">
-                {reussiteFeatures.map((f) => (
-                  <li key={f} className="flex items-center gap-3 text-label-sm text-white">
-                    <span className="material-symbols-outlined text-tertiary-fixed text-[20px]">verified</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <SubscriptionCta />
-            </div>
-          </div>
+          {variant === "B" ? (
+            <PlansGridB decouverte={decouverte} reussite={reussite} />
+          ) : (
+            <PlansGridA decouverte={decouverte} reussite={reussite} />
+          )}
           <p className="text-center text-label-sm text-on-surface-variant mt-8">
             Des questions ? Consulte notre FAQ ci-dessous ou contacte le support.
           </p>
@@ -275,6 +235,182 @@ export default async function Page() {
       </main>
 
       <MarketingFooter />
+      <PricingVariantTracker serverVariant={variant} />
+    </div>
+  );
+}
+
+function PlansGridA({ decouverte, reussite }: { decouverte: PlanRow; reussite: PlanRow }) {
+  const decouverteFeatures = planFeatures(decouverte);
+  const reussiteFeatures = planFeatures(reussite);
+  return (
+    <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
+      <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 border border-outline-variant relative overflow-hidden hover:border-primary/30 transition-all">
+        <div className="mb-8">
+          <h3 className="text-headline-md text-on-surface mb-2">{decouverte.name}</h3>
+          <div className="flex items-baseline gap-1">
+            <span className="text-[32px] font-bold text-primary">{formatPlanPrice(decouverte.price_cents)}</span>
+            <span className="text-on-surface-variant">{formatPlanInterval(decouverte.interval)}</span>
+          </div>
+          <p className="text-label-sm text-on-surface-variant mt-2">Idéal pour tester la plateforme</p>
+        </div>
+        <ul className="space-y-4 mb-10">
+          {decouverteFeatures.map((f) => (
+            <li key={f} className="flex items-center gap-3 text-label-sm">
+              <span className="material-symbols-outlined text-primary text-[20px]">check</span>
+              {f}
+            </li>
+          ))}
+        </ul>
+        <Link
+          href="/inscription-1-2-edukora"
+          className="w-full block text-center py-4 rounded-[16px] border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[18px] align-middle mr-1">rocket_launch</span>
+          Essayer gratuitement
+        </Link>
+      </div>
+      <div className="bg-primary rounded-[32px] p-8 relative overflow-hidden shadow-2xl transform hover:-translate-y-1 transition-all">
+        <div className="absolute top-0 right-0 bg-secondary-container text-on-secondary-fixed px-6 py-2 rounded-bl-[24px] text-label-xs font-bold uppercase tracking-tighter">
+          Populaire
+        </div>
+        <div className="mb-8">
+          <h3 className="text-headline-md text-white mb-2">{reussite.name}</h3>
+          <div className="flex items-baseline gap-1">
+            <span className="text-[32px] font-bold text-primary-fixed">{formatPlanPrice(reussite.price_cents)}</span>
+            <span className="text-primary-container">{formatPlanInterval(reussite.interval)}</span>
+          </div>
+          {isRentreePromoActive() && (
+            <p className="text-tertiary-fixed text-label-xs font-bold mt-1">
+              -30 % avec le code RENTREE30 au paiement
+            </p>
+          )}
+          <p className="text-on-primary-container text-label-sm mt-2">L'outil ultime pour le BAC &amp; BEPC</p>
+        </div>
+        <ul className="space-y-4 mb-10">
+          {reussiteFeatures.map((f) => (
+            <li key={f} className="flex items-center gap-3 text-label-sm text-white">
+              <span className="material-symbols-outlined text-tertiary-fixed text-[20px]">verified</span>
+              {f}
+            </li>
+          ))}
+        </ul>
+        <SubscriptionCta />
+      </div>
+    </div>
+  );
+}
+
+function PlansGridB({ decouverte, reussite }: { decouverte: PlanRow; reussite: PlanRow }) {
+  const decouverteFeatures = planFeatures(decouverte);
+  const reussiteFeatures = planFeatures(reussite);
+  const promoActive = isRentreePromoActive();
+  const promoPrice = Math.round((reussite.price_cents * (100 - RENTREE_PROMO_PERCENT)) / 100);
+  const endDate = new Date(`${RENTREE_PROMO_ENDS_AT}T23:59:59Z`);
+  const endLabel = endDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+  const trimaestriel = (
+    <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 border border-outline-variant relative overflow-hidden hover:border-primary/30 transition-all text-center">
+      <div className="absolute top-0 right-0 bg-tertiary-container text-on-tertiary-fixed px-6 py-2 rounded-bl-[24px] text-label-xs font-bold uppercase tracking-tighter">
+        Sans engagement
+      </div>
+      <h3 className="text-headline-md text-on-surface mb-2">{PREMIUM_TRIMESTRIEL_TITLE}</h3>
+      <div className="flex items-baseline justify-center gap-1">
+        <span className="text-[32px] font-bold text-primary">14 700 FCFA</span>
+        <span className="text-on-surface-variant">/trimestre</span>
+      </div>
+      <p className="text-label-sm text-on-surface-variant mt-2">4 900 FCFA/mois, facturé tous les 3 mois</p>
+      <ul className="space-y-4 mt-8 mb-10 text-left max-w-xs mx-auto">
+        <li key="eng" className="flex items-center gap-3 text-label-sm">
+          <span className="material-symbols-outlined text-primary text-[20px]">check</span>
+          Tous les avantages de Réussite
+        </li>
+        <li key="sim" className="flex items-center gap-3 text-label-sm">
+          <span className="material-symbols-outlined text-primary text-[20px]">check</span>
+          Simulateur complet + corrections
+        </li>
+        <li key="prio" className="flex items-center gap-3 text-label-sm">
+          <span className="material-symbols-outlined text-primary text-[20px]">check</span>
+          Support prioritaire
+        </li>
+      </ul>
+      <SubscriptionCta label="Choisir le trimestriel" cta="tarifs" icon="calendar_month" />
+    </div>
+  );
+  return (
+    <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 items-stretch">
+      <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 border border-outline-variant relative overflow-hidden hover:border-primary/30 transition-all">
+        <div className="mb-8">
+          <h3 className="text-headline-md text-on-surface mb-2">{decouverte.name}</h3>
+          <div className="flex items-baseline gap-1">
+            <span className="text-[32px] font-bold text-primary">{formatPlanPrice(decouverte.price_cents)}</span>
+            <span className="text-on-surface-variant">{formatPlanInterval(decouverte.interval)}</span>
+          </div>
+          <p className="text-label-sm text-on-surface-variant mt-2">Idéal pour tester la plateforme</p>
+        </div>
+        <ul className="space-y-4 mb-10">
+          {decouverteFeatures.map((f) => (
+            <li key={f} className="flex items-center gap-3 text-label-sm">
+              <span className="material-symbols-outlined text-primary text-[20px]">check</span>
+              {f}
+            </li>
+          ))}
+        </ul>
+        <Link
+          href="/inscription-1-2-edukora"
+          className="w-full block text-center py-4 rounded-[16px] border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[18px] align-middle mr-1">rocket_launch</span>
+          Essayer gratuitement
+        </Link>
+      </div>
+
+      <div className="bg-primary rounded-[32px] p-8 relative overflow-hidden shadow-2xl transform hover:-translate-y-1 transition-all">
+        <div className="absolute top-0 right-0 bg-secondary-container text-on-secondary-fixed px-6 py-2 rounded-bl-[24px] text-label-xs font-bold uppercase tracking-tighter">
+          Populaire
+        </div>
+        <div className="mb-8">
+          <h3 className="text-headline-md text-white mb-2">{reussite.name}</h3>
+          <div className="flex items-baseline gap-2 flex-wrap">
+            {promoActive ? (
+              <>
+                <span className="text-[16px] text-primary-container line-through">{formatPlanPrice(reussite.price_cents)}</span>
+                <span className="text-[40px] font-extrabold text-tertiary-fixed">{promoPrice.toLocaleString("fr-FR")} FCFA</span>
+                <span className="text-primary-container">/mois</span>
+              </>
+            ) : (
+              <>
+                <span className="text-[32px] font-bold text-primary-fixed">{formatPlanPrice(reussite.price_cents)}</span>
+                <span className="text-primary-container">{formatPlanInterval(reussite.interval)}</span>
+              </>
+            )}
+          </div>
+          {promoActive && (
+            <span className="inline-block mt-3 bg-tertiary-fixed text-on-tertiary-fixed text-label-xs font-extrabold px-3 py-1 rounded-[999px]">
+              OFFRE RENTRÉE -{RENTREE_PROMO_PERCENT}% — jusqu'au {endLabel}
+            </span>
+          )}
+          <p className="text-on-primary-container text-label-sm mt-2">
+            {promoActive ? (
+              <>
+                {promoPrice.toLocaleString("fr-FR")} FCFA/mois avec le code <b>{RENTREE_PROMO_CODE}</b> au paiement
+              </>
+            ) : (
+              "L'outil ultime pour le BAC & BEPC"
+            )}
+          </p>
+        </div>
+        <ul className="space-y-4 mb-10">
+          {reussiteFeatures.map((f) => (
+            <li key={f} className="flex items-center gap-3 text-label-sm text-white">
+              <span className="material-symbols-outlined text-tertiary-fixed text-[20px]">verified</span>
+              {f}
+            </li>
+          ))}
+        </ul>
+        <SubscriptionCta label={promoActive ? `Profiter de -${RENTREE_PROMO_PERCENT}% maintenant` : "S'abonner maintenant"} cta="tarifs" icon="local_fire_department" />
+      </div>
+
+      {trimaestriel}
     </div>
   );
 }

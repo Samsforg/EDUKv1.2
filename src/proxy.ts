@@ -1,4 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  AB_PRICING_COOKIE,
+  AB_PRICING_MAX_AGE,
+  assignPricingVariant,
+  isPricingAbEnabled,
+  isValidPricingVariant,
+} from "@/lib/ab-test";
 
 const PUBLIC_ROUTES = [
   "/",
@@ -79,6 +86,18 @@ export function proxy(req: NextRequest) {
 
   // Public routes — always allowed
   if (PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/"))) {
+    if (pathname === "/tarifs" && isPricingAbEnabled()) {
+      const forced = req.nextUrl.searchParams.get("ab_variant");
+      let variant = forced ?? req.cookies.get(AB_PRICING_COOKIE)?.value ?? null;
+      if (!isValidPricingVariant(variant)) variant = assignPricingVariant();
+      const res = NextResponse.next();
+      res.cookies.set(AB_PRICING_COOKIE, variant, {
+        path: "/",
+        maxAge: AB_PRICING_MAX_AGE,
+        sameSite: "lax",
+      });
+      return res;
+    }
     return NextResponse.next();
   }
 

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { EVENTS, trackEvent } from "@/lib/analytics";
+import { getClientPricingVariant } from "@/lib/ab-test";
 
 export default function SubscriptionCta({
   href = "/plans-d-abonnement-edukora-1",
@@ -19,7 +20,7 @@ export default function SubscriptionCta({
   return (
     <Link
       href={href}
-      onClick={() => trackEvent(EVENTS.subscriptionStarted, { cta })}
+      onClick={() => trackEvent(EVENTS.subscriptionStarted, { cta, ab_variant: getClientPricingVariant() ?? "unknown" })}
       className={
         className ??
         "w-full block text-center py-4 rounded-[16px] bg-secondary-container text-on-secondary-fixed font-bold hover:shadow-lg transition-all active:scale-95"

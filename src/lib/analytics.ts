@@ -41,6 +41,7 @@ export const EVENTS = {
   ficheUnsaved: "fiche_unsaved",
   referralCodeCopied: "referral_code_copied",
   referralLinkShared: "referral_link_shared",
+  pricingVariantViewed: "pricing_variant_viewed",
 } as const;
 
 export type EdukoraEventName = (typeof EVENTS)[keyof typeof EVENTS];
