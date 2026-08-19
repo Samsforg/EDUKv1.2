@@ -60,6 +60,9 @@ export async function getConversionStats(days = 7): Promise<ConversionStats> {
     "SELECT COALESCE(SUM(price_cents),0) AS v FROM subscriptions WHERE status='active'",
   );
 
+  const avgRevenueToday =
+    subsToday > 0 ? Math.round(revenueToday / subsToday) : 0;
+
   const plans = await query<{ name: string; count: number; revenue_cents: number }>(
     `SELECT COALESCE(p.name, 'Premium') AS name, COUNT(*) AS count, COALESCE(SUM(s.price_cents),0) AS revenue_cents
      FROM subscriptions s LEFT JOIN subscription_plans p ON p.id = s.plan_id
@@ -94,7 +97,7 @@ export async function getConversionStats(days = 7): Promise<ConversionStats> {
     revenue_today_cents: revenueToday,
     revenue_week_cents: revenueWeek,
     revenue_month_cents: revenueMonth,
-    avg_revenue_today_cents: 0,
+    avg_revenue_today_cents: avgRevenueToday,
     cancelled_today: cancelledToday,
     mrr_cents: mrr,
     conversion_rate: conversionRate,
@@ -117,6 +120,7 @@ export function buildWhatsappReport(s: ConversionStats): string {
     `✅ Nouveaux abonnements : ${s.subscriptions_today}`,
     `❌ Annulations : ${s.cancelled_today}`,
     `💰 Revenu aujourd'hui : ${formatFcfa(s.revenue_today_cents)}`,
+    `🧾 Panier moyen aujourd'hui : ${formatFcfa(s.avg_revenue_today_cents)}`,
     `📆 Revenu 7j : ${formatFcfa(s.revenue_week_cents)}`,
     `🗓️ Revenu 30j : ${formatFcfa(s.revenue_month_cents)}`,
     `💳 MRR (abonnements actifs) : ${formatFcfa(s.mrr_cents)}`,
@@ -141,6 +145,7 @@ export function buildEmailReport(s: ConversionStats): { subject: string; html: s
     ["Nouveaux abonnements (jour)", s.subscriptions_today],
     ["Annulations (jour)", s.cancelled_today],
     ["Revenu aujourd'hui", money(s.revenue_today_cents)],
+    ["Panier moyen (jour)", money(s.avg_revenue_today_cents)],
     ["Revenu 7 jours", money(s.revenue_week_cents)],
     ["Revenu 30 jours", money(s.revenue_month_cents)],
     ["MRR (abonnements actifs)", money(s.mrr_cents)],

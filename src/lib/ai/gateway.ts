@@ -6,6 +6,8 @@ import { OpenAIProvider } from "./providers/openai";
 import { logAI } from "./logger";
 import type { AICompletion, AIGenerateOptions, AIProvider } from "./types";
 
+const MAX_RESPONSE_CHARS = 2000;
+
 const GATEWAY_CHAIN: (() => AIProvider)[] = [
   () => new GroqProvider(),
   () => new HuggingFaceProvider(),
@@ -66,6 +68,9 @@ export async function generateWithGateway(
 
     try {
       const completion = await provider.generateResponse(options);
+      if (completion.text.length > MAX_RESPONSE_CHARS) {
+        completion.text = completion.text.slice(0, MAX_RESPONSE_CHARS).trimEnd();
+      }
       logAI({
         provider: provider.name,
         model: completion.model,
