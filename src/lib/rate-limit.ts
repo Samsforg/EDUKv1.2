@@ -20,6 +20,9 @@ const PRESETS: Record<string, RateLimitConfig> = {
 let cleanupCounter = 0;
 
 export async function rateLimit(key: string, preset?: string): Promise<{ allowed: boolean; remaining: number; resetAt: number } >{
+  if (process.env.RATE_LIMIT_DISABLED === "1") {
+    return { allowed: true, remaining: 999, resetAt: 0 };
+  }
   const config = preset ? PRESETS[preset] ?? PRESETS.api_general : PRESETS.api_general;
   const now = Date.now();
 
