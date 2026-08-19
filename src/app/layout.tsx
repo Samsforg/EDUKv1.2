@@ -64,7 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className="light">
       <head>
-        <link rel="preload" as="font" type="font/woff2" href="/fonts/MaterialSymbols.woff2" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/MaterialSymbols-subset.woff2" crossOrigin="anonymous" />
         <link rel="preload" as="font" type="font/woff2" href="/fonts/HankenGrotesk-latin.woff2" crossOrigin="anonymous" />
         <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-latin.woff2" crossOrigin="anonymous" />
         <script

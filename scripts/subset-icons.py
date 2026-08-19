@@ -41,34 +41,50 @@ ALIASES = {
 }
 
 missing = []
-needed = set()
+keep = set()
 for i in icons:
     key = spell_digits(ALIASES.get(i, i))
     if key not in name2target:
         missing.append(i)
     else:
-        needed.add(name2target[key])
-        needed.update(components_by_key[key])
+        keep.add(name2target[key])
+        keep.update(components_by_key[key])
 
 if missing:
     print("MISSING ICONS (ignored): %s" % ", ".join(missing))
-needed.add(".notdef")
+keep.add(".notdef")
 
-from fontTools import subset
+# Fermeture recursive des glyphes composites (composants de composants).
+# NB: on ne RETIRE pas les glyphes superflus avec fontTools.subset : Chrome
+# (decoder OTS) rejette tous les subsets produits par fontTools sur cette police
+# (NetworkError, quelle que soit la config : tables var, GSUB, getGlyphs...).
+# -> on garde la structure complete et on VIDE les glyphes inutiles : le fichier
+#    passe de 390 Ko a ~135 Ko et OTS l'accepte.
+from fontTools.ttLib.tables._g_l_y_f import Glyph
 
-options = subset.Options()
-options.output_file = OUT
-options.flavor = "woff2"
-options.layout_features = ["rlig", "rclt"]
-options.name_IDs = ["*"]
-options.drop_tables = []
-options.ignore_missing_glyphs = True
-options.hinting = False
+glyf = f["glyf"]
+gorder = f.getGlyphOrder()
+changed = True
+while changed:
+    changed = False
+    for gn in list(keep):
+        g = glyf[gn]
+        if g.isComposite():
+            for c in g.components:
+                if c.glyphName not in keep:
+                    keep.add(c.glyphName)
+                    changed = True
 
-subsetter = subset.Subsetter(options)
-ft = TTFont(FONT)
-subsetter.populate(unicodes=[], glyphs=needed)
-subsetter.subset(ft)
+empty = Glyph()
+emptied = 0
+names = set(gorder)
+for gn in gorder:
+    if gn not in keep:
+        if glyf[gn] != empty:
+            glyf[gn] = empty
+        emptied += 1
+
+ft = f
 ft.flavor = "woff2"
 ft.save(OUT)
-print("saved", OUT, os.path.getsize(OUT), "bytes")
+print("saved", OUT, os.path.getsize(OUT), "bytes", "(kept %d, emptied %d)" % (len(keep), emptied))
