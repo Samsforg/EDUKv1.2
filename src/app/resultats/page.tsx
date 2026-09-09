@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Résultats et réussites",
   description:
-    "95% de réussite au BAC et au BEPC avec Edukora. Plus de 50 000 élèves, 500 épreuves types et 2 000 fiches de cours certifiées en Côte d'Ivoire.",
+    "Découvrez les résultats de la communauté Edukora en Côte d'Ivoire : fiches de révision, quiz corrigés et progression des élèves.",
   alternates: { canonical: "/resultats" },
 };
 
@@ -21,30 +21,6 @@ function formatStat(n: number, plus = true): string {
       : n.toLocaleString("fr-FR");
   return plus ? `${formatted}+` : formatted;
 }
-
-const testimonials = [
-  {
-    img: "/images/landing-7.webp",
-    name: "Mariam K.",
-    role: "Admise au BAC D (Mention Bien)",
-    quote:
-      "Kora m'a aidé à comprendre les intégrales en une soirée alors que je luttais depuis des semaines. Sans Edukora, je n'aurais jamais eu cette mention !",
-  },
-  {
-    img: "/images/landing-8.webp",
-    name: "Jean-Philippe A.",
-    role: "Admis au BEPC",
-    quote:
-      "Les simulateurs d'examen sont incroyables. Le jour J, j'avais l'impression de faire un simple exercice sur l'appli. Je n'avais aucun stress.",
-  },
-  {
-    img: "/images/landing-9.webp",
-    name: "Awa D.",
-    role: "Parent d'élève (Abidjan)",
-    quote:
-      "En tant que parent, je peux suivre les progrès de mon fils sur mon téléphone. C'est l'investissement le plus rentable pour son avenir.",
-  },
-];
 
 export default async function Page() {
   const stats = await getPlatformStats();
@@ -97,29 +73,37 @@ export default async function Page() {
         <section className="py-24 px-4 md:px-8 bg-surface-container-low">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-[32px] md:text-[40px] font-extrabold text-primary mb-4">Ils ont réussi avec Edukora</h2>
-              <p className="text-body-md text-on-surface-variant">Parce que leur succès est notre plus grande fierté.</p>
+              <h2 className="text-[32px] md:text-[40px] font-extrabold text-primary mb-4">Ce que propose Edukora</h2>
+              <p className="text-body-md text-on-surface-variant">Des outils conçus pour accompagner les élèves du BAC et du BEPC.</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
-              {testimonials.map((t) => (
-                <div key={t.name} className="bg-white rounded-[24px] p-8 border border-outline-variant/40 shadow-sm">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-14 h-14 rounded-[999px] overflow-hidden bg-surface-container">
-                      <img  className="w-full h-full object-cover" src={t.img} alt={t.name} loading="lazy" />
-                    </div>
-                    <div>
-                      <h4 className="text-label-sm font-bold text-on-surface">{t.name}</h4>
-                      <p className="text-label-xs text-on-surface-variant">{t.role}</p>
-                    </div>
-                  </div>
-                  <p className="text-body-md italic text-on-surface-variant leading-relaxed">"{t.quote}"</p>
-                  <div className="flex gap-1 mt-6 text-secondary-container">
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <span key={i} className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    ))}
-                  </div>
+              <div className="bg-white rounded-[24px] p-8 border border-outline-variant/40 shadow-sm">
+                <div className="w-14 h-14 rounded-[999px] bg-primary-container flex items-center justify-center mb-6">
+                  <span className="material-symbols-outlined text-primary text-2xl">school</span>
                 </div>
-              ))}
+                <h4 className="text-label-sm font-bold text-on-surface mb-2">Programme officiel</h4>
+                <p className="text-body-md text-on-surface-variant leading-relaxed">
+                  Les fiches Edukora sont alignées sur les programmes officiels du BAC et du BEPC en Côte d&apos;Ivoire.
+                </p>
+              </div>
+              <div className="bg-white rounded-[24px] p-8 border border-outline-variant/40 shadow-sm">
+                <div className="w-14 h-14 rounded-[999px] bg-secondary-container flex items-center justify-center mb-6">
+                  <span className="material-symbols-outlined text-on-secondary-fixed text-2xl">smart_toy</span>
+                </div>
+                <h4 className="text-label-sm font-bold text-on-surface mb-2">Tuteur IA Kora</h4>
+                <p className="text-body-md text-on-surface-variant leading-relaxed">
+                  Un assistant intelligent disponible pour répondre à vos questions et vous accompagner dans vos révisions.
+                </p>
+              </div>
+              <div className="bg-white rounded-[24px] p-8 border border-outline-variant/40 shadow-sm">
+                <div className="w-14 h-14 rounded-[999px] bg-tertiary-container flex items-center justify-center mb-6">
+                  <span className="material-symbols-outlined text-on-tertiary-container text-2xl">timer</span>
+                </div>
+                <h4 className="text-label-sm font-bold text-on-surface mb-2">Simulateur d&apos;examen</h4>
+                <p className="text-body-md text-on-surface-variant leading-relaxed">
+                  Entraînez-vous en conditions réelles avec des épreuves chronométrées et des corrections détaillées.
+                </p>
+              </div>
             </div>
             <div className="text-center mt-14">
               <Link
@@ -127,7 +111,7 @@ export default async function Page() {
                 className="inline-flex bg-secondary-container text-on-secondary-fixed text-body-md font-bold px-10 py-5 rounded-[20px] items-center justify-center gap-3 active:scale-95 transition-transform shadow-xl"
               >
                 <span className="material-symbols-outlined">emoji_events</span>
-                Devenir le prochain lauréat
+                Découvrir Edukora
               </Link>
             </div>
           </div>
@@ -139,7 +123,7 @@ export default async function Page() {
             <div className="relative z-10">
               <h2 className="text-[28px] md:text-[40px] font-extrabold mb-6">Ton succès commence aujourd'hui</h2>
               <p className="text-body-lg text-on-primary-container mb-10 max-w-2xl mx-auto">
-                Rejoins les {stats.students.toLocaleString("fr-FR")} élèves qui révisent déjà avec Edukora.
+                Rejoins la communauté Edukora et commence à réviser gratuitement dès maintenant.
               </p>
               <Link
                 href="/inscription-1-2-edukora"

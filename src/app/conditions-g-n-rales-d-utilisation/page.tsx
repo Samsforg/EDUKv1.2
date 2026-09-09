@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Conditions générales d'utilisation",
@@ -157,7 +158,7 @@ const sections: { title: string; body: string[]; list?: string[]; extra?: string
   {
     title: "Suppression du compte",
     body: [
-      "L'utilisateur peut demander la suppression de son compte en contactant : support@edukora.net",
+      "L'utilisateur peut demander la suppression de son compte en contactant : contact@edukora.net",
       "La suppression peut être soumise aux obligations légales de conservation applicables.",
     ],
   },
@@ -187,7 +188,7 @@ const sections: { title: string; body: string[]; list?: string[]; extra?: string
     title: "Contact",
     body: [
       "Pour toute question concernant les présentes CGU :",
-      "Edukora - Soma Samaké FORGO — E-mail : contact@edukora.net — Support : support@edukora.net",
+      "Edukora - Soma Samaké FORGO — E-mail : contact@edukora.net",
       "Téléphone : +225 07 09 14 15 45 — Adresse : 09 BP 989 Abidjan 09, Côte d'Ivoire",
     ],
   },
@@ -199,9 +200,9 @@ export default function Page() {
 
 <header className="w-full sticky top-0 bg-surface dark:bg-background z-50 flex items-center justify-between px-4 py-4 border-b border-outline-variant dark:border-outline">
 <div className="flex items-center gap-4">
-<a href="/" aria-label="Retour à l'accueil" className="active:scale-95 duration-150 p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors flex items-center justify-center text-primary dark:text-primary-fixed">
+<Link href="/" aria-label="Retour à l'accueil" className="active:scale-95 duration-150 p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors flex items-center justify-center text-primary dark:text-primary-fixed">
 <span className="material-symbols-outlined">arrow_back</span>
-</a>
+</Link>
 <h1 className="font-headline text-headline-md font-semibold text-primary dark:text-primary-fixed">Informations Légales</h1>
 </div>
 <div className="hidden md:flex gap-6 items-center">

@@ -9,7 +9,7 @@ function hasConsentCookie(): boolean {
   return document.cookie.split(";").some((c) => c.trim().startsWith(CONSENT_COOKIE + "="));
 }
 
-function saveConsent(prefs: { essential: boolean; analytics: boolean; ia: boolean }) {
+function saveConsent(prefs: { essential: boolean; analytics: boolean; marketing?: boolean; ia: boolean }) {
   document.cookie =
     CONSENT_COOKIE + "=" + encodeURIComponent(JSON.stringify(prefs)) + ";path=/;max-age=15552000;samesite=lax";
   try {
@@ -32,7 +32,7 @@ export default function ConsentBanner() {
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[60] p-3 md:p-4 pointer-events-none">
-      <div className="mx-auto max-w-2xl bg-surface text-on-surface rounded-2xl border border-outline-variant shadow-lg p-4 md:p-5 pointer-events-auto">
+      <div role="region" aria-label="Bandeau de consentement aux cookies" className="mx-auto max-w-2xl bg-surface text-on-surface rounded-2xl border border-outline-variant shadow-lg p-4 md:p-5 pointer-events-auto">
         <div className="flex items-start gap-3 mb-2">
           <span className="material-symbols-outlined text-primary mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>
             cookie
@@ -42,19 +42,28 @@ export default function ConsentBanner() {
             <p className="text-sm text-on-surface-variant leading-relaxed">
               Edukora utilise des cookies essentiels pour la sécurité et votre
               progression. Nous vous demandons votre accord avant d'activer les
-              cookies analytiques qui nous aident à améliorer l'expérience.
+              cookies analytiques et publicitaires qui nous aident à améliorer l&apos;expérience et à financer la plateforme.
             </p>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 mt-3">
           <button
             onClick={() => {
-              saveConsent({ essential: true, analytics: true, ia: true });
+              saveConsent({ essential: true, analytics: true, marketing: true, ia: true });
               setVisible(false);
             }}
             className="flex-1 bg-primary hover:bg-primary/90 text-on-primary font-bold py-3 px-4 rounded-xl transition-all duration-200 active:scale-95"
           >
             Tout accepter
+          </button>
+          <button
+            onClick={() => {
+              saveConsent({ essential: true, analytics: false, marketing: false, ia: false });
+              setVisible(false);
+            }}
+            className="flex-1 bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold py-3 px-4 rounded-xl border border-outline-variant transition-all duration-200 active:scale-95"
+          >
+            Tout refuser
           </button>
           <a
             href="/pr-f-rences-de-cookies-et-donn-es"

@@ -10,6 +10,7 @@ async function GETHandler() {
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
   const classes = await query<{
+    id: number;
     name: string;
     invite_code: string;
     subject_name: string | null;
@@ -20,7 +21,7 @@ async function GETHandler() {
     teacher_last: string;
     joined_at: string;
   }>(
-    `SELECT c.name, c.invite_code,
+    `SELECT c.id, c.name, c.invite_code,
             s.name AS subject_name, s.icon, s.color, g.name AS grade_name,
             t.first_name AS teacher_first, t.last_name AS teacher_last,
             cs.joined_at

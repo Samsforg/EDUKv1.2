@@ -36,7 +36,9 @@ async function GETHandler() {
     if (sub) userSubscription = sub;
   }
   
-  return NextResponse.json({ grades, subjects, userGrade, userSubscription });
+  const res = NextResponse.json({ grades, subjects, userGrade, userSubscription });
+  res.headers.set("Cache-Control", "private, max-age=30, stale-while-revalidate=300");
+  return res;
 }
 
 export const GET = guardApi("GET /api/cours", GETHandler);

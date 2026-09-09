@@ -5,6 +5,8 @@ import { getCurrentUser, applyActivity, addXp, notify } from "@/lib/session";
 import { refreshBadges } from "@/lib/badges";
 import { endSession } from "@/lib/proctoring";
 import { creditLigueChallenges } from "@/lib/ligue";
+import { getSimulateurQuota } from "@/lib/quotas";
+import { getPremiumPlans } from "@/lib/plans";
 
 async function POSTHandler(
   req: NextRequest,
@@ -24,6 +26,23 @@ async function POSTHandler(
     Number(id),
   );
   if (!paper) return NextResponse.json({ error: "Sujet introuvable" }, { status: 404 });
+
+  const simQuota = await getSimulateurQuota(user.id);
+  if (!simQuota.isPremium && simQuota.limit !== null && simQuota.used >= simQuota.limit) {
+    const plans = await getPremiumPlans().catch(() => []);
+    const reussite = plans.find((p) => p.price_cents > 0 && p.interval === "month");
+    return NextResponse.json(
+      {
+        error: `Limite mensuelle atteinte : ${simQuota.limit} sujet${simQuota.limit > 1 ? "s" : ""} d'examen par mois sur le plan Découverte. Passez au plan Réussite pour un accès illimité !`,
+        code: "simulateur_quota_exceeded",
+        quota: simQuota,
+        plan: reussite
+          ? { id: reussite.id, name: reussite.name, price_cents: reussite.price_cents, interval: reussite.interval }
+          : null,
+      },
+      { status: 403 },
+    );
+  }
 
   const questions = await query<{ id: number; answer_index: number; points: number; explanation: string | null }>(
     "SELECT id, answer_index, points, explanation FROM questions WHERE paper_id = ? ORDER BY position",

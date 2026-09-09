@@ -2,8 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import ShareResultButton from "@/components/ShareResultButton";
+import dynamic from "next/dynamic";
 import { EVENTS, trackEvent } from "@/lib/analytics";
+
+const ShareResultButton = dynamic(() => import("@/components/ShareResultButton"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-12 flex items-center justify-center">
+      <span className="material-symbols-outlined text-primary animate-spin">progress_activity</span>
+    </div>
+  ),
+});
 
 interface Result {
   score: number;
@@ -20,6 +29,8 @@ export default function QuizResultPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [result, setResult] = useState<Result | null>(null);
+  const [aiData, setAiData] = useState<{ questionId: number; explanation: string; videoUrl: string | null; tip: string | null }[] | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     const raw = sessionStorage.getItem(`edukora-quiz-result-${id}`);
@@ -34,6 +45,19 @@ export default function QuizResultPage() {
     }
     setResult(data);
     trackEvent(EVENTS.quizCompleted, { quiz_id: id, score: data.score, max: data.max, pct: data.pct });
+    // fetch AI correction si au moins une erreur
+    const hasError = (data.details as { correct: boolean }[]).some((d) => !d.correct);
+    if (hasError) {
+      setAiLoading(true);
+      const answers = Object.values((data.userAnswers ?? {}) as Record<string, number>);
+      // fallback: reconstruire tableau ordonné via questions
+      const ordered = (data.questions as { id: number }[]).map((q) => (data.userAnswers?.[q.id] ?? -1));
+      fetch(`/api/quiz/${id}/ai-correct`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ answers: ordered }) })
+        .then((r) => r.json())
+        .then((j) => setAiData(j.corrections ?? null))
+        .catch(() => {})
+        .finally(() => setAiLoading(false));
+    }
   }, [router, id]);
 
   if (!result) {
@@ -78,6 +102,7 @@ export default function QuizResultPage() {
         </div>
 
         <h2 className="font-title-md text-title-md text-on-surface mb-4">Corrigé détaillé</h2>
+        {aiLoading && <p className="font-label-sm text-primary flex items-center gap-2 mb-4"><span className="material-symbols-outlined animate-spin text-sm">progress_activity</span> Correction IA en cours...</p>}
         <div className="space-y-4">
           {result.questions.map((q, qi) => {
             const d = detailsById[q.id];
@@ -126,6 +151,21 @@ export default function QuizResultPage() {
                         {d.explanation}
                       </p>
                     )}
+                    {aiData && (() => { const ai = aiData.find((x) => x.questionId === q.id); if (!ai || d?.correct) return null; return (
+                      <div className="mt-3 space-y-2">
+                        <div className="px-3 py-2.5 rounded-lg bg-primary/5 border border-primary/20 text-body-sm">
+                          <p className="font-semibold text-primary flex items-center gap-1"><span className="material-symbols-outlined text-sm">smart_toy</span> Correction IA</p>
+                          <p className="text-on-surface-variant mt-1">{ai.explanation}</p>
+                          {ai.tip && <p className="text-label-xs text-primary mt-1">{ai.tip}</p>}
+                        </div>
+                        {ai.videoUrl && (
+                          <div className="rounded-lg overflow-hidden border border-outline-variant bg-black">
+                            <video src={ai.videoUrl} controls className="w-full max-h-48" poster="/images/og-cover.png" />
+                            <p className="font-label-xs text-on-surface-variant px-2 py-1 bg-surface">Vidéo courte associée — révise le point clé en 2 min</p>
+                          </div>
+                        )}
+                      </div>
+                    );})()}
                   </div>
                 </div>
               </div>

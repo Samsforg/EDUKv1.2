@@ -107,8 +107,8 @@ export async function maybeSendDailyReminder(userId: number, sendPush = false): 
   if (sendPush) {
     try {
       await sendPushToUser(userId, { title: message.title, body: message.body, tag: "rappel-revision" });
-    } catch (err: any) {
-      console.warn(`[reminders] push échoué (user ${userId}):`, err?.message ?? err);
+    } catch (err: unknown) {
+      console.warn(`[reminders] push échoué (user ${userId}):`, err instanceof Error ? err.message : err);
     }
   }
 

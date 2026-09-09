@@ -3,12 +3,12 @@ import { validate, LoginSchema, RegisterSchema, QuizSubmitSchema, ForumPostSchem
 describe("validation.ts", () => {
   describe("LoginSchema", () => {
     it("should accept valid login", () => {
-      const v = validate(LoginSchema, { identifier: "test@test.ci", password: "1234" });
+      const v = validate(LoginSchema, { identifier: "test@test.ci", password: "12345678" });
       expect(v.ok).toBe(true);
     });
 
     it("should reject missing identifier", () => {
-      const v = validate(LoginSchema, { password: "1234" });
+      const v = validate(LoginSchema, { password: "12345678" });
       expect(v.ok).toBe(false);
     });
 
@@ -24,7 +24,7 @@ describe("validation.ts", () => {
         first_name: "Aya",
         last_name: "Traore",
         email: "aya@test.ci",
-        password: "123456",
+        password: "12345678",
       });
       expect(v.ok).toBe(true);
     });
@@ -34,7 +34,7 @@ describe("validation.ts", () => {
         first_name: "Aya",
         last_name: "Traore",
         phone: "0707070707",
-        password: "123456",
+        password: "12345678",
       });
       expect(v.ok).toBe(true);
     });
@@ -43,7 +43,7 @@ describe("validation.ts", () => {
       const v = validate(RegisterSchema, {
         first_name: "Aya",
         last_name: "Traore",
-        password: "123456",
+        password: "12345678",
       });
       expect(v.ok).toBe(false);
     });

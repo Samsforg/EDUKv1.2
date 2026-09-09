@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
@@ -286,9 +287,9 @@ export default function Page() {
 <header className="w-full sticky top-0 bg-surface dark:bg-background z-50 border-b border-outline-variant dark:border-outline glass-header">
 <div className="flex items-center justify-between px-4 py-2 w-full max-w-5xl mx-auto">
 <div className="flex items-center gap-4">
-<a href="/" aria-label="Retour à l'accueil" className="p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors active:scale-95 duration-150 flex items-center justify-center">
+<Link href="/" aria-label="Retour à l'accueil" className="p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors active:scale-95 duration-150 flex items-center justify-center">
 <span className="material-symbols-outlined text-primary dark:text-primary-fixed" data-icon="arrow_back">arrow_back</span>
-</a>
+</Link>
 <h1 className="font-headline text-headline-md font-semibold text-primary dark:text-primary-fixed">Informations Légales</h1>
 </div>
 <div className="hidden md:block">

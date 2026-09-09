@@ -47,8 +47,8 @@ async function POSTHandler(req: NextRequest) {
   let token: string;
   try {
     token = await createSession(user.id);
-  } catch (err: any) {
-    console.error("[login] création de session impossible:", err.message);
+  } catch (err: unknown) {
+    console.error("[login] création de session impossible:", err instanceof Error ? err.message : err);
     return NextResponse.json(
       { error: "Configuration serveur incomplète (SESSION_SECRET). Contactez l'administrateur." },
       { status: 503 },

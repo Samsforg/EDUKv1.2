@@ -69,6 +69,7 @@ export const BADGE_DEFS: BadgeDef[] = [
   { code: "ligue_expert", name: "Perfectionniste", icon: "workspace_premium", category: "Quiz", goal: 3, description: "Réussir 3 quiz à 100 % dans ta ligue", hint: "Enchaîne 3 quiz parfaits" },
   { code: "ligue_mentor", name: "Mentor de la Ligue", icon: "groups", category: "Communauté", goal: 5, description: "Aider 5 étudiants dans le forum", hint: "Réponds à 5 questions de camarades" },
   { code: "ligue_master", name: "Maître de l'Analyse", icon: "calculate", category: "Quiz", goal: 5, description: "Réussir 5 quiz parfaits en Ligue Or", hint: "Enchaîne 5 quiz sans faute" },
+  // Matières — badges dynamiques générés via getSubjectBadges()
 ];
 
 export interface BadgeContext {
@@ -156,8 +157,18 @@ function measure(code: string, ctx: BadgeContext): number {
   }
 }
 
+export async function getSubjectBadges(): Promise<BadgeDef[]> {
+  const subjects = await query<{ code: string; name: string; icon: string }>("SELECT code, name, icon FROM subjects ORDER BY name");
+  return subjects.flatMap((s) => [
+    { code: `mat_${s.code}_5`, name: `${s.name} · Curieux`, icon: s.icon, category: "Cours" as BadgeCategory, goal: 5, description: `Terminer 5 quiz de ${s.name}`, hint: `Fais 5 quiz de ${s.name}` },
+    { code: `mat_${s.code}_10`, name: `${s.name} · Expert`, icon: s.icon, category: "Cours" as BadgeCategory, goal: 10, description: `Terminer 10 quiz de ${s.name}`, hint: `Fais 10 quiz de ${s.name}` },
+    { code: `mat_${s.code}_perfect`, name: `${s.name} · Sans faute`, icon: "verified", category: "Quiz" as BadgeCategory, goal: 1, description: `100% à un quiz de ${s.name}`, hint: `Sans faute en ${s.name}` },
+  ]);
+}
+
 export async function ensureBadges() {
-  for (const def of BADGE_DEFS) {
+  const allDefs = [...BADGE_DEFS, ...(await getSubjectBadges())];
+  for (const def of allDefs) {
     const existing = await queryOne<{ id: number }>("SELECT id FROM badges WHERE code = ?", def.code);
     if (!existing) {
       await run("INSERT INTO badges (code, name, icon, description) VALUES (?, ?, ?, ?)", def.code, def.name, def.icon, def.description);
@@ -173,8 +184,9 @@ export async function computeBadgeProgress(userId: number): Promise<BadgeProgres
     userId,
   );
   for (const e of earned) earnedMap.set(e.code, e.earned_at);
+  const allDefs = [...BADGE_DEFS, ...(await getSubjectBadges())];
 
-  return BADGE_DEFS.map((def) => {
+  return allDefs.map((def) => {
     const m = measure(def.code, ctx);
     const progress = Math.min(100, Math.round((m / def.goal) * 100));
     return { ...def, earned_at: earnedMap.get(def.code) ?? null, measure: m, progress };
@@ -183,9 +195,36 @@ export async function computeBadgeProgress(userId: number): Promise<BadgeProgres
 
 export async function refreshBadges(userId: number): Promise<string[] >{
   const ctx = await computeContext(userId);
+  const allDefs = [...BADGE_DEFS, ...(await getSubjectBadges())];
   const newly: string[] = [];
-  for (const def of BADGE_DEFS) {
+  for (const def of allDefs) {
     if (measure(def.code, ctx) < def.goal) continue;
+    // pour badges matière dynamiques, mesure nécessite comptage par matière
+    if (def.code.startsWith("mat_")) {
+      const parts = def.code.split("_");
+      const subjectCode = parts[1];
+      const type = parts[2];
+      const subject = await queryOne<{ id: number }>("SELECT id FROM subjects WHERE code = ?", subjectCode);
+      if (!subject) continue;
+      let count = 0;
+      if (type === "5" || type === "10") {
+        const r = await queryOne<{ c: number }>(
+          "SELECT COUNT(*) AS c FROM quiz_attempts qa JOIN quizzes q ON q.id = qa.quiz_id WHERE qa.user_id = ? AND q.subject_id = ?",
+          userId,
+          subject.id
+        );
+        count = r?.c ?? 0;
+        if (count < def.goal) continue;
+      } else if (type === "perfect") {
+        const r = await queryOne<{ c: number }>(
+          "SELECT COUNT(*) AS c FROM quiz_attempts qa JOIN quizzes q ON q.id = qa.quiz_id WHERE qa.user_id = ? AND q.subject_id = ? AND qa.score = qa.max_score AND qa.max_score > 0",
+          userId,
+          subject.id
+        );
+        count = r?.c ?? 0;
+        if (count < 1) continue;
+      }
+    }
     const badge = await queryOne<{ id: number; name: string; icon: string; description: string }>(
       "SELECT id, name, icon, description FROM badges WHERE code = ?",
       def.code,

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import DataControls from "./DataControls";
 
 export const metadata: Metadata = { title: "Paramètres de Confidentialité - Edukora" };
@@ -16,7 +17,7 @@ export default function Page() {
 </div>
 <div className="flex items-center gap-2">
 <div className="w-8 h-8 rounded-full overflow-hidden border border-on-primary/20">
-<img  className="w-full h-full object-cover" src="/images/ecran-270.webp" alt="A professional close-up studio portrait of a young Ivorian student with a warm, confident expression. The lighting is bright and even, reflecting a clean academic environment. The style is modern corporate photography, using the Edukora primary blue as a subtle background accent. High contrast and sharp focus represent academic excellence." loading="lazy" />
+<Image  className="w-full h-full object-cover" src="/images/ecran-270.webp" alt="A professional close-up studio portrait of a young Ivorian student with a warm, confident expression." loading="lazy" width={32} height={32} />
 </div>
 </div>
 </header>
@@ -115,7 +116,7 @@ export default function Page() {
 </div>
 </main>
 
-<nav className="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container-lowest dark:bg-inverse-surface border-t border-outline-variant dark:border-none shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-around items-center h-20 px-2 pb-safe">
+<nav aria-label="Navigation principale" className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl bg-surface-container-lowest dark:bg-inverse-surface border-t border-outline-variant dark:border-none shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-around items-center h-20 px-2 pb-safe">
 <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95" href="#">
 <span className="material-symbols-outlined" data-icon="home">home</span>
 <span className="font-label text-label-xs font-semibold">Accueil</span>

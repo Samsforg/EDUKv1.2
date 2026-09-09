@@ -7,24 +7,29 @@ export function UserFilters({
   initialQ,
   initialRole,
   initialStatus,
+  initialAccountType,
 }: {
   initialQ: string;
   initialRole: string;
   initialStatus: string;
+  initialAccountType: string;
 }) {
   const [q, setQ] = useState(initialQ);
   const [role, setRole] = useState(initialRole);
   const [status, setStatus] = useState(initialStatus);
+  const [accountType, setAccountType] = useState(initialAccountType);
   const router = useRouter();
 
-  function go(next: { q?: string; role?: string; status?: string }) {
+  function go(next: { q?: string; role?: string; status?: string; account_type?: string }) {
     const sp = new URLSearchParams();
     const qq = next.q !== undefined ? next.q : q;
     const rr = next.role !== undefined ? next.role : role;
     const ss = next.status !== undefined ? next.status : status;
+    const at = next.account_type !== undefined ? next.account_type : accountType;
     if (qq.trim()) sp.set("q", qq.trim());
     if (rr && rr !== "all") sp.set("role", rr);
     if (ss && ss !== "all") sp.set("status", ss);
+    if (at && at !== "real") sp.set("account_type", at);
     router.push(`/espace-admin/utilisateurs?${sp.toString()}`);
     router.refresh();
   }
@@ -49,6 +54,19 @@ export function UserFilters({
           className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-10 pr-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary"
         />
       </form>
+      <select
+        value={accountType}
+        onChange={(e) => {
+          setAccountType(e.target.value);
+          go({ account_type: e.target.value });
+        }}
+        className="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary"
+        aria-label="Filtrer par type de compte"
+      >
+        <option value="real">Comptes réels</option>
+        <option value="test">Comptes de test</option>
+        <option value="all">Tous les comptes</option>
+      </select>
       <select
         value={role}
         onChange={(e) => {
@@ -78,12 +96,13 @@ export function UserFilters({
         <option value="active">Actifs</option>
         <option value="blocked">Bloqués</option>
       </select>
-      {(q || role !== "all" || status !== "all") && (
+      {(q || role !== "all" || status !== "all" || accountType !== "real") && (
         <button
           onClick={() => {
             setQ("");
             setRole("all");
             setStatus("all");
+            setAccountType("real");
             router.push("/espace-admin/utilisateurs");
             router.refresh();
           }}

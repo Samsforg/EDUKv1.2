@@ -7,6 +7,7 @@ import { fetchFresh } from "@/lib/client-fetch";
 import PageHeader from "@/components/PageHeader";
 
 interface MyClass {
+  id: number;
   name: string;
   invite_code: string | null;
   subject_name: string | null;
@@ -17,6 +18,11 @@ interface MyClass {
   teacher_last: string;
   joined_at: string;
 }
+interface ClassLeaderboard {
+  ranking: { id: number; first_name: string; last_name: string; xp: number; streak: number; is_me?: boolean; rank: number }[];
+  total: number;
+  myRank: number | null;
+}
 
 export default function StudentClassesPage() {
   const router = useRouter();
@@ -25,6 +31,7 @@ export default function StudentClassesPage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [leaderboards, setLeaderboards] = useState<Record<number, ClassLeaderboard>>({});
 
   async function load() {
     const res = await fetchFresh("/api/classes/mine");
@@ -34,7 +41,16 @@ export default function StudentClassesPage() {
     }
     if (res.ok) {
       const data = await res.json();
-      setClasses(data.classes ?? []);
+      const list: MyClass[] = data.classes ?? [];
+      setClasses(list);
+      list.forEach(async (c) => {
+        try {
+          const r = await fetch(`/api/gamification/class-leaderboard?classId=${c.id}`);
+          if (!r.ok) return;
+          const json = await r.json();
+          if (json?.ranking) setLeaderboards((prev) => ({ ...prev, [c.id]: json }));
+        } catch {}
+      });
     }
     setLoading(false);
   }
@@ -109,18 +125,36 @@ export default function StudentClassesPage() {
                   Tu n&apos;es encore inscrit dans aucune classe. Entre le code reçu de ton professeur pour commencer.
                 </p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {classes.map((c, i) => (
-                    <div key={i} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: (c.color ?? "#0047ab") + "22", color: c.color ?? "#0047ab" }}>
-                        <span className="material-symbols-outlined">{c.icon ?? "school"}</span>
+                    <div key={c.id ?? i} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: (c.color ?? "#0047ab") + "22", color: c.color ?? "#0047ab" }}>
+                          <span className="material-symbols-outlined">{c.icon ?? "school"}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-label-md font-semibold text-on-surface truncate">{c.name}</h4>
+                          <p className="font-label-xs text-on-surface-variant">
+                            {[c.subject_name, c.grade_name].filter(Boolean).join(" · ") || "Classe"} · Prof. {c.teacher_first} {c.teacher_last}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-label-md font-semibold text-on-surface truncate">{c.name}</h4>
-                        <p className="font-label-xs text-on-surface-variant">
-                          {[c.subject_name, c.grade_name].filter(Boolean).join(" · ") || "Classe"} · Prof. {c.teacher_first} {c.teacher_last}
-                        </p>
-                      </div>
+                      {leaderboards[c.id] && (
+                        <div className="bg-surface rounded-xl border border-outline-variant/50 p-3">
+                          <p className="font-label-xs font-bold text-on-surface mb-2 flex items-center gap-1"><span className="material-symbols-outlined text-sm">leaderboard</span> Classement classe · {leaderboards[c.id].total} élèves</p>
+                          <div className="space-y-1">
+                            {leaderboards[c.id].ranking.slice(0, 5).map((r) => (
+                              <div key={r.id} className={`flex items-center justify-between px-2 py-1.5 rounded-lg ${r.is_me ? "bg-primary/10 border border-primary/20" : ""}`}>
+                                <span className="font-label-sm flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-outline-variant flex items-center justify-center text-xs font-bold">{r.rank}</span> {r.first_name} {r.last_name} {r.is_me ? "(toi)" : ""}</span>
+                                <span className="font-label-xs font-bold text-primary flex items-center gap-1"><span className="material-symbols-outlined text-xs">bolt</span>{r.xp} · <span className="material-symbols-outlined text-xs">local_fire_department</span>{r.streak}</span>
+                              </div>
+                            ))}
+                          </div>
+                          {leaderboards[c.id].myRank && leaderboards[c.id].myRank! > 5 && (
+                            <p className="font-label-xs text-on-surface-variant text-center mt-2">Ton rang : #{leaderboards[c.id].myRank}</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

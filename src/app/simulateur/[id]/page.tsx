@@ -30,6 +30,7 @@ export default function SimulatorTakePage() {
   const [showNav, setShowNav] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [fsWarning, setFsWarning] = useState(false);
 
   useEffect(() => {
     fetch(`/api/simulator/${id}`)
@@ -60,6 +61,99 @@ export default function SimulatorTakePage() {
     const t = setTimeout(() => setSecondsLeft((s) => (s === null ? null : s - 1)), 1000);
     return () => clearTimeout(t);
   }, [secondsLeft]);
+
+  useEffect(() => {
+    if (!data) return;
+
+    // Request fullscreen on exam start
+    const root = document.documentElement;
+    if (root.requestFullscreen) {
+      root.requestFullscreen().catch(() => {});
+    }
+
+    // Block copy/cut/paste
+    const blockEdit = (e: Event) => {
+      e.preventDefault();
+      fetch("/api/proctoring/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paper_id: Number(id), type: "copy_attempt", detail: "Tentative de copier-coller détectée" }),
+      }).catch(() => {});
+    };
+
+    // Block right-click
+    const blockContext = (e: Event) => {
+      e.preventDefault();
+      fetch("/api/proctoring/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paper_id: Number(id), type: "context_menu", detail: "Clic droit désactivé pendant l'examen" }),
+      }).catch(() => {});
+    };
+
+    // Block keyboard shortcuts (Ctrl+C, Ctrl+V, Ctrl+U, Ctrl+S, F12, Alt+Tab)
+    const blockKey = (e: KeyboardEvent) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+      const key = e.key.toLowerCase();
+      if (
+        (ctrl && (key === "c" || key === "v" || key === "x" || key === "u" || key === "s" || key === "a" || key === "p")) ||
+        key === "f12" ||
+        (e.altKey && key === "tab") ||
+        (ctrl && e.shiftKey && (key === "i" || key === "j" || key === "k"))
+      ) {
+        e.preventDefault();
+        fetch("/api/proctoring/event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paper_id: Number(id), type: "keyboard_shortcut", detail: `Raccourci bloqué: ${e.altKey ? "Alt+" : ""}${e.ctrlKey ? "Ctrl+" : ""}${e.shiftKey ? "Shift+" : ""}${e.key}` }),
+        }).catch(() => {});
+      }
+    };
+
+    document.addEventListener("copy", blockEdit);
+    document.addEventListener("cut", blockEdit);
+    document.addEventListener("paste", blockEdit);
+    document.addEventListener("contextmenu", blockContext);
+    document.addEventListener("keydown", blockKey);
+
+    // Track fullscreen change — re-request if exited
+    const onFsChange = () => {
+      if (!document.fullscreenElement && document.visibilityState === "visible") {
+        setFsWarning(true);
+        document.documentElement.requestFullscreen?.().catch(() => {});
+        fetch("/api/proctoring/event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paper_id: Number(id), type: "fullscreen_exit", detail: "Sortie du plein écran détectée" }),
+        }).catch(() => {});
+      } else {
+        setFsWarning(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+
+    const handler = () => {
+      if (document.hidden) {
+        fetch("/api/proctoring/event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paper_id: Number(id), type: "tab_switch", detail: "Changement d'onglet pendant l'examen" }),
+        }).catch(() => {});
+      }
+    };
+    document.addEventListener("visibilitychange", handler);
+
+    return () => {
+      document.removeEventListener("copy", blockEdit);
+      document.removeEventListener("cut", blockEdit);
+      document.removeEventListener("paste", blockEdit);
+      document.removeEventListener("contextmenu", blockContext);
+      document.removeEventListener("keydown", blockKey);
+      document.removeEventListener("fullscreenchange", onFsChange);
+      document.removeEventListener("visibilitychange", handler);
+      if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+    };
+  }, [data, id]);
 
   async function submit(timeout = false) {
     if (!data || submitting) return;
@@ -152,6 +246,21 @@ export default function SimulatorTakePage() {
       </header>
 
       <main className="flex-1 w-full max-w-lg mx-auto flex flex-col px-4 pt-6 pb-32">
+        {fsWarning && (
+          <div className="mb-4 bg-error-container/30 border border-error/30 rounded-xl px-4 py-3 flex items-center gap-3">
+            <span className="material-symbols-outlined text-error text-xl">fullscreen</span>
+            <div className="flex-1">
+              <p className="font-label-sm font-bold text-error">Plein écran requis</p>
+              <p className="font-body-xs text-on-surface-variant">Ce Skills est enregistré. Reste en plein écran pour continuer.</p>
+            </div>
+            <button
+              onClick={() => document.documentElement.requestFullscreen?.()}
+              className="px-3 py-1.5 rounded-lg bg-error text-on-error text-xs font-bold"
+            >
+              Rétablir
+            </button>
+          </div>
+        )}
         {q && (
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">

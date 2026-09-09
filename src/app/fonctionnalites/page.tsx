@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
 import type { Metadata } from "next";
@@ -6,7 +7,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Fonctionnalités",
   description:
-    "Découvrez les fonctionnalités Edukora : simulateur d'examen BAC/BEPC, fiches certifiées par des inspecteurs, tuteur IA Kora, classements et ligues. Toutes séries, toutes classes.",
+    "Découvrez les fonctionnalités Edukora : simulateur d'examen BAC/BEPC, fiches de révision, tuteur IA Kora, classements et ligues. Toutes séries, toutes classes.",
   alternates: { canonical: "/fonctionnalites" },
 };
 
@@ -20,8 +21,8 @@ const features = [
   {
     icon: "menu_book",
     iconBg: "bg-tertiary-container",
-    title: "Fiches Certifiées",
-    text: "Contenu rédigé et validé par des inspecteurs et professeurs agrégés de l'Éducation Nationale.",
+    title: "Fiches de révision",
+    text: "Des fiches structurées couvrant les programmes officiels du BAC et du BEPC.",
   },
   {
     icon: "emoji_events",
@@ -173,7 +174,7 @@ export default function Page() {
                 </p>
               </div>
               <div className="flex-1 w-full flex justify-center">
-                <img className="w-full h-48 object-cover rounded-[16px] shadow-md" src="/images/landing-6-hd.webp" alt="Étudiants ivoiriens en session de révision collaborative" loading="lazy" />
+                <Image className="w-full h-48 object-cover rounded-[16px] shadow-md" src="/images/landing-6-hd.webp" alt="Étudiants ivoiriens en session de révision collaborative" loading="lazy" width={600} height={192} />
               </div>
             </div>
 

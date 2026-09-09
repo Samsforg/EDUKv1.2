@@ -102,7 +102,7 @@ export default function PlanningPage() {
               <section className="space-y-2">
                 <div className="flex items-center justify-between">
                   <p className="font-label-sm text-on-surface-variant uppercase tracking-wider">À revoir (relecture espacée)</p>
-                  <a href="/parcours" className="text-primary font-label-xs">Voir tout</a>
+                  <Link href="/parcours" className="text-primary font-label-xs">Voir tout</Link>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {data.days.flatMap((d) => d.slots)

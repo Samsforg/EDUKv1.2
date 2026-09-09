@@ -6,6 +6,11 @@ const PRECACHE = [
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
+  "/fiches",
+  "/cours",
+  "/quiz",
+  "/simulateur",
+  "/accueil-edukora",
 ];
 
 // ---------- INSTALL ----------
@@ -18,11 +23,11 @@ self.addEventListener("install", (event) => {
 
 // ---------- ACTIVATE ----------
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE && k !== EDU_CACHE).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
+    event.waitUntil(
+      caches.keys().then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE && k !== EDU_CACHE && !k.startsWith("api-")).map((k) => caches.delete(k)))
+      ).then(() => self.clients.claim())
+    );
 });
 
 // ---------- FETCH ----------
@@ -42,7 +47,7 @@ self.addEventListener("fetch", (event) => {
 
   // Navigate → NetworkFirst + offline fallback
   if (request.mode === "navigate") {
-    event.respondWith(networkFirst(request, "pages", 50, 86400, 3));
+    event.respondWith(networkFirst(request, "pages", 50, 86400, 10));
     return;
   }
 
@@ -58,9 +63,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // API → StaleWhileRevalidate
+  // API → NetworkFirst (toujours frais en ligne pour respecter le statut premium/session,
+  // le cache ne sert que de repli hors-ligne). On n'utilise PAS staleWhileRevalidate ici :
+  // cela servait des réponses périmées (et potentiellement partagées entre utilisateurs).
   if (url.pathname.startsWith("/api/")) {
-    event.respondWith(staleWhileRevalidate(request, "api-cache", 3600, 100));
+    event.respondWith(networkFirstApi(request));
     return;
   }
 
@@ -134,6 +141,41 @@ async function staleWhileRevalidate(request, cacheName, maxAgeSeconds, maxEntrie
     return response;
   }).catch(() => cached);
   return cached || fetchPromise;
+}
+
+// API : réseau en priorité, cache uniquement en repli hors-ligne.
+// Le cache est isolé par session (cookie) pour éviter de servir les données
+// d'un utilisateur à un autre sur un appareil partagé.
+async function networkFirstApi(request) {
+  const cookie = request.headers.get("cookie") || "";
+  let token = "anon";
+  const m = /edukora_session=([^;]+)/.exec(cookie);
+  if (m) token = m[1];
+  const cacheName = "api-" + hashString(token).toString(36);
+  const cache = await caches.open(cacheName);
+  const keyed = new Request(request.url, { method: request.method, headers: request.headers, credentials: "include" });
+  try {
+    const response = await fetch(keyed);
+    if (response.ok) {
+      await cache.put(keyed, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await cache.match(keyed);
+    if (cached) return cached;
+    return new Response(JSON.stringify({ error: "Hors-ligne" }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+function hashString(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  }
+  return h >>> 0;
 }
 
 // ---------- BACKGROUND SYNC ----------

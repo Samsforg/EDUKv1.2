@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/session";
 import { gpCancelSubscription } from "@/lib/geniuspay";
 
 async function GETHandler() {
-  const plans = await query<{
+  const plansRaw = await query<{
     id: number;
     name: string;
     interval: string;
@@ -14,6 +14,7 @@ async function GETHandler() {
     features: string | null;
     sort_order: number;
   }>("SELECT id, name, interval, price_cents, currency, features, sort_order FROM subscription_plans ORDER BY sort_order");
+  const plans = plansRaw;
 
   const user = await getCurrentUser();
   let activePlan: { id: number; name: string; end_at: string | null } | null = null;
@@ -48,8 +49,8 @@ async function POSTHandler(req: Request) {
 
     try {
       await gpCancelSubscription(sub.provider_subscription_id, false, "Annulation par l'utilisateur");
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message ?? "Échec de l'annulation" }, { status: 502 });
+    } catch (err: unknown) {
+      return NextResponse.json({ error: err instanceof Error ? err.message : "Échec de l'annulation" }, { status: 502 });
     }
 
     await run("UPDATE subscriptions SET cancel_at_period_end = 1, updated_at = ? WHERE id = ?", new Date().toISOString(), sub.id);

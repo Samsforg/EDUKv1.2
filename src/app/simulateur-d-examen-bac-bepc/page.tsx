@@ -106,7 +106,7 @@ Passer
 <span className="material-symbols-outlined text-white" data-icon="history_edu">history_edu</span>
 </div>
 <div>
-<p className="text-body-md font-bold text-on-surface">Plus de 500 épreuves types</p>
+<p className="text-body-md font-bold text-on-surface">Des épreuves types variées</p>
 <p className="text-label-xs text-on-surface-variant">Pour maîtriser chaque sujet du programme.</p>
 </div>
 </div>

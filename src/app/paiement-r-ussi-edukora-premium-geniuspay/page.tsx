@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function Page() {
   const [state, setState] = React.useState<{
@@ -90,7 +92,7 @@ export default function Page() {
 
 <div className="flex items-center justify-center gap-3 bg-surface-container-low py-3 px-4 rounded-lg">
 <span className="text-[12px] font-medium text-on-surface-variant uppercase tracking-widest">Sécurisé par</span>
-<img  alt="Geniuspay" className="h-6 object-contain grayscale opacity-70" src="/images/ecran-269.webp" loading="lazy" />
+<Image  alt="Geniuspay" className="h-6 object-contain grayscale opacity-70" src="/images/ecran-269.webp" loading="lazy" width={80} height={24} />
 </div>
 
 <section className="flex flex-col gap-4">
@@ -130,31 +132,31 @@ export default function Page() {
 </section>
 
 <div className="mt-4">
-<a href="/accueil-edukora" className="block w-full bg-secondary-container hover:bg-secondary text-white font-headline font-bold py-4 rounded-xl shadow-md active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+<Link href="/accueil-edukora" className="block w-full bg-secondary-container hover:bg-secondary text-white font-headline font-bold py-4 rounded-xl shadow-md active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
                 Commencer mes révisions
                 <span className="material-symbols-outlined">arrow_forward</span>
-</a>
+</Link>
 <p className="text-center text-[11px] text-outline mt-3 px-6 italic">Un reçu de paiement a été envoyé à votre adresse email associée.</p>
 </div>
 </main>
 
-<nav className="fixed bottom-0 w-full z-50 bg-surface-container-lowest dark:bg-surface-container-high shadow-[0_-1px_3px_0_rgba(0,0,0,0.1)] flex justify-around items-center h-20 px-2 pb-safe">
-<a href="/accueil-edukora" className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-colors active:scale-90 duration-150">
+<nav aria-label="Navigation principale" className="fixed bottom-0 left-0 w-full z-50 bg-surface-container-lowest dark:bg-surface-container-high shadow-[0_-1px_3px_0_rgba(0,0,0,0.1)] flex justify-around items-center h-20 px-2 pb-safe">
+<Link href="/accueil-edukora" className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-colors active:scale-90 duration-150">
 <span className="material-symbols-outlined mb-1">home</span>
 <span className="font-label text-label-xs">Accueil</span>
-</a>
-<a href="/fiches" className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-colors active:scale-90 duration-150">
+</Link>
+<Link href="/fiches" className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-colors active:scale-90 duration-150">
 <span className="material-symbols-outlined mb-1">school</span>
 <span className="font-label text-label-xs">Cours</span>
-</a>
-<a href="/tuteur-ia" className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-colors active:scale-90 duration-150">
+</Link>
+<Link href="/tuteur-ia" className="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-4 py-1 hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-colors active:scale-90 duration-150">
 <span className="material-symbols-outlined mb-1">smart_toy</span>
 <span className="font-label text-label-xs">tuteur IA</span>
-</a>
-<a href="/profil" className="flex flex-col items-center justify-center bg-primary-container dark:bg-on-primary-fixed-variant text-on-primary-container dark:text-primary-fixed rounded-xl px-4 py-1 transition-colors active:scale-90 duration-150">
+</Link>
+<Link href="/profil" className="flex flex-col items-center justify-center bg-primary-container dark:bg-on-primary-fixed-variant text-on-primary-container dark:text-primary-fixed rounded-xl px-4 py-1 transition-colors active:scale-90 duration-150">
 <span className="material-symbols-outlined mb-1" style={{"fontVariationSettings":"'FILL' 1"}}>person</span>
 <span className="font-label text-label-xs">Profil</span>
-</a>
+</Link>
 </nav>
 <script>
         // Micro-interaction for benefits cards

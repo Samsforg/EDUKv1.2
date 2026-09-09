@@ -1,28 +1,9 @@
 /** @type {import('next').NextConfig} */
 import { withSentryConfig } from "@sentry/nextjs";
-import { fileURLToPath } from "node:url";
-
-const polyfillLoaderPath = fileURLToPath(
-  new URL("./scripts/polyfill-module-loader.cjs", import.meta.url)
-);
 
 const nextConfig = {
   experimental: {
     inlineCss: true,
-  },
-  turbopack: {
-    rules: {
-      // Next.js bundles its own polyfill-module (trimStart/trimEnd, Symbol.description,
-      // flat/flatMap, Promise.finally, fromEntries, Array.prototype.at, Object.hasOwn,
-      // URL.canParse) into every client entry via next/dist/client/app-globals.js.
-      // All of them are Baseline and supported since Chrome/Edge 111, Firefox 111 and
-      // Safari 16.4 (our browserslist targets), except URL.canParse (Safari 17+),
-      // which this loader keeps. This drops ~1.4 kB of legacy polyfills per page.
-      "**/polyfills/polyfill-module.js": {
-        loaders: [polyfillLoaderPath],
-        as: "*.js",
-      },
-    },
   },
   images: {
     formats: ["image/avif", "image/webp"],
@@ -38,22 +19,6 @@ const nextConfig = {
   },
   async headers() {
     const securityHeaders = [
-      {
-        key: "Content-Security-Policy",
-        value: [
-          "default-src 'self'",
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms",
-          "style-src 'self' 'unsafe-inline'",
-          "img-src 'self' data: blob: https:",
-          "font-src 'self' data:",
-          "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://region1.analytics.google.com https://stats.g.doubleclick.net https://www.clarity.ms https://*.clarity.ms",
-          "worker-src 'self' blob:",
-          "object-src 'none'",
-          "base-uri 'self'",
-          "form-action 'self'",
-          "frame-ancestors 'none'",
-        ].join("; "),
-      },
       {
         key: "Strict-Transport-Security",
         value: "max-age=63072000; includeSubDomains; preload",

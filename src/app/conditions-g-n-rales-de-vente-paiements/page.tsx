@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Conditions générales de vente",
@@ -13,9 +15,9 @@ export default function Page() {
 
 <header className="bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline docked full-width top-0 sticky z-50">
 <div className="flex items-center px-4 h-16 w-full max-w-screen-xl mx-auto">
-<a href="/" aria-label="Retour à l'accueil" className="mr-4 text-primary dark:text-primary-fixed-dim hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95 duration-100">
+<Link href="/" aria-label="Retour à l'accueil" className="mr-4 text-primary dark:text-primary-fixed-dim hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95 duration-100">
 <span className="material-symbols-outlined">arrow_back</span>
-</a>
+</Link>
 <h1 className="font-headline text-headline-md font-semibold text-primary dark:text-primary-fixed truncate">
                 Conditions Générales
             </h1>
@@ -25,7 +27,7 @@ export default function Page() {
 <main className="flex-grow w-full max-w-screen-md mx-auto px-4 py-8">
 
 <div className="flex flex-col items-center mb-10 text-center">
-<img  alt="Edukora Logo" className="w-16 h-16 mb-4 opacity-90" src="/images/ecran-073.png" loading="lazy" />
+<Image  alt="Edukora Logo" className="w-16 h-16 mb-4 opacity-90" src="/images/ecran-073.png" loading="lazy" width={64} height={64} />
 <h2 className="text-display-lg-mobile md:text-display-lg font-bold text-on-surface mb-2">Conditions Générales de Vente</h2>
 <p className="text-label-sm text-outline font-medium">Dernière mise à jour : 24 Octobre 2023</p>
 <div className="w-16 h-1 bg-secondary-container rounded-full mt-4"></div>
@@ -162,7 +164,7 @@ export default function Page() {
 <p className="text-body-md text-on-surface-variant">
                     Une question sur nos conditions ? Contactez notre support :
                 </p>
-<a className="inline-block mt-4 text-primary font-bold hover:underline" href="mailto:support@edukora.ci">support@edukora.ci</a>
+<a className="inline-block mt-4 text-primary font-bold hover:underline" href="mailto:contact@edukora.net">contact@edukora.net</a>
 </div>
 </div>
 </main>
@@ -188,8 +190,7 @@ export default function Page() {
 <script>
         // Simple back button interaction
         document.querySelector('button[aria-label="Retour"]').addEventListener('click', () =&gt; &#123;
-            console.log('Navigating back...');
-            // In a real PWA this would be window.history.back();
+            window.history.back();
         &#125;);
 
         // Smooth scroll implementation for navigation (if any internal links were added)

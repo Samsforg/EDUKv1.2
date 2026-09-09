@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import ShareResultButton from "@/components/ShareResultButton";
+import dynamic from "next/dynamic";
+
+const ShareResultButton = dynamic(() => import("@/components/ShareResultButton"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-12 flex items-center justify-center">
+      <span className="material-symbols-outlined text-primary animate-spin">progress_activity</span>
+    </div>
+  ),
+});
 
 interface ExamResult {
   score: number;

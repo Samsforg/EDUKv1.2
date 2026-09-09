@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface ChatMsg {
   role: "user" | "assistant";
@@ -65,11 +66,13 @@ export default function TutorDemoPage() {
             <span className="material-symbols-outlined">arrow_back</span>
           </Link>
           <div className="w-10 h-10 rounded-full overflow-hidden border border-primary-fixed bg-surface-container">
-            <img
+            <Image
               className="w-full h-full object-cover"
               src="/images/ecran-369.webp"
               alt="Portrait d'une élève ivoirienne souriante"
               loading="lazy"
+              width={40}
+              height={40}
             />
           </div>
           <h1 className="font-display-lg-mobile text-display-lg-mobile text-primary tracking-tight">Edukora</h1>
@@ -201,7 +204,7 @@ export default function TutorDemoPage() {
         </div>
       </div>
 
-      <nav className="fixed bottom-0 w-full z-50 bg-surface shadow-[0_-1px_4px_rgba(0,0,0,0.1)] flex justify-around items-center h-20 pb-safe px-2 rounded-t-xl">
+      <nav aria-label="Navigation principale" className="fixed bottom-0 left-0 w-full z-50 bg-surface shadow-[0_-1px_4px_rgba(0,0,0,0.1)] flex justify-around items-center h-20 pb-safe px-2 rounded-t-xl">
         <a className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-90 duration-200" href="/">
           <span className="material-symbols-outlined">home</span>
           <span className="font-label-xs text-label-xs">Accueil</span>

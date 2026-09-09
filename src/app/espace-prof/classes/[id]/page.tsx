@@ -324,7 +324,10 @@ export default function TeacherClassDetailPage() {
                     <div className="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold shrink-0">
                       {s.first_name?.[0] ?? "?"}{s.last_name?.[0] ?? ""}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <Link
+                      href={`/espace-prof/eleves/${s.user_id}`}
+                      className="flex-1 min-w-0 hover:underline"
+                    >
                       <p className="font-label-md font-semibold text-on-surface truncate">
                         {s.first_name} {s.last_name}
                         {s.class_level ? <span className="font-label-xs text-on-surface-variant font-normal"> · {s.class_level}</span> : null}
@@ -332,7 +335,7 @@ export default function TeacherClassDetailPage() {
                       <p className="font-label-xs text-on-surface-variant truncate">
                         {s.email ?? "Sans email"} · {s.attempts} tentative{s.attempts > 1 ? "s" : ""}
                       </p>
-                    </div>
+                    </Link>
                     <div className="text-right shrink-0">
                       <p className="font-label-md font-bold text-primary">{s.avg_pct != null ? `${s.avg_pct}%` : "—"}</p>
                       <p className="font-label-xs text-on-surface-variant">moyenne</p>

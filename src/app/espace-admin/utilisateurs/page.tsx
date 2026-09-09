@@ -3,12 +3,15 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { getAdminUsersPage } from "@/lib/admin";
+import { queryOne } from "@/lib/db";
+import { testUsersWhere } from "@/lib/test-users";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { UserFilters } from "@/components/admin/UserFilters";
 import { RoleSelect } from "@/components/admin/RoleSelect";
 import { NotifyButton } from "@/components/admin/NotifyButton";
 import { BlockButton } from "@/components/admin/BlockButton";
 import { DeleteUserButton } from "@/components/admin/DeleteUserButton";
+import { PurgeTestAccountsButton } from "@/components/admin/PurgeTestAccountsButton";
 
 export const metadata: Metadata = { title: "Edukora Admin - Utilisateurs" };
 
@@ -29,20 +32,27 @@ export default async function Page({
   const q = str(sp.q);
   const role = str(sp.role);
   const status = str(sp.status);
+  const accountType = str(sp.account_type) || "real";
   const page = Math.max(1, Number.parseInt(str(sp.page), 10) || 1);
 
   const { users, total, pages, page: currentPage } = await getAdminUsersPage({
     q,
     role,
     status: (status === "active" || status === "blocked" ? status : undefined) as "active" | "blocked" | undefined,
+    account_type: (accountType === "real" || accountType === "test" || accountType === "all" ? accountType : "real") as "real" | "test" | "all",
     page,
   });
+
+  const testCount = (await queryOne<{ c: number }>(
+    `SELECT COUNT(*) AS c FROM users u WHERE ${testUsersWhere("u")}`,
+  ))?.c ?? 0;
 
   function pageHref(p: number): string {
     const spu = new URLSearchParams();
     if (q) spu.set("q", q);
     if (role && role !== "all") spu.set("role", role);
     if (status && status !== "all") spu.set("status", status);
+    if (accountType && accountType !== "real") spu.set("account_type", accountType);
     if (p > 1) spu.set("page", String(p));
     const s = spu.toString();
     return `/espace-admin/utilisateurs${s ? `?${s}` : ""}`;
@@ -54,13 +64,16 @@ export default async function Page({
         <div>
           <h2 className="font-display text-[28px] md:text-display-lg font-bold text-on-surface">Gestion des Utilisateurs</h2>
           <p className="text-on-surface-variant font-body mt-1">
-            {total} compte{total > 1 ? "s" : ""}. Recherchez, filtrez, changez un rôle, notifiez, bloquez ou supprimez.
+            {total} compte{total > 1 ? "s" : ""} {accountType === "real" ? "réel" : accountType === "test" ? "de test" : ""}. Recherchez, filtrez, changez un rôle, notifiez, bloquez ou supprimez.
           </p>
         </div>
-        <NotifyButton all />
+        <div className="flex gap-2 items-center">
+          <NotifyButton all />
+          <PurgeTestAccountsButton count={testCount} />
+        </div>
       </section>
 
-      <UserFilters initialQ={q} initialRole={role || "all"} initialStatus={status || "all"} />
+      <UserFilters initialQ={q} initialRole={role || "all"} initialStatus={status || "all"} initialAccountType={accountType} />
 
       <section className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
         {users.length === 0 ? (
@@ -96,7 +109,15 @@ export default async function Page({
                           {`${u.first_name[0]}${u.last_name[0]}`.toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-semibold text-on-surface group-hover:text-primary transition-colors">{u.first_name} {u.last_name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-on-surface group-hover:text-primary transition-colors">{u.first_name} {u.last_name}</p>
+                            {u.is_test && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-surface-container-high text-on-surface-variant border border-outline-variant">
+                                <span className="material-symbols-outlined text-[11px]">science</span>
+                                Test
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-on-surface-variant">#{u.id}{u.id === user.id ? " • vous" : ""}</p>
                         </div>
                       </Link>

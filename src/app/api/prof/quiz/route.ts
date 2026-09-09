@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne, run } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { canTeachSubject, ensureProfSubject } from "@/lib/prof-subjects";
+import { moderateContent, moderateQuizQuestion } from "@/lib/moderation";
 
 function requireTeacher(user: { role: string } | null): NextResponse | null {
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
@@ -58,6 +59,19 @@ async function POSTHandler(req: NextRequest) {
 
   const subject = await queryOne<{ id: number }>("SELECT id FROM subjects WHERE id = ?", Number(body.subject_id));
   if (!subject) return NextResponse.json({ error: "Matière introuvable" }, { status: 400 });
+
+  // Moderation IA du contenu
+  const titleMod = moderateContent(body.title);
+  if (!titleMod.approved) {
+    return NextResponse.json({ error: `Titre inapproprié : ${titleMod.reason}`, code: "MODERATION_FAILED" }, { status: 422 });
+  }
+  const questionsMod = moderateQuizQuestion(
+    body.questions.map((q: { question: string }) => q.question).join(" "),
+    body.questions.flatMap((q: { options: string[] }) => q.options),
+  );
+  if (!questionsMod.approved) {
+    return NextResponse.json({ error: `Contenu inapproprié : ${questionsMod.reason}`, code: "MODERATION_FAILED" }, { status: 422 });
+  }
 
   const teach = await canTeachSubject(user!.id, subject.id);
   if (teach === "no") {

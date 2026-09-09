@@ -1,5 +1,5 @@
 import { query, queryOne, run } from "./db";
-import { getLigueOf, getLigueProgress, LIGUE_ORDER_NAMES } from "./rank";
+import { getLigueOf, getLigueProgress, LIGUE_ORDER_NAMES, getSeasonMultiplier } from "./rank";
 import { notify, addXp, awardBadge } from "./session";
 
 export interface LigueChallenge {
@@ -47,11 +47,14 @@ async function countSource(userId: number, goalType: string): Promise<number >{
 
 async function grantReward(userId: number, c: Row) {
   if (c.reward_type === "xp") {
-    await addXp(userId, Number(c.reward_value) || 0);
+    const mult = getSeasonMultiplier();
+    const base = Number(c.reward_value) || 0;
+    const reward = base * mult;
+    await addXp(userId, reward);
     await notify(
       userId,
       "Défi de ligue terminé",
-      `Défi « ${c.title} » complété ! Récompense : +${c.reward_value} XP.`,
+      `Défi « ${c.title} » complété ! Récompense : +${reward} XP${mult > 1 ? ` (x${mult} saison)` : ""}.`,
       c.icon,
     );
   } else {

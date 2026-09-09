@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/session";
 import { refreshBadges } from "@/lib/badges";
 import { validate, ForumPostSchema } from "@/lib/validation";
 import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
+import { moderateContent } from "@/lib/moderation";
 
 async function POSTHandler(req: NextRequest) {
   const user = await getCurrentUser();
@@ -22,6 +23,12 @@ async function POSTHandler(req: NextRequest) {
 
   const cat = await queryOne<{ id: number }>("SELECT id FROM forum_categories WHERE id = ?", category_id ?? 0);
   if (!cat) return NextResponse.json({ error: "Catégorie introuvable" }, { status: 404 });
+
+  const postContent = [title, content].filter(Boolean).join(" ");
+  const mod = moderateContent(postContent);
+  if (!mod.approved) {
+    return NextResponse.json({ error: `Contenu inapproprié : ${mod.reason}`, code: "MODERATION_FAILED" }, { status: 422 });
+  }
 
   const r = await run(
     "INSERT INTO forum_posts (category_id, user_id, title, content) VALUES (?, ?, ?, ?)",

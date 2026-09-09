@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { getCurrentUser } from "@/lib/session";
 import { LogoutButton } from "@/components/parent/LogoutButton";
@@ -19,7 +20,8 @@ type ActiveTab =
   | "defis"
   | "tarifs"
   | "abonnes"
-  | "ads";
+  | "ads"
+  | "growth";
 
 const TABS: { key: ActiveTab; href: string; icon: string; label: string; mobileLabel: string }[] = [
   { key: "overview", href: "/espace-admin", icon: "dashboard", label: "Overview", mobileLabel: "Overview" },
@@ -38,6 +40,7 @@ const TABS: { key: ActiveTab; href: string; icon: string; label: string; mobileL
   { key: "tarifs", href: "/espace-admin/tarifs", icon: "sell", label: "Tarifs", mobileLabel: "Tarifs" },
   { key: "abonnes", href: "/espace-admin/abonnes", icon: "subscriptions", label: "Abonnés", mobileLabel: "Abonnés" },
   { key: "ads", href: "/espace-admin/pub", icon: "campaign", label: "Espace pub", mobileLabel: "Pub" },
+  { key: "growth", href: "/espace-admin/growth", icon: "trending_up", label: "Growth AI", mobileLabel: "Growth" },
 ];
 
 export async function AdminShell({ active, children }: { active: ActiveTab; children: ReactNode }) {
@@ -49,10 +52,10 @@ export async function AdminShell({ active, children }: { active: ActiveTab; chil
       <aside className="fixed left-0 top-0 h-full flex-col z-40 bg-surface dark:bg-inverse-surface w-64 border-r border-outline-variant hidden md:flex">
         <div className="px-6 py-8 flex flex-col items-start gap-4">
           <div className="flex items-center gap-3">
-            <img  alt="Edukora Logo" className="w-10 h-10 rounded-lg shadow-sm" src="/images/ecran-346.png" loading="lazy" />
+            <Image  alt="Edukora Logo" className="w-10 h-10 rounded-lg shadow-sm" src="/images/logo-edukora.webp" loading="lazy" width={40} height={40} />
             <div>
               <h1 className="font-headline text-headline-md font-bold text-primary leading-tight">Console admin</h1>
-              <p className="font-body text-label-xs text-on-surface-variant">Contrôleur de plateforme</p>
+              <p className="font-body text-label-xs text-on-surface-variant">Administration plateforme</p>
             </div>
           </div>
         </div>
@@ -98,7 +101,7 @@ export async function AdminShell({ active, children }: { active: ActiveTab; chil
       <main className="flex-1 flex flex-col min-h-screen md:ml-64">
         <header className="w-full top-0 sticky z-30 bg-primary dark:bg-primary-container text-on-primary dark:text-on-primary-container shadow-sm flex justify-between items-center px-4 md:px-8 py-4">
           <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-on-primary">shield_person</span>
+            <Image alt="Edukora" className="w-8 h-8 rounded-md" src="/images/logo-edukora.webp" width={32} height={32} />
             <span className="font-headline text-headline-md font-bold text-on-primary">Edukora Admin</span>
           </div>
           <div className="w-10 h-10 rounded-full bg-on-primary/20 flex items-center justify-center text-on-primary border-2 border-on-primary/20">

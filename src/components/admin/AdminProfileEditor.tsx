@@ -2,24 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-interface Serie {
-  id: number;
-  code: string;
-  name: string;
-}
-
 interface Profile {
   id: number;
   first_name: string;
   last_name: string;
   email: string | null;
   phone: string | null;
-  serie_id: number | null;
-  class_level: string | null;
   commune: string | null;
-  xp: number;
-  streak: number;
-  referral_code: string | null;
   created_at: string | null;
 }
 
@@ -28,7 +17,6 @@ const INPUT_CLASS =
 
 export function AdminProfileEditor() {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [series, setSeries] = useState<Serie[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [form, setForm] = useState({
@@ -37,8 +25,6 @@ export function AdminProfileEditor() {
     email: "",
     phone: "",
     commune: "",
-    serie_id: "",
-    class_level: "",
   });
 
   const [saving, setSaving] = useState(false);
@@ -52,10 +38,10 @@ export function AdminProfileEditor() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([fetch("/api/admin/profile").then((r) => r.json()), fetch("/api/series").then((r) => r.json())])
-      .then(([p, s]) => {
+    fetch("/api/admin/profile")
+      .then((r) => r.json())
+      .then((p) => {
         if (cancelled) return;
-        setSeries(s.series ?? []);
         if (p.profile) {
           setProfile(p.profile);
           setForm({
@@ -64,8 +50,6 @@ export function AdminProfileEditor() {
             email: p.profile.email ?? "",
             phone: p.profile.phone ?? "",
             commune: p.profile.commune ?? "",
-            serie_id: p.profile.serie_id?.toString() ?? "",
-            class_level: p.profile.class_level ?? "",
           });
         }
       })
@@ -95,10 +79,8 @@ export function AdminProfileEditor() {
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
         email: form.email.trim(),
-        serie_id: form.serie_id ? Number(form.serie_id) : null,
       };
       if (form.phone.trim()) payload.phone = form.phone.trim();
-      if (form.class_level.trim()) payload.class_level = form.class_level.trim();
       if (form.commune.trim()) payload.commune = form.commune.trim();
 
       const res = await fetch("/api/admin/profile", {
@@ -122,8 +104,8 @@ export function AdminProfileEditor() {
 
   async function changePassword(e: React.FormEvent) {
     e.preventDefault();
-    if (pw.next.length < 6) {
-      setPwError("Le nouveau mot de passe doit contenir au moins 6 caractères.");
+    if (pw.next.length < 8) {
+      setPwError("Le nouveau mot de passe doit contenir au moins 8 caractères.");
       return;
     }
     if (pw.next !== pw.confirm) {
@@ -172,19 +154,19 @@ export function AdminProfileEditor() {
         <h3 className="font-headline text-headline-md font-bold text-on-surface">
           {profile?.first_name} {profile?.last_name}
         </h3>
-        <p className="text-sm text-on-surface-variant mt-1">Super Admin • Edukora</p>
+        <p className="text-sm text-on-surface-variant mt-1">Compte administrateur</p>
         <div className="w-full mt-6 space-y-2">
           <div className="bg-surface-container rounded-xl p-4 flex items-center justify-between">
-            <span className="text-xs text-on-surface-variant">XP total</span>
-            <span className="font-bold text-on-surface">{profile?.xp ?? 0}</span>
+            <span className="text-xs text-on-surface-variant">Email</span>
+            <span className="font-semibold text-on-surface truncate ml-2">{profile?.email ?? "—"}</span>
           </div>
           <div className="bg-surface-container rounded-xl p-4 flex items-center justify-between">
-            <span className="text-xs text-on-surface-variant">Série de jours</span>
-            <span className="font-bold text-on-surface">{profile?.streak ?? 0} j</span>
+            <span className="text-xs text-on-surface-variant">Téléphone</span>
+            <span className="font-semibold text-on-surface">{profile?.phone ?? "—"}</span>
           </div>
           <div className="bg-surface-container rounded-xl p-4 flex items-center justify-between">
-            <span className="text-xs text-on-surface-variant">Parrainage</span>
-            <span className="font-semibold text-on-surface">{profile?.referral_code ?? "—"}</span>
+            <span className="text-xs text-on-surface-variant">Commune</span>
+            <span className="font-semibold text-on-surface">{profile?.commune ?? "—"}</span>
           </div>
           <div className="bg-surface-container rounded-xl p-4 flex items-center justify-between">
             <span className="text-xs text-on-surface-variant">Membre depuis</span>
@@ -220,23 +202,6 @@ export function AdminProfileEditor() {
               <label className="block">
                 <span className="font-label-sm text-on-surface-variant mb-1 block">Téléphone</span>
                 <input value={form.phone} onChange={(e) => set("phone", e.target.value)} className={INPUT_CLASS} />
-              </label>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label className="block">
-                <span className="font-label-sm text-on-surface-variant mb-1 block">Série</span>
-                <select value={form.serie_id} onChange={(e) => set("serie_id", e.target.value)} className={INPUT_CLASS}>
-                  <option value="">Série —</option>
-                  {series.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block">
-                <span className="font-label-sm text-on-surface-variant mb-1 block">Classe</span>
-                <input value={form.class_level} onChange={(e) => set("class_level", e.target.value)} placeholder="Ex. Terminale C" className={INPUT_CLASS} />
               </label>
             </div>
             <label className="block">
@@ -301,7 +266,7 @@ export function AdminProfileEditor() {
                     setPwError("");
                   }}
                   required
-                  minLength={6}
+                  minLength={8}
                   className={INPUT_CLASS}
                 />
               </label>
@@ -316,7 +281,7 @@ export function AdminProfileEditor() {
                     setPwError("");
                   }}
                   required
-                  minLength={6}
+                  minLength={8}
                   className={INPUT_CLASS}
                 />
               </label>

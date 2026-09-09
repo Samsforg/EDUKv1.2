@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 const SLIDES = [
   {
@@ -36,10 +37,12 @@ export function HeroCarousel() {
   return (
     <div className="relative w-full h-full rounded-[24px] overflow-hidden bg-surface-container">
       {SLIDES.map((slide, i) => (
-        <img
+        <Image
           key={slide.src}
           src={slide.src}
           alt={slide.alt}
+          fill
+          sizes="100vw"
           fetchPriority={i === 0 ? "high" : undefined}
           loading={i === 0 ? undefined : "lazy"}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
@@ -58,7 +61,7 @@ export function HeroCarousel() {
           >
             <span
               className={`block h-1.5 rounded-[999px] transition-all ${
-                i === index ? "w-4 bg-primary" : "w-1.5 bg-white/60 group-hover:bg-white"
+                i === index ? "w-4 bg-primary" : "w-1.5 bg-white/80 group-hover:bg-white"
               }`}
             />
           </button>
@@ -66,7 +69,7 @@ export function HeroCarousel() {
       </div>
       <div
         key={SLIDES[index].src}
-        className="absolute top-3 left-3 z-10 px-3 py-1 bg-black/45 backdrop-blur-sm text-white text-label-xs font-bold rounded-full"
+        className="absolute top-3 left-3 z-10 px-3 py-1 bg-black/70 backdrop-blur-sm text-white text-label-xs font-bold rounded-full"
       >
         {SLIDES[index].label}
       </div>

@@ -1,9 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import "./globals.css";
+import "@/lib/csrf-client";
 import RegisterSW from "@/components/RegisterSW";
 import VercelAnalytics from "@/components/VercelAnalytics";
 import EdukoraAnalytics from "@/components/EdukoraAnalytics";
 import ConsentBanner from "@/components/ConsentBanner";
+import AdSenseLoader from "@/components/AdSenseLoader";
+import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/JsonLd";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://edukora.net"),
@@ -12,7 +16,7 @@ export const metadata: Metadata = {
     template: "%s | Edukora",
   },
   description:
-    "L'allié n°1 pour réussir le BAC et le BEPC en Côte d'Ivoire. Fiches certifiées, tuteur IA et simulateur d'examen.",
+    "Fiches de révision, tuteur IA et simulateur d'examen pour réussir le BAC et le BEPC en Côte d'Ivoire.",
   manifest: "/manifest.webmanifest",
   icons: [
     { rel: "icon", url: "/favicon.png", type: "image/png" },
@@ -30,10 +34,10 @@ export const metadata: Metadata = {
     siteName: "Edukora",
     title: "Edukora - Réussir son BAC & BEPC",
     description:
-      "L'allié n°1 pour réussir le BAC et le BEPC en Côte d'Ivoire. Fiches certifiées, tuteur IA et simulateur d'examen.",
+      "Fiches de révision, tuteur IA et simulateur d'examen pour réussir le BAC et le BEPC en Côte d'Ivoire.",
     images: [
       {
-        url: "/images/og-cover.png",
+        url: "https://edukora.net/images/og-cover.png",
         width: 1200,
         height: 630,
         alt: "Edukora - Réussir son BAC et BEPC en Côte d'Ivoire",
@@ -44,8 +48,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Edukora - Réussir son BAC & BEPC",
     description:
-      "L'allié n°1 pour réussir le BAC et le BEPC en Côte d'Ivoire. Fiches certifiées, tuteur IA et simulateur d'examen.",
-    images: ["/images/og-cover.png"],
+      "Fiches de révision, tuteur IA et simulateur d'examen pour réussir le BAC et le BEPC en Côte d'Ivoire.",
+    images: ["https://edukora.net/images/og-cover.png"],
   },
   robots: {
     index: true,
@@ -60,18 +64,17 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const h = await headers();
+  const nonce = h.get("x-nonce") ?? undefined;
+
   return (
     <html lang="fr" className="light">
       <head>
         <link rel="preload" as="font" type="font/woff2" href="/fonts/MaterialSymbols-subset.woff2" crossOrigin="anonymous" />
         <link rel="preload" as="font" type="font/woff2" href="/fonts/HankenGrotesk-latin.woff2" crossOrigin="anonymous" />
         <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-latin.woff2" crossOrigin="anonymous" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('edukora-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');}}catch(e){}})();`,
-          }}
-        />
+        <script nonce={nonce} src="/theme-init.js" />
         {process.env.GSC_VERIFICATION ? (
           <meta
             name="google-site-verification"
@@ -80,11 +83,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         ) : null}
       </head>
       <body className="bg-background text-on-background">
+        <OrganizationJsonLd />
+        <WebSiteJsonLd />
         {children}
         <RegisterSW />
         <VercelAnalytics />
         <EdukoraAnalytics />
         <ConsentBanner />
+        <AdSenseLoader />
       </body>
     </html>
   );

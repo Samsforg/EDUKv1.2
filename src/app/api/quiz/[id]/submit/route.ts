@@ -8,6 +8,7 @@ import { creditLigueChallenges } from "@/lib/ligue";
 import { getDailyQuiz, creditDailyChallenge, DAILY_BONUS_XP } from "@/lib/daily";
 import { validate, QuizSubmitSchema } from "@/lib/validation";
 import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
+import { scheduleReview } from "@/lib/spaced-repetition";
 
 async function POSTHandler(
   req: NextRequest,
@@ -74,9 +75,19 @@ async function POSTHandler(
   }
 
   await addXp(user.id, xp);
+  // Révision espacée SM-2 : planifie la prochaine révision de ce quiz
+  void scheduleReview(user.id, Number(id), pct).catch(() => {});
   await creditLigueChallenges(user.id, "quiz_done", 1);
   await creditLigueChallenges(user.id, "xp_total", xp);
   if (pct === 100) await creditLigueChallenges(user.id, "quiz_perfect", 1);
+
+  // Upsell contextuel 1-clic essai 3j après 3 perfect
+  if (pct === 100) {
+    const perfectTotal = (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM quiz_attempts WHERE user_id = ? AND score = max_score AND max_score > 0", user.id))!.c;
+    if (perfectTotal === 3) {
+      await notify(user.id, "Offre spéciale débloquée 🎉", "3 sans-faute ! Ton essai gratuit 3 jours t'attend en 1-clic sur /tarifs.", "verified");
+    }
+  }
 
   const badges = await refreshBadges(user.id);
 

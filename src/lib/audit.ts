@@ -1,4 +1,5 @@
 import { query, queryOne, run } from "./db";
+import { parseDbDate } from "./date-parse";
 
 export interface AuditRow {
   id: number;
@@ -48,7 +49,7 @@ export async function getAuditLogs(limit = 100, action?: string): Promise<AuditR
   return rows.map((r) => ({
     ...r,
     relative: (() => {
-      const t = new Date(r.created_at.replace(" ", "T") + "Z").getTime();
+      const t = parseDbDate(r.created_at)?.getTime() ?? 0;
       if (Number.isNaN(t)) return r.created_at;
       const diff = Math.max(0, Math.floor((now - t) / 1000));
       if (diff < 60) return "à l'instant";

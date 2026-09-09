@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
+import AdSenseBanner from "@/components/AdSenseBanner";
 
 interface Grade {
   id: number;
@@ -190,6 +191,13 @@ export default function CoursPage() {
             ))}
           </div>
         </section>
+
+        {/* Bannière pub pour les utilisateurs gratuits */}
+        {!userSubscription && (
+          <div className="mb-8">
+            <AdSenseBanner slot="1234567890" format="fluid" minHeight={120} />
+          </div>
+        )}
 
         {userSubscription && (
           <div className="bg-surface-container-lowest border border-dashed border-outline-variant rounded-xl p-6 text-center">

@@ -17,12 +17,13 @@ async function GETHandler() {
     chapter_pos: number;
     lesson_id: number;
     lesson_title: string;
+    is_premium: number;
     saved: number;
     read: number;
   }>(
     `SELECT s.id AS subject_id, s.name AS subject_name, s.icon, s.color,
             c.id AS chapter_id, c.title AS chapter_title, c.position AS chapter_pos,
-            l.id AS lesson_id, l.title AS lesson_title,
+            l.id AS lesson_id, l.title AS lesson_title, l.is_premium,
             (SELECT COUNT(*) FROM saved_lessons sl WHERE sl.user_id = ? AND sl.lesson_id = l.id) AS saved,
             (SELECT COUNT(*) FROM lesson_reads lr WHERE lr.user_id = ? AND lr.lesson_id = l.id) AS read
      FROM subjects s
@@ -54,6 +55,7 @@ async function GETHandler() {
     ch.lessons.push({
       id: r.lesson_id,
       title: r.lesson_title,
+      is_premium: r.is_premium === 1,
       saved: r.saved > 0,
       read: r.read > 0,
     });

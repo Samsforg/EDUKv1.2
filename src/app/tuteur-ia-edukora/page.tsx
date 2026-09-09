@@ -1,4 +1,4 @@
-import TutorDemoPage from "@/components/TutorDemoPage";
+import TutorDemoPageWrapper from "@/components/TutorDemoPageWrapper";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <TutorDemoPage />;
+  return <TutorDemoPageWrapper />;
 }

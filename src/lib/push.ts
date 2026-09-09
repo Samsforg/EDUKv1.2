@@ -41,12 +41,12 @@ export async function sendPushToUser(userId: number, payload: PushPayload): Prom
         }),
       );
       sent++;
-    } catch (err: any) {
-      const status = err?.statusCode;
+    } catch (err: unknown) {
+      const status = err && typeof err === "object" && "statusCode" in err ? (err as { statusCode: number }).statusCode : undefined;
       if (status === 404 || status === 410) {
         await run("DELETE FROM push_subscriptions WHERE id = ?", s.id);
       } else {
-        console.warn(`[push] échec d'envoi (user ${userId}):`, err?.message ?? err);
+        console.warn(`[push] échec d'envoi (user ${userId}):`, err instanceof Error ? err.message : err);
       }
     }
   }

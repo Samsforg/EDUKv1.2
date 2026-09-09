@@ -3,6 +3,8 @@ import { notify } from "./session";
 import { hashPassword } from "./auth";
 import { logAudit } from "./audit";
 import { getAdminChallenges, getAdminLeagueChallenges } from "./admin-content";
+import { realUsersWhere, testUsersWhere, isTestEmail } from "./test-users";
+import { parseDbDate } from "./date-parse";
 
 const ROLES = ["student", "teacher", "admin", "parent", "expert"] as const;
 export type AdminRole = (typeof ROLES)[number];
@@ -29,15 +31,15 @@ export interface ActivityItem {
 }
 
 export async function getAdminStats(): Promise<AdminStats> {
-  const roles = await query<{ role: string; c: number }>("SELECT role, COUNT(*) AS c FROM users GROUP BY role");
+  const roles = await query<{ role: string; c: number }>(`SELECT role, COUNT(*) AS c FROM users u WHERE ${realUsersWhere()} GROUP BY role`);
   const count = (role: string) => roles.find((r) => r.role === role)?.c ?? 0;
   const today = new Date().toISOString().slice(0, 10);
 
   const online_today =
-    (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM users WHERE last_active >= ?", today))?.c ?? 0;
+    (await queryOne<{ c: number }>(`SELECT COUNT(*) AS c FROM users u WHERE ${realUsersWhere()} AND u.last_active >= ?`, today))?.c ?? 0;
 
   const new_week =
-    (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM users WHERE created_at >= datetime('now', '-7 days')"))?.c ?? 0;
+    (await queryOne<{ c: number }>(`SELECT COUNT(*) AS c FROM users u WHERE ${realUsersWhere()} AND u.created_at >= datetime('now', '-7 days')`))?.c ?? 0;
 
   const content = {
     lessons: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM lessons"))?.c ?? 0,
@@ -57,7 +59,7 @@ export async function getAdminStats(): Promise<AdminStats> {
       (await queryOne<{ v: number | null }>("SELECT ROUND(AVG(score * 100.0 / max_score)) AS v FROM quiz_attempts"))?.v ?? null,
     avg_exam_over_20:
       (await queryOne<{ v: number | null }>("SELECT ROUND(AVG(score_over_20), 1) AS v FROM exam_attempts"))?.v ?? null,
-    total_xp: (await queryOne<{ v: number }>("SELECT COALESCE(SUM(xp), 0) AS v FROM users"))?.v ?? 0,
+    total_xp: (await queryOne<{ v: number }>(`SELECT COALESCE(SUM(u.xp), 0) AS v FROM users u WHERE ${realUsersWhere()}`))?.v ?? 0,
   };
 
   const forum = {
@@ -87,7 +89,8 @@ export async function getAdminStats(): Promise<AdminStats> {
 }
 
 function relativeTime(iso: string): string {
-  const then = new Date(iso.replace(" ", "T") + (iso.includes("Z") ? "" : "Z"));
+  const then = parseDbDate(iso);
+  if (!then) return "à l'instant";
   const diff = Math.max(0, Date.now() - then.getTime());
   const min = Math.floor(diff / 60000);
   if (min < 1) return "à l'instant";
@@ -231,6 +234,7 @@ export interface AdminUserRow {
   quiz_attempts: number;
   exam_attempts: number;
   forum_posts: number;
+  is_test: boolean;
 }
 
 export async function getAdminUsers(): Promise<AdminUserRow[]> {
@@ -244,13 +248,14 @@ export async function getAdminUsers(): Promise<AdminUserRow[]> {
      FROM users u LEFT JOIN series s ON s.id = u.serie_id
      ORDER BY u.id`,
   );
-  return rows.map((u) => ({ ...u, online: !!u.last_active && u.last_active.slice(0, 10) === today }));
+  return rows.map((u) => ({ ...u, online: !!u.last_active && u.last_active.slice(0, 10) === today, is_test: isTestEmail(u.email) }));
 }
 
 export interface UserListFilters {
   q?: string;
   role?: string;
   status?: "all" | "active" | "blocked";
+  account_type?: "all" | "real" | "test";
   page?: number;
   pageSize?: number;
 }
@@ -268,6 +273,7 @@ export async function getAdminUsersPage(filters: UserListFilters = {}): Promise<
   const q = filters.q?.trim() ?? "";
   const role = filters.role ?? "all";
   const status = filters.status ?? "all";
+  const accountType = filters.account_type ?? "all";
   const pageSize = filters.pageSize ?? 20;
 
   const where: string[] = [];
@@ -284,6 +290,8 @@ export async function getAdminUsersPage(filters: UserListFilters = {}): Promise<
   }
   if (status === "active") where.push("u.blocked = 0");
   if (status === "blocked") where.push("u.blocked = 1");
+  if (accountType === "real") where.push(`(${realUsersWhere("u")})`);
+  if (accountType === "test") where.push(`(${testUsersWhere("u")})`);
   const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
 
   const total =
@@ -304,7 +312,7 @@ export async function getAdminUsersPage(filters: UserListFilters = {}): Promise<
     pageSize,
     (page - 1) * pageSize,
   );
-  const users = rows.map((u) => ({ ...u, online: !!u.last_active && u.last_active.slice(0, 10) === today }));
+  const users = rows.map((u) => ({ ...u, online: !!u.last_active && u.last_active.slice(0, 10) === today, is_test: isTestEmail(u.email) }));
 
   return { users, total, page, pages, pageSize };
 }
@@ -610,7 +618,7 @@ export async function getTrends(days = 14): Promise<TrendDay[]> {
   const start = dayStr(days - 1);
 
   const regs = await query<{ day: string; c: number }>(
-    "SELECT substr(created_at, 1, 10) AS day, COUNT(*) AS c FROM users WHERE created_at >= ? GROUP BY day",
+    `SELECT substr(u.created_at, 1, 10) AS day, COUNT(*) AS c FROM users u WHERE ${realUsersWhere()} AND u.created_at >= ? GROUP BY day`,
     `${start} 00:00:00`,
   );
   const quiz = await query<{ day: string; c: number }>(
@@ -1044,9 +1052,10 @@ export async function getSubscriptionsPage(filters: {
     JOIN users u ON u.id = s.user_id
     JOIN subscription_plans p ON p.id = s.plan_id
   `;
+  const realOnly = `NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`;
 
   const total =
-    Number((await queryOne<{ c: number }>(`SELECT COUNT(*) AS c ${base} ${whereSql}`, ...params))?.c ?? 0);
+    Number((await queryOne<{ c: number }>(`SELECT COUNT(*) AS c ${base} ${whereSql.length ? `WHERE ${whereSql} AND ${realOnly}` : `WHERE ${realOnly}`}`, ...params))?.c ?? 0);
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const page = Math.min(Math.max(1, filters.page ?? 1), pages);
 
@@ -1056,7 +1065,7 @@ export async function getSubscriptionsPage(filters: {
             u.first_name || ' ' || u.last_name AS user_name, u.email, u.phone, u.class_level,
             p.name AS plan_name, p.interval, COALESCE(s.price_cents, p.price_cents) AS price_cents
      ${base}
-     ${whereSql}
+     ${whereSql.length ? `${whereSql} AND ${realOnly}` : `WHERE ${realOnly}`}
      ORDER BY s.id DESC LIMIT ? OFFSET ?`,
     ...params,
     pageSize,
@@ -1065,19 +1074,19 @@ export async function getSubscriptionsPage(filters: {
   const subs = rows.map((r) => ({ ...r }));
 
   const counts = await query<{ status: string; c: number }>(
-    "SELECT s.status, COUNT(*) AS c FROM subscriptions s GROUP BY s.status",
+    `SELECT s.status, COUNT(*) AS c FROM subscriptions s WHERE ${realOnly} GROUP BY s.status`,
   );
   const countOf = (st: string) => Number(counts.find((x) => x.status === st)?.c ?? 0);
 
   const expiring_30d =
     Number((await queryOne<{ c: number }>(
-      `SELECT COUNT(*) AS c FROM subscriptions s WHERE s.status = 'active' AND s.end_at IS NOT NULL AND s.end_at >= ? AND s.end_at < ?`,
+      `SELECT COUNT(*) AS c FROM subscriptions s WHERE s.status = 'active' AND s.end_at IS NOT NULL AND s.end_at >= ? AND s.end_at < ? AND ${realOnly}`,
       `${today}T00:00:00`,
       `${in30}T23:59:59`,
     ))?.c ?? 0);
 
   const activePlans = await query<{ interval: string; price_cents: number }>(
-    `SELECT p.interval, COALESCE(s.price_cents, p.price_cents) AS price_cents FROM subscriptions s JOIN subscription_plans p ON p.id = s.plan_id WHERE s.status = 'active'`,
+    `SELECT p.interval, COALESCE(s.price_cents, p.price_cents) AS price_cents FROM subscriptions s JOIN subscription_plans p ON p.id = s.plan_id WHERE s.status = 'active' AND ${realOnly}`,
   );
   const monthlyRecurring = activePlans.reduce((sum, p) => {
     const divisor = p.interval === "year" ? 12 : p.interval === "quarter" ? 3 : 1;

@@ -11,12 +11,15 @@
     "ai:index-courses": "node scripts/ai-index-courses.mjs",
     "ai:watch-index": "node scripts/ai-watch-index.mjs",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
     "test:e2e": "playwright test",
     "deploy": "bash scripts/deploy-vercel.sh"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.69.0",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/blob": "^2.8.0",
     "@vercel/speed-insights": "^2.0.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
@@ -29,6 +32,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@eslint/js": "^9.39.5",
     "@playwright/test": "^1.62.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.10.0",
@@ -37,12 +42,15 @@
     "@types/react-dom": "^19.0.0",
     "@types/web-push": "^3.6.4",
     "autoprefixer": "^10.4.20",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.3",
     "jest": "^30.4.2",
     "parse5": "^7.2.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "ts-jest": "^29.4.12",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.68.0"
   },
   "overrides": {
     "glob": "13.0.6"

@@ -3,7 +3,7 @@ node_modules
 .next-prod
 out
 build
-data
+/data
 coverage
 .git
 .vercel

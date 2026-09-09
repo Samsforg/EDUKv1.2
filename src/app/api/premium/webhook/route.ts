@@ -5,6 +5,43 @@ import { queryOne, run, query } from "@/lib/db";
 import { canonicalPhone } from "@/lib/geniuspay";
 import { sendSubscriptionReceipt } from "@/lib/mailer";
 import { sendGa4Purchase } from "@/lib/ga4-ssr";
+import { addXp, notify } from "@/lib/session";
+import { logger } from "@/lib/logger";
+
+interface WebhookTransactionData {
+  reference?: string | null;
+  id?: string | null;
+  customer_phone?: string | null;
+  customer?: { phone?: string; name?: string };
+  metadata?: Record<string, unknown>;
+  amount?: number;
+  status?: string;
+  next_billing_date?: string;
+  end_at?: string;
+  subscription?: WebhookSubscriptionData;
+}
+
+interface WebhookSubscriptionData {
+  id?: string;
+  status?: string;
+  next_billing_date?: string;
+  is_trialing?: boolean;
+  customer?: { phone?: string; name?: string };
+  amount?: number;
+  plan_name?: string;
+  end_at?: string;
+}
+
+interface WebhookPayload {
+  event?: string;
+  data?: WebhookTransactionData;
+  subscription?: WebhookSubscriptionData;
+  reference?: string;
+  customer_phone?: string;
+  amount?: number;
+  plan_name?: string;
+  [key: string]: unknown;
+}
 
 async function sendReceiptIfActive(reference: string | null) {
   if (!reference) return;
@@ -34,7 +71,7 @@ async function sendReceiptIfActive(reference: string | null) {
     endAt: sub.end_at,
     reference: sub.provider_subscription_id,
   });
-  console.log(`[webhook] reçu ${okMail ? "envoyé" : "ENVOI ÉCHOUÉ"} -> user ${sub.user_id} (${sub.plan_name})`);
+  logger.webhook("geniuspay", "receipt_email", { userId: sub.user_id, planName: sub.plan_name, sent: okMail });
 
   // Fire-and-forget : ne bloque jamais la réponse du webhook (GeniusPay attend un 200 rapide).
   void sendGa4Purchase({
@@ -68,7 +105,9 @@ function verifySignature(
   parsed: unknown,
 ): { ok: boolean; reason?: string } {
   const secretsEnv = process.env.GENIUSPAY_WEBHOOK_SECRET;
-  if (!secretsEnv) return { ok: true, reason: "secret-non-configuré" };
+  if (!secretsEnv) {
+    return { ok: false, reason: "secret-non-configuré" };
+  }
   if (!sigHeader || !timestampHeader) return { ok: false, reason: "headers-manquants" };
   const ts = Number(timestampHeader);
   if (!Number.isFinite(ts)) return { ok: false, reason: "timestamp-invalide" };
@@ -95,30 +134,36 @@ function parseDateish(value: string | null | undefined): string | null {
 async function findUserByPhone(phone: string | null): Promise<number | null> {
   const canon = canonicalPhone(phone);
   if (!canon) return null;
+  const row = await queryOne<{ id: number }>("SELECT id FROM users WHERE phone_canonical = ? LIMIT 1", canon);
+  if (row) return row.id;
+  // Fallback legacy (avant migration phone_canonical)
   for (const u of await query<{ id: number; phone: string | null }>(
-    "SELECT id, phone FROM users WHERE phone IS NOT NULL AND phone != ''",
+    "SELECT id, phone FROM users WHERE phone IS NOT NULL AND phone != '' LIMIT 2000",
   )) {
-    if (canonicalPhone(u.phone) === canon) return u.id;
+    if (canonicalPhone(u.phone) === canon) {
+      await run("UPDATE users SET phone_canonical = ? WHERE id = ?", canon, u.id).catch(() => {});
+      return u.id;
+    }
   }
   return null;
 }
 
 /** Récupère la souscription GeniusPay la plus récente d'un utilisateur. */
 async function findLatestUserSubscription(userId: number) {
-  return queryOne<{ id: number }>(
-    "SELECT id FROM subscriptions WHERE user_id = ? AND provider = 'geniuspay' ORDER BY id DESC LIMIT 1",
+  return queryOne<{ id: number; status: string }>(
+    "SELECT id, status FROM subscriptions WHERE user_id = ? AND provider = 'geniuspay' ORDER BY id DESC LIMIT 1",
     userId,
   );
 }
 
 /** Traite un événement via le payload `data` au format officiel (transaction). */
-async function handleTransactionEvent(event: string, data: any): Promise<string | null> {
+async function handleTransactionEvent(event: string, data: WebhookTransactionData): Promise<string | null> {
   const reference = data?.reference ?? data?.id ?? null;
   const orderId = data?.metadata?.order_id ?? data?.metadata?.ref ?? null;
   const phone = data?.customer_phone ?? null;
 
-  let existing = await queryOne<{ id: number }>(
-    "SELECT id FROM subscriptions WHERE provider = 'geniuspay' AND (provider_subscription_id = ? OR provider_subscription_id = ?) ORDER BY id DESC LIMIT 1",
+  let existing = await queryOne<{ id: number; status: string }>(
+    "SELECT id, status FROM subscriptions WHERE provider = 'geniuspay' AND (provider_subscription_id = ? OR provider_subscription_id = ?) ORDER BY id DESC LIMIT 1",
     String(reference ?? ""),
     String(orderId ?? ""),
   );
@@ -130,7 +175,7 @@ async function handleTransactionEvent(event: string, data: any): Promise<string 
   }
 
   const now = new Date().toISOString();
-  const endAt = parseDateish(data?.next_billing_date ?? data?.end_at ?? data?.metadata?.next_billing_date);
+  const endAt = parseDateish(data?.next_billing_date ?? data?.end_at ?? (data?.metadata?.next_billing_date as string | undefined));
 
   let nextStatus: string | null = null;
   switch (event) {
@@ -155,13 +200,17 @@ async function handleTransactionEvent(event: string, data: any): Promise<string 
 
   if (nextStatus) {
     if (existing) {
-      await run(
-        "UPDATE subscriptions SET status = ?, end_at = COALESCE(?, end_at), updated_at = ? WHERE id = ?",
-        nextStatus,
-        endAt,
-        now,
-        existing.id,
-      );
+      // Ne pas rétrograder un essai/actif vers 'incomplete'.
+      const isDowngradeToIncomplete = nextStatus === "incomplete" && (existing.status === "trial" || existing.status === "active");
+      if (!isDowngradeToIncomplete) {
+        await run(
+          "UPDATE subscriptions SET status = ?, end_at = COALESCE(?, end_at), updated_at = ? WHERE id = ?",
+          nextStatus,
+          endAt,
+          now,
+          existing.id,
+        );
+      }
     } else if (user && nextStatus === "active") {
       const amount = Math.round(Number(data?.amount) || 0);
       const plan =
@@ -172,7 +221,7 @@ async function handleTransactionEvent(event: string, data: any): Promise<string 
             )) ?? null
           : null;
       if (!plan) {
-        console.warn(`[webhook] aucun plan ne correspond au montant payé (${amount} FCFA)`);
+        logger.warn("webhook:no_plan_match", { amount });
         return nextStatus;
       }
       await run(
@@ -187,17 +236,30 @@ async function handleTransactionEvent(event: string, data: any): Promise<string 
       );
     }
   }
-  if (nextStatus === "active") await sendReceiptIfActive(reference);
+  if (nextStatus === "active") {
+    await sendReceiptIfActive(reference);
+    void (async () => {
+      try {
+        const subUser = await queryOne<{ user_id: number }>("SELECT user_id FROM subscriptions WHERE provider_subscription_id = ? ORDER BY id DESC LIMIT 1", String(reference ?? ""));
+        if (!subUser) return;
+        const filleul = await queryOne<{ referred_by: number | null; first_name: string }>("SELECT referred_by, first_name FROM users WHERE id = ?", subUser.user_id);
+        if (filleul?.referred_by) {
+          await addXp(filleul.referred_by, 300);
+          await notify(filleul.referred_by, "Prime parrainage payant !", `${filleul.first_name} s'est abonné : +300 XP + prime Wave à réclamer sur /parrainage.`, "payments");
+        }
+      } catch (e: unknown) { logger.warn("webhook:referral_xp_failed", { error: e instanceof Error ? e.message : String(e) }); }
+    })();
+  }
   return nextStatus ?? null;
 }
 
 /** Rétro-compatibilité : payload `data.subscription` (API abonnements). */
-async function handleSubscriptionEvent(event: string, sub: any): Promise<string | null> {
+async function handleSubscriptionEvent(event: string, sub: WebhookSubscriptionData): Promise<string | null> {
   if (!sub?.id) return null;
   const endAt = parseDateish(sub.next_billing_date);
 
-  const existing = await queryOne<{ id: number }>(
-    "SELECT id FROM subscriptions WHERE provider_subscription_id = ? ORDER BY id DESC LIMIT 1",
+  const existing = await queryOne<{ id: number; status: string }>(
+    "SELECT id, status FROM subscriptions WHERE provider_subscription_id = ? ORDER BY id DESC LIMIT 1",
     sub.id,
   );
 
@@ -208,7 +270,9 @@ async function handleSubscriptionEvent(event: string, sub: any): Promise<string 
       nextStatus = "active";
       break;
     case "subscription.created":
-      nextStatus = sub.status === "active" ? "active" : "incomplete";
+      if (sub.status === "active") nextStatus = "active";
+      else if (sub.status === "trial" || sub.status === "trialing" || sub.is_trialing) nextStatus = "trial";
+      else nextStatus = "incomplete";
       break;
     case "subscription.payment_failed":
     case "subscription.past_due":
@@ -225,14 +289,32 @@ async function handleSubscriptionEvent(event: string, sub: any): Promise<string 
 
   const now = new Date().toISOString();
   if (existing) {
-    await run(
-      "UPDATE subscriptions SET status = ?, end_at = COALESCE(?, end_at), updated_at = ? WHERE id = ?",
-      nextStatus,
-      endAt,
-      now,
-      existing.id,
-    );
-    if (nextStatus === "active") await sendReceiptIfActive(sub.id);
+    // Ne pas rétrograder un essai ('trial') ou un abonnement actif vers 'incomplete'
+    // (ex : subscription.created reçu avant le 1er paiement de l'essai).
+    const isDowngradeToIncomplete = nextStatus === "incomplete" && (existing.status === "trial" || existing.status === "active");
+    if (!isDowngradeToIncomplete) {
+      await run(
+        "UPDATE subscriptions SET status = ?, end_at = COALESCE(?, end_at), updated_at = ? WHERE id = ?",
+        nextStatus,
+        endAt,
+        now,
+        existing.id,
+      );
+    }
+    if (nextStatus === "active") {
+      await sendReceiptIfActive(sub.id);
+      void (async () => {
+        try {
+          const subUser = await queryOne<{ user_id: number }>("SELECT user_id FROM subscriptions WHERE provider_subscription_id = ? ORDER BY id DESC LIMIT 1", String(sub.id));
+          if (!subUser) return;
+          const filleul = await queryOne<{ referred_by: number | null; first_name: string }>("SELECT referred_by, first_name FROM users WHERE id = ?", subUser.user_id);
+          if (filleul?.referred_by) {
+            await addXp(filleul.referred_by, 300);
+            await notify(filleul.referred_by, "Prime parrainage payant !", `${filleul.first_name} s'est abonné : +300 XP + prime Wave à réclamer sur /parrainage.`, "payments");
+          }
+        } catch (e: unknown) { logger.warn("webhook:referral_xp_failed", { error: e instanceof Error ? e.message : String(e) }); }
+      })();
+    }
     return nextStatus;
   }
 
@@ -250,6 +332,9 @@ async function handleSubscriptionEvent(event: string, sub: any): Promise<string 
     );
   }
   if (user && plan) {
+    const insertEndAt = nextStatus === "trial" && !endAt
+      ? new Date(Date.now() + 3 * 86_400_000).toISOString()
+      : endAt;
     await run(
       "INSERT INTO subscriptions (user_id, plan_id, provider, provider_subscription_id, provider_customer_id, price_cents, status, started_at, end_at) VALUES (?, ?, 'geniuspay', ?, ?, ?, ?, ?, ?)",
       user,
@@ -259,10 +344,23 @@ async function handleSubscriptionEvent(event: string, sub: any): Promise<string 
       amount,
       nextStatus,
       now,
-      endAt,
+      insertEndAt,
     );
   }
-  if (nextStatus === "active") await sendReceiptIfActive(sub.id);
+  if (nextStatus === "active") {
+    await sendReceiptIfActive(sub.id);
+    void (async () => {
+      try {
+        const subUser = await queryOne<{ user_id: number }>("SELECT user_id FROM subscriptions WHERE provider_subscription_id = ? ORDER BY id DESC LIMIT 1", String(sub.id));
+        if (!subUser) return;
+        const filleul = await queryOne<{ referred_by: number | null; first_name: string }>("SELECT referred_by, first_name FROM users WHERE id = ?", subUser.user_id);
+        if (filleul?.referred_by) {
+          await addXp(filleul.referred_by, 300);
+          await notify(filleul.referred_by, "Prime parrainage payant !", `${filleul.first_name} s'est abonné : +300 XP + prime Wave à réclamer sur /parrainage.`, "payments");
+        }
+      } catch (e: unknown) { logger.warn("webhook:referral_xp_failed", { error: e instanceof Error ? e.message : String(e) }); }
+    })();
+  }
   return nextStatus;
 }
 
@@ -276,7 +374,7 @@ async function POSTHandler(req: Request) {
   const raw = await req.text().catch(() => null);
   if (!raw) return NextResponse.json({ error: "Corps vide" }, { status: 400 });
 
-  let payload: any;
+  let payload: WebhookPayload;
   try {
     payload = JSON.parse(raw);
   } catch {
@@ -287,15 +385,23 @@ async function POSTHandler(req: Request) {
   const tsHdr = req.headers.get("x-webhook-timestamp");
   const check = verifySignature(raw, sig, tsHdr, payload);
   if (!check.ok) {
-    console.warn(`[webhook] rejeté: ${check.reason}`);
+    logger.warn("webhook:rejected", { reason: check.reason });
     return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
   }
 
   const event = (req.headers.get("x-webhook-event") ?? payload.event ?? "") as string;
   if (event === "webhook.test") {
-    console.log("[webhook] test reçu (OK)");
+    logger.info("webhook:test_received", { event });
     return NextResponse.json({ received: true });
   }
+
+  const eventId = `${event}:${payload.data?.reference ?? payload.data?.id ?? payload.data?.subscription?.id ?? raw.slice(0, 80)}:${tsHdr ?? ""}`.slice(0, 200);
+  const dup = await queryOne<{ event_id: string }>("SELECT event_id FROM webhook_events WHERE event_id = ?", eventId);
+  if (dup) {
+    logger.info("webhook:duplicate_ignored", { eventId });
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+  await run("INSERT INTO webhook_events (event_id) VALUES (?) ON CONFLICT(event_id) DO NOTHING", eventId);
 
   const data = payload.data ?? {};
 
@@ -307,11 +413,11 @@ async function POSTHandler(req: Request) {
       nextStatus = await handleTransactionEvent(event, data);
     }
   } catch (err) {
-    console.error("[webhook] erreur de traitement:", err);
+    logger.error("webhook:processing_error", { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
 
-  console.log(`[webhook] ${event} -> ${nextStatus ?? "ignoré"}`);
+  logger.webhook("geniuspay", event, { status: nextStatus ?? "ignored" });
   return NextResponse.json({ received: true });
 }
 

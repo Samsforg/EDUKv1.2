@@ -8,7 +8,8 @@
 | 2 | **Hugging Face** (fallback 1) | `HF_API_KEY` | `mistralai/Mistral-7B-Instruct-v0.3` |
 | 3 | **Cloudflare** (fallback 2) | `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_API_TOKEN` | `@cf/meta/llama-3.1-8b-instruct` |
 | 4 | **Gemini** (fallback 3) | `GEMINI_API_KEY` | `gemini-3.1-flash-lite` (via `GEMINI_TUTOR_MODEL`) |
-| 5 | **OpenAI** (fallback 4) | `OPENAI_API_KEY` | `gpt-4o-mini` |
+| 5 | **OpenRouter** (fallback 4) | `OPENROUTER_API_KEY` | `openai/gpt-4o-mini` (via `OPENROUTER_TUTOR_MODEL`) |
+| 6 | **OpenAI** (fallback 5) | `OPENAI_API_KEY` | `gpt-4o-mini` |
 
 Les providers sans clé sont **skippés** (jamais d'échec inutile).
 

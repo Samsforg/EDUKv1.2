@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 
 export const metadata: Metadata = { title: "Edukora | Réussis ton BAC & BEPC en Côte d'Ivoire" };
 
@@ -9,7 +10,7 @@ export default function Page() {
 
 <header className="bg-surface sticky top-0 z-50 w-full flex justify-between items-center px-4 md:px-8 py-3 max-w-7xl mx-auto">
 <div className="flex items-center gap-3">
-<img  alt="Edukora Logo" className="w-10 h-10 object-contain" src="/images/ecran-202.png" loading="lazy" />
+<Image alt="Edukora Logo" className="w-10 h-10 object-contain" src="/images/ecran-202.png" width={40} height={40} loading="lazy" />
 <span className="font-headline text-headline-md font-bold text-primary">Edukora</span>
 </div>
 <nav className="hidden md:flex items-center gap-8 font-label text-label-sm font-semibold text-on-surface-variant">
@@ -29,13 +30,13 @@ export default function Page() {
 <div className="z-10">
 <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-fixed text-on-primary-fixed rounded-full text-label-xs font-bold mb-6">
 <span className="material-symbols-outlined text-[16px]">verified</span>
-                        N°1 EN CÔTE D'IVOIRE
+                        PLATEFORME ÉDUCATIVE
                     </div>
 <h1 className="text-[40px] md:text-[56px] leading-[1.1] font-extrabold text-primary mb-6">
                         Réussis ton BAC &amp; BEPC avec l'excellence.
                     </h1>
 <p className="text-body-lg text-on-surface-variant mb-10 max-w-xl">
-                        Accédez à des fiches de révision certifiées par les meilleurs professeurs et progressez plus vite grâce à <strong>Kora</strong>, votre tuteur IA disponible 24h/24.
+                        Accédez à des fiches de révision et progressez plus vite grâce à <strong>Kora</strong>, votre tuteur IA disponible 24h/24.
                     </p>
 <div className="flex flex-col sm:flex-row gap-4">
 <Link href="/inscription-1-2-edukora" className="bg-secondary-container text-on-secondary-fixed text-body-md font-bold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2">
@@ -49,29 +50,29 @@ export default function Page() {
 <div className="mt-8 flex items-center gap-4 text-label-sm text-on-surface-variant">
 <div className="flex -space-x-2">
 <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-surface-container">
-<img  className="w-full h-full object-cover" src="/images/ecran-203.webp" alt="A portrait of a cheerful Ivorian high school student in a blue uniform, smiling at the camera in a bright outdoor school hallway. The lighting is warm and natural, following a professional corporate photography style with a shallow depth of field." loading="lazy" />
+<Image className="w-full h-full object-cover" src="/images/ecran-203.webp" alt="Étudiant ivoirien" width={32} height={32} loading="lazy" />
 </div>
 <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-surface-container">
-<img  className="w-full h-full object-cover" src="/images/ecran-204.webp" alt="A young West African student studying focusedly with a laptop in a modern library. Soft, clean sunlight filters through large windows, highlighting a bright academic environment. Professional photography, high-key lighting, corporate aesthetic." loading="lazy" />
+<Image className="w-full h-full object-cover" src="/images/ecran-204.webp" alt="Étudiant en bibliothèque" width={32} height={32} loading="lazy" />
 </div>
 <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-surface-container">
-<img  className="w-full h-full object-cover" src="/images/ecran-205.webp" alt="Close-up of a happy student celebrating an exam success, wearing a graduation cap. The image is bright, professional, and optimistic, capturing the energy of youth in Abidjan. High quality, vibrant primary blue accents in the background." loading="lazy" />
+<Image className="w-full h-full object-cover" src="/images/ecran-205.webp" alt="Étudiant en célébration" width={32} height={32} loading="lazy" />
 </div>
 </div>
-<span>Rejoins +50,000 étudiants ivoiriens</span>
+<span>Rejoins la communauté Edukora</span>
 </div>
 </div>
 <div className="relative">
 <div className="absolute -top-20 -right-20 w-80 h-80 bg-primary opacity-5 rounded-full blur-3xl"></div>
 <div className="relative glass-card rounded-[2rem] p-4 shadow-2xl border border-outline-variant/30 transform lg:rotate-2">
-<img  className="w-full h-full rounded-2xl object-cover aspect-[4/5]" src="/images/ecran-206.webp" alt="A high-tech dashboard of an educational mobile app shown on a modern smartphone screen. The interface displays course progress charts in forest green, academic blue headers, and a friendly AI avatar named Kora. The scene is set on a clean white desk with a notebook and a pen nearby. Modern, sleek, professional tech-focused photography." loading="lazy" />
+<Image className="w-full h-full rounded-2xl object-cover aspect-[4/5]" src="/images/ecran-206.webp" alt="Dashboard Edukora" width={400} height={500} loading="lazy" />
 <div className="absolute -left-6 bottom-12 bg-white p-4 rounded-2xl shadow-xl border border-outline-variant flex items-center gap-3 max-w-[200px]">
 <div className="w-10 h-10 bg-tertiary-container rounded-full flex items-center justify-center">
-<span className="material-symbols-outlined text-on-tertiary-container">trending_up</span>
+<span className="material-symbols-outlined text-on-tertiary-container">auto_awesome</span>
 </div>
 <div>
-<p className="text-label-xs text-on-surface-variant">Progression</p>
-<p className="text-label-sm font-bold text-on-surface">+24% ce mois</p>
+<p className="text-label-xs text-on-surface-variant">Tuteur IA</p>
+<p className="text-label-sm font-bold text-on-surface">Disponible 24h/24</p>
 </div>
 </div>
 </div>
@@ -112,82 +113,37 @@ Découvrir toutes les fonctionnalités
 
 <section className="py-24 px-4 md:px-8">
 <div className="max-w-7xl mx-auto">
-<div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-<div className="max-w-xl">
-<h2 className="text-display-lg-mobile md:text-display-lg text-primary mb-4">Ils ont réussi avec Edukora</h2>
-<p className="text-body-md text-on-surface-variant">Parce que leur succès est notre plus grande fierté.</p>
+<div className="text-center mb-16">
+<h2 className="text-display-lg-mobile md:text-display-lg text-primary mb-4">Ce que propose Edukora</h2>
+<p className="text-body-md text-on-surface-variant">Des outils conçus pour accompagner les élèves du BAC et du BEPC.</p>
 </div>
-<Link href="/resultats" className="inline-flex items-center gap-2 font-label text-label-sm font-semibold text-primary border border-outline-variant rounded-full px-6 py-3 hover:bg-surface-container transition-colors">
-Voir nos résultats
-<span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-</Link>
-</div>
-<div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-
+<div className="grid md:grid-cols-3 gap-8">
 <div className="bg-white p-8 rounded-3xl border border-outline-variant/30 shadow-sm">
-<div className="flex items-center gap-4 mb-6">
-<div className="w-14 h-14 rounded-full overflow-hidden bg-surface-container">
-<img  className="w-full h-full object-cover" src="/images/ecran-208.webp" alt="Portrait of a young Ivorian woman, smiling brightly, dressed in a neat high school uniform. She has an aura of confidence and success. High-quality portrait photography, bright background, light-mode design consistency." loading="lazy" />
+<div className="w-14 h-14 rounded-full bg-primary-container flex items-center justify-center mb-6">
+<span className="material-symbols-outlined text-primary text-2xl">menu_book</span>
 </div>
-<div>
-<h3 className="text-label-sm font-bold text-on-surface">Mariam K.</h3>
-<p className="text-label-xs text-on-surface-variant">Admise au BAC D (Mention Bien)</p>
-</div>
-</div>
+<h3 className="text-label-sm font-bold text-on-surface mb-2">Fiches de révision</h3>
 <p className="text-body-md italic text-on-surface-variant leading-relaxed">
-                            "Kora m'a aidé à comprendre les intégrales en une soirée alors que je luttais depuis des semaines. Sans Edukora, je n'aurais jamais eu cette mention !"
+                            Des fiches structurées couvrant les programmes du BAC et du BEPC, accessibles sur mobile et ordinateur.
                         </p>
-<div className="flex gap-1 mt-6 text-secondary-container">
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
 </div>
-</div>
-
 <div className="bg-white p-8 rounded-3xl border border-outline-variant/30 shadow-sm">
-<div className="flex items-center gap-4 mb-6">
-<div className="w-14 h-14 rounded-full overflow-hidden bg-surface-container">
-<img  className="w-full h-full object-cover" src="/images/ecran-209.webp" alt="Portrait of a young Ivorian student, looking focused and proud, holding a digital tablet. Professional lighting, outdoor campus setting, corporate educational style. Focus on the success and empowerment of Ivorian youth." loading="lazy" />
+<div className="w-14 h-14 rounded-full bg-secondary-container flex items-center justify-center mb-6">
+<span className="material-symbols-outlined text-on-secondary-fixed text-2xl">smart_toy</span>
 </div>
-<div>
-<h4 className="text-label-sm font-bold text-on-surface">Jean-Philippe A.</h4>
-<p className="text-label-xs text-on-surface-variant">Admis au BEPC</p>
-</div>
-</div>
+<h3 className="text-label-sm font-bold text-on-surface mb-2">Tuteur IA Kora</h3>
 <p className="text-body-md italic text-on-surface-variant leading-relaxed">
-                            "Les simulateurs d'examen sont incroyables. Le jour J, j'avais l'impression de faire un simple exercice sur l'appli. Je n'avais aucun stress."
+                            Posez vos questions et obtenez des explications détaillées, disponibles à tout moment.
                         </p>
-<div className="flex gap-1 mt-6 text-secondary-container">
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
 </div>
-</div>
-
 <div className="bg-white p-8 rounded-3xl border border-outline-variant/30 shadow-sm hidden lg:block">
-<div className="flex items-center gap-4 mb-6">
-<div className="w-14 h-14 rounded-full overflow-hidden bg-surface-container">
-<img  className="w-full h-full object-cover" src="/images/ecran-210.webp" alt="Close up of an Ivorian female student laughing with joy, wearing her school uniform. Background shows a bright classroom setting. Professional photography, vibrant colors, celebrating youth and academic success." loading="lazy" />
+<div className="w-14 h-14 rounded-full bg-tertiary-container flex items-center justify-center mb-6">
+<span className="material-symbols-outlined text-on-tertiary-container text-2xl">timer</span>
 </div>
-<div>
-<h4 className="text-label-sm font-bold text-on-surface">Awa D.</h4>
-<p className="text-label-xs text-on-surface-variant">Parent d'élève (Abidjan)</p>
-</div>
-</div>
+<h3 className="text-label-sm font-bold text-on-surface mb-2">Simulateur d&apos;examen</h3>
 <p className="text-body-md italic text-on-surface-variant leading-relaxed">
-                            "En tant que parent, je peux suivre les progrès de mon fils sur mon téléphone. C'est l'investissement le plus rentable pour son avenir."
+                            Entraînez-vous en conditions réelles avec des épreuves chronométrées et des corrections détaillées.
                         </p>
-<div className="flex gap-1 mt-6 text-secondary-container">
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>star</span>
-</div>
 </div>
 </div>
 </div>
@@ -218,11 +174,11 @@ Voir nos résultats
 <div className="grid md:grid-cols-4 gap-12 mb-16">
 <div className="col-span-1 md:col-span-1">
 <div className="flex items-center gap-3 mb-6">
-<img  alt="Edukora Logo" className="w-8 h-8 object-contain" src="/images/ecran-211.png" loading="lazy" />
+<Image alt="Edukora Logo" className="w-8 h-8 object-contain" src="/images/ecran-211.png" width={32} height={32} loading="lazy" />
 <span className="font-headline text-headline-md font-bold text-primary">Edukora</span>
 </div>
 <p className="text-label-sm text-on-surface-variant leading-relaxed">
-                            Plateforme de révision n°1 en Côte d'Ivoire. Nous transformons l'éducation par la technologie pour chaque étudiant ivoirien.
+                            Plateforme de révision pour le BAC et le BEPC en Côte d'Ivoire. Nous transformons l&apos;éducation par la technologie pour chaque étudiant ivoirien.
                         </p>
 </div>
 <div>

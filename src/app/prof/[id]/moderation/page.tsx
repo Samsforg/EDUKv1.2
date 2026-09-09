@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { parseDbDate } from "@/lib/date-parse";
 
 interface QItem {
   id: number;
@@ -41,7 +42,7 @@ interface ModData {
 }
 
 function timeAgo(s: string) {
-  const t = new Date(s.includes("T") ? s : s.replace(" ", "T") + "Z");
+  const t = parseDbDate(s) ?? new Date(0);
   const d = (Date.now() - t.getTime()) / 60000;
   if (d < 1) return "à l'instant";
   if (d < 60) return `il y a ${Math.floor(d)}m`;

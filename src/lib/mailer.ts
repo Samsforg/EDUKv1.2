@@ -130,3 +130,27 @@ export async function sendSubscriptionReceipt(userId: number, data: ReceiptData)
     html: receiptHtml(data),
   });
 }
+
+export function welcomeHtml(firstName: string, referralCode: string): string {
+  return `
+  <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px">
+    <h2 style="color:#0047ab;margin-bottom:8px">Bienvenue sur Edukora, ${firstName} ! 🎉</h2>
+    <p>Votre compte est créé. Vous pouvez dès maintenant réviser le BAC & BEPC avec nos fiches, quiz et le tuteur IA Kora.</p>
+    <p style="margin:16px 0;padding:12px;background:#f0f6ff;border-radius:8px">Votre code de parrainage : <strong style="letter-spacing:0.12em">${referralCode}</strong> — partagez-le, gagnez <strong>+150 XP</strong> par filleul.</p>
+    <p style="margin:24px 0"><a href="https://edukora.net/accueil-edukora" style="background:#0047ab;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold">Commencer à réviser</a></p>
+    <p style="color:#666;font-size:12px;margin-top:32px">&copy; Edukora — La plateforme d'apprentissage intelligente.</p>
+  </div>`;
+}
+
+export async function sendWelcomeEmail(userId: number): Promise<boolean> {
+  const user = await queryOne<{ email: string; first_name: string; referral_code: string }>(
+    "SELECT email, first_name, referral_code FROM users WHERE id = ?",
+    userId
+  );
+  if (!user?.email) return false;
+  return await sendMail({
+    to: user.email,
+    subject: `Bienvenue sur Edukora, ${user.first_name} !`,
+    html: welcomeHtml(user.first_name, user.referral_code),
+  });
+}

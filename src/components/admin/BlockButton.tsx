@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getCsrfToken } from "@/lib/csrf-client";
 
 export function BlockButton({ userId, blocked }: { userId: number; blocked: boolean }) {
   const [busy, setBusy] = useState(false);
@@ -14,9 +15,12 @@ export function BlockButton({ userId, blocked }: { userId: number; blocked: bool
     setBusy(true);
     setError("");
     try {
+      const token = await getCsrfToken();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["x-csrf-token"] = token;
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ blocked: !blocked }),
       });
       const data = await res.json();

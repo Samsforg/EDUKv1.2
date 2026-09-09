@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { guardApi } from "@/lib/api-guard";
 import { query } from "@/lib/db";
 import { maybeSendDailyReminder } from "@/lib/reminders";
+import { logger } from "@/lib/logger";
+import { requireCronSecret } from "@/lib/cron-auth";
 
 async function GETHandler(req: NextRequest) {
-  const auth = req.headers.get("authorization");
-  const secret = process.env.CRON_SECRET;
-  if (secret && auth !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  }
+  const forbidden = requireCronSecret(req);
+  if (forbidden) return forbidden;
 
   const users = await query<{ user_id: number }>(
     "SELECT user_id FROM reminder_settings WHERE enabled = 1",
@@ -19,9 +18,9 @@ async function GETHandler(req: NextRequest) {
   for (const u of users) {
     try {
       if (await maybeSendDailyReminder(u.user_id, true)) sent++;
-    } catch (err: any) {
+    } catch (err: unknown) {
       failed++;
-      console.error(`[cron-reminders] user ${u.user_id}:`, err?.message ?? err);
+      logger.error("cron:reminders_failed", { userId: u.user_id, error: err instanceof Error ? err.message : String(err) });
     }
   }
 

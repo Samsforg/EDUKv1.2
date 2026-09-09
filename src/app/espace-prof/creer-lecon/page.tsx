@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
+import ImageUploader from "@/components/ImageUploader";
 import { useRouter, useSearchParams } from "next/navigation";
 
 interface Chapter {
@@ -214,6 +215,10 @@ function CreateLessonPage() {
             placeholder="Contenu de la leçon au format Markdown…"
             rows={8}
             className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 font-body-sm text-on-surface focus:outline-none focus:border-primary resize-none font-mono text-xs leading-relaxed"
+          />
+          <ImageUploader
+            onUploaded={(url) => setContentMd((prev) => prev + `\n![Image](${url})\n`)}
+            className="mt-2"
           />
         </section>
 

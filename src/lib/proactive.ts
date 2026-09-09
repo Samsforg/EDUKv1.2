@@ -1,5 +1,6 @@
 import { query, queryOne } from "@/lib/db";
 import { notify } from "@/lib/session";
+import { parseDbDate } from "@/lib/date-parse";
 
 const COOLDOWN_MS: Record<string, number> = {
   welcome: 365 * 24 * 3600 * 1000,
@@ -15,7 +16,7 @@ async function lastNotifiedAt(userId: number, type: string): Promise<Date | null
     userId,
     type,
   );
-  return row ? new Date(row.created_at.replace(" ", "T") + "Z") : null;
+  return row ? parseDbDate(row.created_at) : null;
 }
 
 export async function maybeNotify(
@@ -58,7 +59,7 @@ export async function notifyOnLogin(userId: number): Promise<void> {
   if (!user) return;
 
   if (user.last_active) {
-    const last = new Date(user.last_active.replace(" ", "T") + "Z");
+    const last = parseDbDate(user.last_active) ?? new Date(0);
     const daysInactive = Math.floor((Date.now() - last.getTime()) / (24 * 3600 * 1000));
     if (daysInactive >= 7) {
       await maybeNotify(

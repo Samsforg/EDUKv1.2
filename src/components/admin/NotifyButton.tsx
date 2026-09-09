@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getCsrfToken } from "@/lib/csrf-client";
 
 export function NotifyButton({
   userId,
@@ -26,9 +27,12 @@ export function NotifyButton({
     setError("");
     setDone("");
     try {
+      const token = await getCsrfToken();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["x-csrf-token"] = token;
       const res = await fetch("/api/admin/notify", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(all ? { title, body } : { user_id: userId, title, body }),
       });
       const data = await res.json();

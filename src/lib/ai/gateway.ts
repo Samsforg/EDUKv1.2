@@ -1,7 +1,9 @@
 import { GroqProvider } from "./providers/groq";
 import { HuggingFaceProvider } from "./providers/huggingface";
 import { CloudflareProvider } from "./providers/cloudflare";
+import { CerebrasProvider } from "./providers/cerebras";
 import { GeminiProvider } from "./providers/gemini";
+import { OpenRouterProvider } from "./providers/openrouter";
 import { OpenAIProvider } from "./providers/openai";
 import { logAI } from "./logger";
 import type { AICompletion, AIGenerateOptions, AIProvider } from "./types";
@@ -12,7 +14,9 @@ const GATEWAY_CHAIN: (() => AIProvider)[] = [
   () => new GroqProvider(),
   () => new HuggingFaceProvider(),
   () => new CloudflareProvider(),
+  () => new CerebrasProvider(),
   () => new GeminiProvider(),
+  () => new OpenRouterProvider(),
   () => new OpenAIProvider(),
 ];
 

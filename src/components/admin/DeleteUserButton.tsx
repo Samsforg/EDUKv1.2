@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getCsrfToken } from "@/lib/csrf-client";
 
 export function DeleteUserButton({ userId, userName }: { userId: number; userName: string }) {
   const [busy, setBusy] = useState(false);
@@ -19,7 +20,10 @@ export function DeleteUserButton({ userId, userName }: { userId: number; userNam
     setBusy(true);
     setError("");
     try {
-      const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
+      const token = await getCsrfToken();
+      const headers: Record<string, string> = {};
+      if (token) headers["x-csrf-token"] = token;
+      const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE", headers });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "Erreur");

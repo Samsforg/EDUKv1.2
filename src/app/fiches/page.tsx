@@ -7,6 +7,7 @@ import PageHeader from "@/components/PageHeader";
 interface LessonItem {
   id: number;
   title: string;
+  is_premium: boolean;
   saved: boolean;
   read: boolean;
 }
@@ -126,6 +127,9 @@ export default function FichesPage() {
                             <span className="material-symbols-outlined text-sm">{l.read ? "check" : "radio_button_unchecked"}</span>
                           </span>
                           <span className="flex-1 font-body-sm text-on-surface truncate">{l.title}</span>
+                          {l.is_premium && (
+                            <span className="material-symbols-outlined text-sm text-amber-500" title="Contenu premium">workspace_premium</span>
+                          )}
                           <span className={`material-symbols-outlined text-lg ${l.saved ? "text-primary" : "text-outline-variant"}`}>
                             {l.saved ? "bookmark" : "bookmark_border"}
                           </span>

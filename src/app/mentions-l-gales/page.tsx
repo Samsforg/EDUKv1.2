@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Mentions légales",
@@ -146,9 +147,9 @@ export default function Page() {
 
 <header className="w-full sticky top-0 bg-surface dark:bg-background z-50 flex items-center justify-between px-4 py-4 border-b border-outline-variant dark:border-outline">
 <div className="flex items-center gap-4">
-<a href="/" aria-label="Retour à l'accueil" className="active:scale-95 duration-150 p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors flex items-center justify-center text-primary dark:text-primary-fixed">
+<Link href="/" aria-label="Retour à l'accueil" className="active:scale-95 duration-150 p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors flex items-center justify-center text-primary dark:text-primary-fixed">
 <span className="material-symbols-outlined">arrow_back</span>
-</a>
+</Link>
 <h1 className="font-headline text-headline-md font-semibold text-primary dark:text-primary-fixed">Informations Légales</h1>
 </div>
 <div className="hidden md:flex gap-6 items-center">

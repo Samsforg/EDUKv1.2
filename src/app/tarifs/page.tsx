@@ -43,7 +43,7 @@ const FALLBACK_DECOUVERTE: PlanRow = {
   interval: "month",
   price_cents: 0,
   currency: "XOF",
-  features: ["Accès à 10 fiches de révision / mois", "5 questions par mois à Kora IA", "Simulateur d'examen (Accès limité)"].join("\n"),
+  features: ["Accès à 10 fiches de révision / mois", "5 questions par mois à Kora IA", "1 sujet d'examen (Simulateur) par mois", "1 correction de dissertation par mois"].join("\n"),
   sort_order: 0,
 };
 
@@ -53,7 +53,7 @@ const FALLBACK_REUSSITE: PlanRow = {
   interval: "month",
   price_cents: 4900,
   currency: "XOF",
-  features: ["Accès illimité à toutes les fiches", "30 questions par mois à Kora IA", "Simulateur complet + Correction détaillée", "Support prioritaire par nos professeurs"].join("\n"),
+  features: ["Accès illimité à toutes les fiches de révision", "30 questions par mois à Kora IA", "Sujets d'examen illimités (Simulateur BAC/BEPC)", "5 corrections de dissertation par mois", "Support prioritaire par nos professeurs"].join("\n"),
   sort_order: 1,
 };
 
@@ -80,7 +80,7 @@ export default async function Page({ searchParams }: { searchParams?: Promise<{ 
     <div className="bg-background text-on-background min-h-screen font-body">
       <MarketingHeader />
 
-      <main>
+      <main role="main">
         <section className="relative overflow-hidden pt-16 pb-20 px-4 md:px-8">
           <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary opacity-[0.06] rounded-[999px] blur-3xl" />
           <div className="max-w-7xl mx-auto text-center relative">
@@ -91,7 +91,7 @@ export default async function Page({ searchParams }: { searchParams?: Promise<{ 
             <h1 className="text-[40px] md:text-[56px] leading-[1.08] font-extrabold text-primary mb-6">
               Un investissement pour ton futur
             </h1>
-            <p className="text-body-lg text-on-surface-variant mb-10 max-w-2xl mx-auto">
+            <p className="text-body-lg text-on-surface mb-10 max-w-2xl mx-auto">
               Choisis le plan qui te convient le mieux pour tes révisions. Commence gratuitement, passe en Premium
               quand tu es prêt.
             </p>
@@ -108,11 +108,11 @@ export default async function Page({ searchParams }: { searchParams?: Promise<{ 
 
         <section className="px-4 md:px-8 pb-24">
           {variant === "B" ? (
-            <PlansGridB decouverte={decouverte} reussite={reussite} />
+            <PlansGridB decouverte={decouverte} reussite={reussite} plans={plans} />
           ) : (
             <PlansGridA decouverte={decouverte} reussite={reussite} />
           )}
-          <p className="text-center text-label-sm text-on-surface-variant mt-8">
+          <p className="text-center text-label-sm text-on-surface mt-8">
             Des questions ? Consulte notre FAQ ci-dessous ou contacte le support.
           </p>
         </section>
@@ -120,7 +120,7 @@ export default async function Page({ searchParams }: { searchParams?: Promise<{ 
         <section className="px-4 md:px-8 pb-24">
           <div className="max-w-5xl mx-auto py-20">
             <h2 className="text-[32px] md:text-[40px] font-extrabold text-primary mb-4 text-center">Compare les plans</h2>
-            <p className="text-body-md text-on-surface-variant mb-12 text-center">
+            <p className="text-body-md text-on-surface mb-12 text-center">
               Tous les plans incluent l'accès aux leçons de ton programme (BAC ou BEPC).
             </p>
 
@@ -129,7 +129,7 @@ export default async function Page({ searchParams }: { searchParams?: Promise<{ 
                 <div className="p-5 md:p-6" />
                 <div className="p-5 md:p-6 text-center">
                   <p className="text-label-sm font-bold text-on-surface">{decouverte.name}</p>
-                  <p className="text-label-xs text-on-surface-variant mt-1">{formatPlanPrice(decouverte.price_cents)}/mois</p>
+                  <p className="text-label-xs text-on-surface mt-1">{formatPlanPrice(decouverte.price_cents)}/mois</p>
                 </div>
                 <div className="p-5 md:p-6 text-center bg-primary-fixed/40">
                   <p className="text-label-sm font-bold text-primary">{reussite.name}</p>
@@ -151,7 +151,7 @@ export default async function Page({ searchParams }: { searchParams?: Promise<{ 
                   className={`grid grid-cols-[1fr_auto_auto] md:grid-cols-[1fr_1fr_1fr] ${i % 2 === 0 ? "bg-surface-container-low/60" : ""} ${row.highlight ? "font-semibold" : ""}`}
                 >
                   <div className="p-5 md:p-6 text-label-sm text-on-surface">{row.feature}</div>
-                  <div className="p-5 md:p-6 text-center text-label-sm text-on-surface-variant">{row.decouverte}</div>
+                  <div className="p-5 md:p-6 text-center text-label-sm text-on-surface">{row.decouverte}</div>
                   <div className="p-5 md:p-6 text-center text-label-sm text-primary bg-primary-fixed/40">{row.reussite}</div>
                 </div>
               ))}
@@ -185,7 +185,7 @@ export default async function Page({ searchParams }: { searchParams?: Promise<{ 
         <section className="pb-24 px-4 md:px-8 bg-surface-container-low">
           <div className="max-w-3xl mx-auto py-20">
             <h2 className="text-[32px] md:text-[40px] font-extrabold text-primary mb-4 text-center">Questions fréquentes</h2>
-            <p className="text-body-md text-on-surface-variant mb-12 text-center">
+            <p className="text-body-md text-on-surface mb-12 text-center">
               Tout ce qu'il faut savoir avant de t'abonner.
             </p>
             <div className="space-y-4">
@@ -198,7 +198,7 @@ export default async function Page({ searchParams }: { searchParams?: Promise<{ 
                     {f.q}
                     <span className="material-symbols-outlined text-primary group-open:rotate-180 transition-transform">expand_more</span>
                   </summary>
-                  <p className="mt-4 text-body-md text-on-surface-variant leading-relaxed">{f.a}</p>
+                  <p className="mt-4 text-body-md text-on-surface leading-relaxed">{f.a}</p>
                 </details>
               ))}
             </div>
@@ -216,7 +216,7 @@ export default async function Page({ searchParams }: { searchParams?: Promise<{ 
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <Link
                   href="/inscription-1-2-edukora"
-                  className="bg-secondary-container text-on-secondary-fixed text-body-md font-bold px-10 py-5 rounded-[20px] flex items-center justify-center gap-3 active:scale-95 transition-transform shadow-xl"
+                  className="bg-secondary-container text-on-secondary-container text-body-md font-bold px-10 py-5 rounded-[20px] flex items-center justify-center gap-3 active:scale-95 transition-transform shadow-xl"
                 >
                   <span className="material-symbols-outlined">rocket_launch</span>
                   Créer mon compte gratuit
@@ -247,12 +247,12 @@ function PlansGridA({ decouverte, reussite }: { decouverte: PlanRow; reussite: P
     <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
       <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 border border-outline-variant relative overflow-hidden hover:border-primary/30 transition-all">
         <div className="mb-8">
-          <h3 className="text-headline-md text-on-surface mb-2">{decouverte.name}</h3>
+          <h2 className="text-headline-md text-on-surface mb-2">{decouverte.name}</h2>
           <div className="flex items-baseline gap-1">
             <span className="text-[32px] font-bold text-primary">{formatPlanPrice(decouverte.price_cents)}</span>
-            <span className="text-on-surface-variant">{formatPlanInterval(decouverte.interval)}</span>
+            <span className="text-on-surface">{formatPlanInterval(decouverte.interval)}</span>
           </div>
-          <p className="text-label-sm text-on-surface-variant mt-2">Idéal pour tester la plateforme</p>
+          <p className="text-label-sm text-on-surface mt-2">Idéal pour tester la plateforme</p>
         </div>
         <ul className="space-y-4 mb-10">
           {decouverteFeatures.map((f) => (
@@ -271,11 +271,11 @@ function PlansGridA({ decouverte, reussite }: { decouverte: PlanRow; reussite: P
         </Link>
       </div>
       <div className="bg-primary rounded-[32px] p-8 relative overflow-hidden shadow-2xl transform hover:-translate-y-1 transition-all">
-        <div className="absolute top-0 right-0 bg-secondary-container text-on-secondary-fixed px-6 py-2 rounded-bl-[24px] text-label-xs font-bold uppercase tracking-tighter">
+        <div className="absolute top-0 right-0 bg-secondary-container text-on-secondary-container px-6 py-2 rounded-bl-[24px] text-label-xs font-bold uppercase tracking-tighter">
           Populaire
         </div>
         <div className="mb-8">
-          <h3 className="text-headline-md text-white mb-2">{reussite.name}</h3>
+          <h2 className="text-headline-md text-white mb-2">{reussite.name}</h2>
           <div className="flex items-baseline gap-1">
             <span className="text-[32px] font-bold text-primary-fixed">{formatPlanPrice(reussite.price_cents)}</span>
             <span className="text-primary-container">{formatPlanInterval(reussite.interval)}</span>
@@ -301,24 +301,27 @@ function PlansGridA({ decouverte, reussite }: { decouverte: PlanRow; reussite: P
   );
 }
 
-function PlansGridB({ decouverte, reussite }: { decouverte: PlanRow; reussite: PlanRow }) {
+function PlansGridB({ decouverte, reussite, plans }: { decouverte: PlanRow; reussite: PlanRow; plans: PlanRow[] }) {
   const decouverteFeatures = planFeatures(decouverte);
   const reussiteFeatures = planFeatures(reussite);
   const promoActive = isRentreePromoActive();
   const promoPrice = Math.round((reussite.price_cents * (100 - RENTREE_PROMO_PERCENT)) / 100);
   const endDate = new Date(`${RENTREE_PROMO_ENDS_AT}T23:59:59Z`);
   const endLabel = endDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
-  const trimaestriel = (
+
+  const trimaestriel = plans.find((p) => p.interval === "quarter" && p.price_cents > 0);
+
+  const TrimaestrielCard = () => (
     <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 border border-outline-variant relative overflow-hidden hover:border-primary/30 transition-all text-center">
-      <div className="absolute top-0 right-0 bg-tertiary-container text-on-tertiary-fixed px-6 py-2 rounded-bl-[24px] text-label-xs font-bold uppercase tracking-tighter">
+      <div className="absolute top-0 right-0 bg-tertiary-container text-on-tertiary-container px-6 py-2 rounded-bl-[24px] text-label-xs font-bold uppercase tracking-tighter">
         Sans engagement
       </div>
-      <h3 className="text-headline-md text-on-surface mb-2">{PREMIUM_TRIMESTRIEL_TITLE}</h3>
+      <h2 className="text-headline-md text-on-surface mb-2">{PREMIUM_TRIMESTRIEL_TITLE}</h2>
       <div className="flex items-baseline justify-center gap-1">
-        <span className="text-[32px] font-bold text-primary">14 700 FCFA</span>
-        <span className="text-on-surface-variant">/trimestre</span>
+        <span className="text-[32px] font-bold text-primary">{formatPlanPrice(trimaestriel?.price_cents ?? 14700)}</span>
+        <span className="text-on-surface">{formatPlanInterval(trimaestriel?.interval ?? "quarter")}</span>
       </div>
-      <p className="text-label-sm text-on-surface-variant mt-2">4 900 FCFA/mois, facturé tous les 3 mois</p>
+      <p className="text-label-sm text-on-surface mt-2">{(trimaestriel?.price_cents ? (trimaestriel.price_cents / 3).toLocaleString("fr-FR") : "4 900")} FCFA/mois, facturé tous les 3 mois</p>
       <ul className="space-y-4 mt-8 mb-10 text-left max-w-xs mx-auto">
         <li key="eng" className="flex items-center gap-3 text-label-sm">
           <span className="material-symbols-outlined text-primary text-[20px]">check</span>
@@ -336,16 +339,17 @@ function PlansGridB({ decouverte, reussite }: { decouverte: PlanRow; reussite: P
       <SubscriptionCta label="Choisir le trimestriel" cta="tarifs" icon="calendar_month" />
     </div>
   );
+
   return (
     <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 items-stretch">
       <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 border border-outline-variant relative overflow-hidden hover:border-primary/30 transition-all">
         <div className="mb-8">
-          <h3 className="text-headline-md text-on-surface mb-2">{decouverte.name}</h3>
+          <h2 className="text-headline-md text-on-surface mb-2">{decouverte.name}</h2>
           <div className="flex items-baseline gap-1">
             <span className="text-[32px] font-bold text-primary">{formatPlanPrice(decouverte.price_cents)}</span>
-            <span className="text-on-surface-variant">{formatPlanInterval(decouverte.interval)}</span>
+            <span className="text-on-surface">{formatPlanInterval(decouverte.interval)}</span>
           </div>
-          <p className="text-label-sm text-on-surface-variant mt-2">Idéal pour tester la plateforme</p>
+          <p className="text-label-sm text-on-surface mt-2">Idéal pour tester la plateforme</p>
         </div>
         <ul className="space-y-4 mb-10">
           {decouverteFeatures.map((f) => (
@@ -365,11 +369,11 @@ function PlansGridB({ decouverte, reussite }: { decouverte: PlanRow; reussite: P
       </div>
 
       <div className="bg-primary rounded-[32px] p-8 relative overflow-hidden shadow-2xl transform hover:-translate-y-1 transition-all">
-        <div className="absolute top-0 right-0 bg-secondary-container text-on-secondary-fixed px-6 py-2 rounded-bl-[24px] text-label-xs font-bold uppercase tracking-tighter">
+        <div className="absolute top-0 right-0 bg-secondary-container text-on-secondary-container px-6 py-2 rounded-bl-[24px] text-label-xs font-bold uppercase tracking-tighter">
           Populaire
         </div>
         <div className="mb-8">
-          <h3 className="text-headline-md text-white mb-2">{reussite.name}</h3>
+          <h2 className="text-headline-md text-white mb-2">{reussite.name}</h2>
           <div className="flex items-baseline gap-2 flex-wrap">
             {promoActive ? (
               <>
@@ -410,7 +414,7 @@ function PlansGridB({ decouverte, reussite }: { decouverte: PlanRow; reussite: P
         <SubscriptionCta label={promoActive ? `Profiter de -${RENTREE_PROMO_PERCENT}% maintenant` : "S'abonner maintenant"} cta="tarifs" icon="local_fire_department" />
       </div>
 
-      {trimaestriel}
+      {trimaestriel && <TrimaestrielCard />}
     </div>
   );
 }

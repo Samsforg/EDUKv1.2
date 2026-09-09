@@ -94,6 +94,7 @@ export default function TeacherDashboardPage() {
   const [lessons, setLessons] = useState<ProfLesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
+  const [copiedQuiz, setCopiedQuiz] = useState<number | null>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -151,6 +152,20 @@ export default function TeacherDashboardPage() {
     setLessons((prev) => prev.filter((l) => l.id !== id));
   }
 
+  async function shareQuiz(id: number) {
+    try {
+      const res = await fetch(`/api/quiz/${id}/share`, { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        await navigator.clipboard.writeText(data.url);
+        setCopiedQuiz(id);
+        setTimeout(() => setCopiedQuiz(null), 2000);
+      }
+    } catch {
+      // silencieux
+    }
+  }
+
   const avgQuiz = quizzes.length > 0 && quizzes.some((q) => q.avg_percent !== null)
     ? Math.round(quizzes.filter((q) => q.avg_percent !== null).reduce((a, q) => a + (q.avg_percent ?? 0), 0) / Math.max(1, quizzes.filter((q) => q.avg_percent !== null).length))
     : null;
@@ -187,7 +202,7 @@ export default function TeacherDashboardPage() {
         <div className="flex items-center gap-3">
           <Link href="/" className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs hover:opacity-90">↗</Link>
           <button
-            onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); location.href = "/connexion-edukora"; }}
+            onClick={() => { window.location.href = "/api/auth/logout"; }}
             className="w-9 h-9 rounded-full bg-primary-container/30 text-on-primary flex items-center justify-center hover:opacity-90"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
@@ -293,6 +308,21 @@ export default function TeacherDashboardPage() {
             <p className="font-label-xs text-on-surface-variant uppercase tracking-wider">Leçons</p>
             <p className="font-headline-md text-headline-md text-on-surface mt-1">{lessons.length}</p>
           </div>
+        </section>
+
+        <section className="mb-8">
+          <Link href="/espace-prof/lives" className="block bg-surface-container-lowest border border-outline-variant rounded-xl p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-xl bg-red-500 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-white">live_tv</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-label-md font-semibold text-on-surface">Gérer mes Lives</h3>
+                <p className="font-label-xs text-on-surface-variant">Créer, lancer et suivre vos sessions live en temps réel</p>
+              </div>
+              <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+            </div>
+          </Link>
         </section>
 
         <section className="mb-8">
@@ -407,6 +437,14 @@ export default function TeacherDashboardPage() {
                   >
                     <span className="material-symbols-outlined text-[20px]">groups</span>
                   </Link>
+                  <button
+                    onClick={() => shareQuiz(q.id)}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors ${copiedQuiz === q.id ? "text-green-600 bg-green-100" : "text-on-surface-variant hover:bg-surface-container-high"}`}
+                    aria-label="Partager le quiz"
+                    title="Copier le lien de partage"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">{copiedQuiz === q.id ? "check" : "share"}</span>
+                  </button>
                   <button onClick={() => setConfirm({ title: "Supprimer ce quiz ?", message: `« ${q.title} » et ses ${q.question_count} questions seront définitivement supprimés.`, onConfirm: () => deleteQuiz(q.id) })} aria-label="Supprimer" className="w-9 h-9 rounded-full text-error hover:bg-error-container/20 flex items-center justify-center shrink-0">
                     <span className="material-symbols-outlined text-[20px]">delete</span>
                   </button>
@@ -463,24 +501,24 @@ export default function TeacherDashboardPage() {
       </main>
 
 <nav className="fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-outline-variant px-4 py-3">
-        <div className="max-w-4xl mx-auto grid grid-cols-2 gap-3">
+        <div className="max-w-4xl mx-auto grid grid-cols-3 gap-3">
+          <Link href="/espace-prof/lives" className="h-12 rounded-full bg-red-500 text-white font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
+            <span className="material-symbols-outlined text-[18px]">live_tv</span> Lives
+          </Link>
           <Link href="/espace-prof/classes" className="h-12 rounded-full bg-surface-container-high text-on-surface font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
-            <span className="material-symbols-outlined text-[18px]">groups</span> Mes classes
+            <span className="material-symbols-outlined text-[18px]">groups</span> Classes
           </Link>
           <Link href="/espace-prof/tentatives" className="h-12 rounded-full bg-surface-container-high text-on-surface font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
             <span className="material-symbols-outlined text-[18px]">assignment_turned_in</span> Tentatives
           </Link>
           <Link href="/espace-prof/creer-chapitre" className="h-12 rounded-full bg-tertiary text-on-tertiary font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
-            <span className="material-symbols-outlined text-[18px]">add</span> Nouveau chapitre
+            <span className="material-symbols-outlined text-[18px]">add</span> Chapitre
           </Link>
           <Link href="/espace-prof/creer-lecon" className="h-12 rounded-full bg-primary text-on-primary font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
-            <span className="material-symbols-outlined text-[18px]">add</span> Nouvelle leçon
+            <span className="material-symbols-outlined text-[18px]">add</span> Leçon
           </Link>
           <Link href="/espace-prof/creer-quiz" className="h-12 rounded-full bg-secondary text-on-secondary font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
-            <span className="material-symbols-outlined text-[18px]">add</span> Nouveau quiz
-          </Link>
-          <Link href="/espace-prof/creer-sujet" className="h-12 rounded-full bg-surface-container text-on-surface font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-100">
-            <span className="material-symbols-outlined text-[18px]">add</span> Nouveau sujet
+            <span className="material-symbols-outlined text-[18px]">add</span> Quiz
           </Link>
         </div>
       </nav>

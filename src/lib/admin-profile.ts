@@ -29,7 +29,7 @@ export async function updateAdminProfile(
   actorId: number,
   fields: Record<string, unknown>,
 ): Promise<{ ok: true; profile: AdminProfile } | { error: string }> {
-  const allowed = ["first_name", "last_name", "email", "phone", "serie_id", "class_level", "commune"] as const;
+  const allowed = ["first_name", "last_name", "email", "phone", "commune"] as const;
   const updates: string[] = [];
   const params: (string | number | null)[] = [];
 
@@ -49,10 +49,6 @@ export async function updateAdminProfile(
     if (v !== null && key === "phone") {
       const exists = await queryOne<{ id: number }>("SELECT id FROM users WHERE phone = ? AND id != ?", String(v), actorId);
       if (exists) return { error: "Ce numéro est déjà utilisé" };
-    }
-    if (key === "serie_id" && v === null) {
-      updates.push("serie_id = NULL");
-      continue;
     }
 
     updates.push(`${key} = ?`);
@@ -77,8 +73,8 @@ export async function changeAdminPassword(
   const user = await queryOne<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = ?", actorId);
   if (!user) return { error: "Utilisateur introuvable" };
   if (!verifyPassword(currentPassword, user.password_hash)) return { error: "Mot de passe actuel incorrect" };
-  if (!newPassword || newPassword.length < 6) {
-    return { error: "Le nouveau mot de passe doit contenir au moins 6 caractères" };
+  if (!newPassword || newPassword.length < 8) {
+    return { error: "Le nouveau mot de passe doit contenir au moins 8 caractères" };
   }
   if (newPassword === currentPassword) return { error: "Le nouveau mot de passe doit être différent de l'actuel" };
 

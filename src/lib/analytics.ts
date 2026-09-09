@@ -1,9 +1,11 @@
 "use client";
 
+import { trackMarketing } from "./marketing";
+
 // ============================================================
-// Edukora Analytics — GA4 (gtag) + Microsoft Clarity
+// Edukora Analytics — GA4 (gtag) + Microsoft Clarity + Marketing
 // Événements métier centralisés. Respecte le consentement
-// (cookie edukora_consent.analytics === true).
+// (cookie edukora_consent.analytics === true / marketing === true).
 // ============================================================
 
 export const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? "";
@@ -172,12 +174,39 @@ gtag('config', '${GA_ID}', { send_page_view: true });`;
 // ------------------------------------------------------------------
 const sentThisView = new Set<string>();
 
+function sendToInternal(name: EdukoraEventName, params: TrackParams) {
+  try {
+    fetch("/api/analytics/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: name, props: params, url: location.href }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {}
+}
+
 export function trackEvent(
   name: EdukoraEventName,
   params: TrackParams = {},
   opts: { dedupe?: boolean } = {},
 ): void {
   if (typeof window === "undefined") return;
+  // Toujours envoyer vers l'analytics interne gratuit (DB), même sans consentement (1st-party, anonymisable)
+  sendToInternal(name, params);
+  // Marketing pro (Meta/TikTok/Google Ads) — respecte son propre consentement marketing
+  try {
+    const map: Record<string, string> = {
+      signup_completed: "CompleteRegistration",
+      subscription_started: "Subscribe",
+      begin_checkout: "InitiateCheckout",
+      add_payment_info: "AddPaymentInfo",
+      quiz_completed: "CompleteQuiz",
+      lesson_completed: "CompleteLesson",
+      simulateur_completed: "CompleteExam",
+    };
+    const mEvent = map[name];
+    if (mEvent) trackMarketing(mEvent, params as Record<string, unknown>);
+  } catch {}
   if (!analyticsAccepted()) return;
 
   const key = `${name}:${JSON.stringify(params).slice(0, 120)}`;

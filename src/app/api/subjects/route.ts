@@ -39,7 +39,9 @@ async function GETHandler() {
     user?.id ?? 0,
     user?.id ?? 0,
   );
-  return NextResponse.json({ subjects });
+  const res = NextResponse.json({ subjects });
+  res.headers.set("Cache-Control", "private, max-age=30, stale-while-revalidate=300");
+  return res;
 }
 
 export const GET = guardApi("GET /api/subjects", GETHandler);

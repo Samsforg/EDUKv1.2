@@ -2,6 +2,7 @@ import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne, run } from "@/lib/db";
 import { getCurrentUser, applyActivity, addXp } from "@/lib/session";
+import { isPremiumUser } from "@/lib/quotas";
 import { validate, LessonCompleteSchema } from "@/lib/validation";
 
 async function POSTHandler(
@@ -16,11 +17,15 @@ async function POSTHandler(
   const v = validate(LessonCompleteSchema, { ...body, lesson_id: Number(lessonId) });
   if (!v.ok) return NextResponse.json({ error: v.errors[0] }, { status: 400 });
 
-  const lesson = await queryOne<{ id: number }>(
-    "SELECT id FROM lessons WHERE id = ? AND status = 'approved'",
+  const lesson = await queryOne<{ id: number; is_premium: number }>(
+    "SELECT id, is_premium FROM lessons WHERE id = ? AND status = 'approved'",
     Number(lessonId),
   );
   if (!lesson) return NextResponse.json({ error: "Leçon introuvable" }, { status: 404 });
+
+  if (lesson.is_premium === 1 && !(await isPremiumUser(user.id))) {
+    return NextResponse.json({ error: "premium_required" }, { status: 402 });
+  }
 
   const score = v.data.score ?? 100;
   const timeSpent = v.data.time_spent_min ?? 0;

@@ -9,6 +9,7 @@ import {
   deleteProfLesson,
   saveProfLessonExercises,
 } from "@/lib/prof-content";
+import { moderateContent } from "@/lib/moderation";
 
 function requireTeacher(user: { role: string } | null): NextResponse | null {
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
@@ -51,6 +52,12 @@ async function POSTHandler(req: NextRequest) {
       );
     }
     if (teach === "first") await ensureProfSubject(user!.id, chapter.subject_id);
+  }
+
+  const lessonText = [body.title, body.summary, body.content_md].filter(Boolean).join(" ");
+  const mod = moderateContent(lessonText);
+  if (!mod.approved) {
+    return NextResponse.json({ error: `Contenu inapproprié : ${mod.reason}`, code: "MODERATION_FAILED" }, { status: 422 });
   }
 
   const res = await createProfLesson(user!.id, {

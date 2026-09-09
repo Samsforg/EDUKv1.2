@@ -5,6 +5,7 @@ import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import { useParams } from "next/navigation";
 import SimpleMarkdown from "@/components/SimpleMarkdown";
+import LessonComments from "@/components/LessonComments";
 import { PremiumUpsell } from "@/components/PremiumUpsell";
 import { EVENTS, trackEvent } from "@/lib/analytics";
 
@@ -51,8 +52,14 @@ export default function LessonReader() {
   const [quota, setQuota] = useState<QuotaInfo | null>(null);
   const [plan, setPlan] = useState<PlanInfo | null>(null);
   const [decouvertePrice, setDecouvertePrice] = useState(0);
+  const [userRole, setUserRole] = useState<string | undefined>(undefined);
 
   useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => setUserRole(d.user?.role))
+      .catch(() => {});
+
     fetch(`/api/lessons/${id}`)
       .then(async (r) => {
         if (!r.ok) {
@@ -165,6 +172,8 @@ export default function LessonReader() {
             <h1 className="font-headline-sm text-headline-sm text-on-surface leading-tight mb-1">{lesson.title}</h1>
             <p className="font-body-sm text-on-surface-variant mb-6">{lesson.summary}</p>
             <SimpleMarkdown content={lesson.content} />
+
+            <LessonComments lessonId={Number(id)} userRole={userRole} />
 
             {(prev || next) && (
               <nav className="mt-10 space-y-2 border-t border-outline-variant pt-5">

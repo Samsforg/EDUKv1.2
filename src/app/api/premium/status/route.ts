@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { queryOne, run } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { gpGetSubscriptionStatus } from "@/lib/geniuspay";
+import { logger } from "@/lib/logger";
 
 function parseDateish(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -39,8 +40,8 @@ async function GETHandler(req: Request) {
   let gp: { is_active: boolean; status: string; next_billing_date?: string } | null = null;
   try {
     gp = await gpGetSubscriptionStatus(ref);
-  } catch (err: any) {
-    console.error("[status] geniuspay check failed:", err.message);
+  } catch (err: unknown) {
+    logger.error("status:geniuspay_check_failed", { error: err instanceof Error ? err.message : String(err) });
   }
 
   const status = gp?.status ?? sub.status;
@@ -53,7 +54,7 @@ async function GETHandler(req: Request) {
       new Date().toISOString(),
       sub.id,
     );
-    console.log(`[status] abonnement ${ref} synchronisé comme actif (webhook manquant?)`);
+    logger.checkout("webhook_missing_synced", { ref });
   }
 
   return NextResponse.json({

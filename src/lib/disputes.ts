@@ -1,6 +1,7 @@
 import { query, queryOne, run } from "./db";
 import { notify } from "./session";
 import { logAudit } from "./audit";
+import { parseDbDate } from "./date-parse";
 
 export interface DisputeRow {
   id: number;
@@ -30,7 +31,7 @@ export async function getDisputes(): Promise<DisputeRow[] >{
   return rows.map((r) => ({
     ...r,
     relative: (() => {
-      const t = new Date(r.created_at.replace(" ", "T") + "Z").getTime();
+      const t = parseDbDate(r.created_at)?.getTime() ?? 0;
       if (Number.isNaN(t)) return r.created_at;
       const diff = Math.max(0, Math.floor((now - t) / 1000));
       if (diff < 3600) return `il y a ${Math.max(1, Math.floor(diff / 60))} min`;

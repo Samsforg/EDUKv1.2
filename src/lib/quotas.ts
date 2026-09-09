@@ -5,6 +5,7 @@ export const KORA_MONTHLY_LIMIT = 30;
 export const KORA_QUARTERLY_LIMIT = 100;
 export const KORA_DECOUVERTE_LIMIT = 5;
 export const FICHE_MONTHLY_LIMIT = 10;
+export const SIMULATEUR_DECOUVERTE_LIMIT = 1;
 export const DISSERTATION_DECOUVERTE_LIMIT = 1;
 export const DISSERTATION_MONTHLY_LIMIT = 5;
 export const DISSERTATION_QUARTERLY_LIMIT = 15;
@@ -32,13 +33,18 @@ async function getActiveSubscription(userId: number): Promise<ActiveSubscription
   const row = await queryOne<{ name: string; interval: string; started_at: string | null }>(
     `SELECT p.name, p.interval, s.started_at
      FROM subscriptions s JOIN subscription_plans p ON p.id = s.plan_id
-     WHERE s.user_id = ? AND s.status = 'active' AND (s.end_at IS NULL OR s.end_at > ?)
+     WHERE s.user_id = ? AND s.status IN ('active','trial') AND (s.end_at IS NULL OR s.end_at > ?)
      ORDER BY s.id DESC LIMIT 1`,
     userId,
     new Date().toISOString(),
   );
   if (!row) return null;
   return { name: row.name, interval: row.interval, startedAt: row.started_at };
+}
+
+/** True si l'utilisateur a un abonnement premium actif OU un essai gratuit en cours. */
+export async function isPremiumUser(userId: number): Promise<boolean> {
+  return !!(await getActiveSubscription(userId));
 }
 
 async function countUserMessagesSince(userId: number, sinceIso: string): Promise<number> {
@@ -117,6 +123,24 @@ export async function getFicheQuota(userId: number): Promise<QuotaInfo> {
       ))?.c ?? 0,
     );
   return { used, limit: FICHE_MONTHLY_LIMIT, isPremium: false, planName: null, windowLabel: "ce mois-ci" };
+}
+
+export async function getSimulateurQuota(userId: number): Promise<QuotaInfo> {
+  const sub = await getActiveSubscription(userId);
+  if (sub) {
+    return { used: 0, limit: null, isPremium: true, planName: sub.name };
+  }
+  const now = new Date();
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+  const used =
+    Number(
+      (await queryOne<{ c: number }>(
+        "SELECT COUNT(*) AS c FROM exam_attempts WHERE user_id = ? AND created_at >= ?",
+        userId,
+        monthStart,
+      ))?.c ?? 0,
+    );
+  return { used, limit: SIMULATEUR_DECOUVERTE_LIMIT, isPremium: false, planName: null, windowLabel: "ce mois-ci" };
 }
 
 async function countDissertationsSince(userId: number, sinceIso: string): Promise<number> {

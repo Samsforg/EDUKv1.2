@@ -19,6 +19,9 @@ export const LIGUES: Ligue[] = [
 export const LIGUE_ORDER = LIGUES.map((l) => l.key);
 export const LIGUE_ORDER_NAMES: Record<string, string> = Object.fromEntries(LIGUES.map((l) => [l.key, l.name])) as Record<string, string>;
 
+export const SEASON = { key: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`, label: "Saison mensuelle", multiplier: 2, active: true };
+export function getSeasonMultiplier(): number { return SEASON.active ? SEASON.multiplier : 1; }
+
 export function getLigueOf(xp: number): Ligue {
   return LIGUES.find((l) => xp >= l.min) ?? LIGUES[LIGUES.length - 1];
 }
@@ -193,6 +196,34 @@ export async function getAmbassadorRanking(limit: number, userId: number) {
     },
     total,
   };
+}
+
+export async function getClassLeaderboard(classId: number, userId: number, limit = 20) {
+  const cls = await queryOne<{ id: number; name: string }>("SELECT id, name FROM classes WHERE id = ?", classId);
+  if (!cls) return null;
+  const member = await queryOne<{ user_id: number }>("SELECT user_id FROM class_students WHERE class_id = ? AND user_id = ?", classId, userId);
+  const isMember = !!member;
+  const rows = await query<Row & { rank: number }>(
+    `SELECT u.id, u.first_name, u.last_name, u.xp, u.streak, u.class_level, s.name AS serie, u.commune,
+            ROW_NUMBER() OVER (ORDER BY u.xp DESC, u.streak DESC, u.id ASC) AS rank
+     FROM class_students cs
+     JOIN users u ON u.id = cs.user_id
+     LEFT JOIN series s ON s.id = u.serie_id
+     WHERE cs.class_id = ?
+     ORDER BY u.xp DESC, u.streak DESC, u.id ASC
+     LIMIT ?`,
+    classId,
+    limit
+  );
+  const meRow = rows.find((r) => r.id === userId);
+  const allRanked = await query<{ id: number; rank: number }>(
+    `SELECT u.id, ROW_NUMBER() OVER (ORDER BY u.xp DESC, u.streak DESC, u.id ASC) AS rank
+     FROM class_students cs JOIN users u ON u.id = cs.user_id WHERE cs.class_id = ?`,
+    classId
+  );
+  const myRank = allRanked.find((r) => r.id === userId)?.rank ?? null;
+  const total = allRanked.length;
+  return { class: cls, ranking: rows.map((r) => ({ ...r, is_me: r.id === userId })), me: meRow ? { ...meRow, is_me: true } : { id: userId, rank: myRank, is_me: true } as any, total, isMember, myRank };
 }
 
 export async function getLigueStatus(userId: number) {

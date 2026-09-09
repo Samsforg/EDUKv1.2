@@ -8,9 +8,9 @@ async function POSTHandler(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const { token, password } = body ?? {};
 
-  if (!token || !password || password.length < 6) {
+  if (!token || !password || password.length < 8) {
     return NextResponse.json(
-      { error: "Jeton invalide ou mot de passe trop court (6 caractères minimum)" },
+      { error: "Jeton invalide ou mot de passe trop court (8 caractères minimum)" },
       { status: 400 },
     );
   }

@@ -10,12 +10,12 @@ export default function MarketingFooter() {
               <span className="font-headline-md font-bold text-primary">Edukora</span>
             </div>
             <p className="text-label-sm text-on-surface-variant leading-relaxed">
-              Plateforme de révision n°1 en Côte d'Ivoire. Nous transformons l'éducation par la technologie pour chaque
+              Plateforme de révision pour le BAC et le BEPC en Côte d'Ivoire. Nous transformons l&aposéducation par la technologie pour chaque
               étudiant ivoirien.
             </p>
           </div>
           <div>
-            <h3 className="font-bold text-primary mb-6">Plateforme</h3>
+            <h2 className="font-bold text-primary mb-6">Plateforme</h2>
             <ul className="space-y-4 text-label-sm text-on-surface-variant">
               <li><Link href="/fonctionnalites" className="hover:text-primary">Fonctionnalités</Link></li>
               <li><Link href="/tarifs" className="hover:text-primary">Tarifs &amp; Abonnements</Link></li>
@@ -25,7 +25,7 @@ export default function MarketingFooter() {
             </ul>
           </div>
           <div>
-            <h3 className="font-bold text-primary mb-6">Accès rapide</h3>
+            <h2 className="font-bold text-primary mb-6">Accès rapide</h2>
             <ul className="space-y-4 text-label-sm text-on-surface-variant">
               <li><Link href="/resultats" className="hover:text-primary">Nos résultats</Link></li>
               <li><Link href="/connexion-edukora" className="hover:text-primary">Connexion</Link></li>
@@ -34,7 +34,7 @@ export default function MarketingFooter() {
             </ul>
           </div>
           <div>
-            <h3 className="font-bold text-primary mb-6">Suivez-nous</h3>
+            <h2 className="font-bold text-primary mb-6">Suivez-nous</h2>
             <div className="flex gap-4">
               <a className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm" href="https://wa.me/2250709141545" target="_blank" rel="noopener noreferrer" aria-label="Nous contacter sur WhatsApp">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

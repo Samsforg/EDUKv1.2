@@ -34,9 +34,10 @@ function fmtXp(n: number) {
   return n.toLocaleString("fr-FR");
 }
 
-function useCountdown(endsAt: string) {
+function useCountdown(endsAt: string | null) {
   const [left, setLeft] = useState("");
   useEffect(() => {
+    if (!endsAt) return;
     const tick = () => {
       const diff = new Date(endsAt).getTime() - Date.now();
       if (diff <= 0) return setLeft("Terminé");
@@ -57,6 +58,7 @@ export default function DefiDetailPage({ params }: { params: Promise<{ id: strin
   const [data, setData] = useState<ChallengeDetail | null>(null);
   const [error, setError] = useState<"unauthorized" | "network" | null>(null);
   const [joined, setJoined] = useState(false);
+  const left = useCountdown(data?.ends_at ?? null);
 
   useEffect(() => {
     params.then((p) => setId(p.id));
@@ -107,7 +109,6 @@ export default function DefiDetailPage({ params }: { params: Promise<{ id: strin
   const diff = Math.abs(data.a.xp - data.b.xp);
   const isMine = data.me.side !== null;
   const mySide = data.me.side === "a" ? data.commune_a : data.me.side === "b" ? data.commune_b : null;
-  const left = useCountdown(data.ends_at);
 
   const TopList = ({ title, side, list }: { title: string; side: "a" | "b"; list: Contributor[] }) => (
     <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden">

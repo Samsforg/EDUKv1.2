@@ -23,8 +23,8 @@ export default function Page() {
       setError("Renseignez votre nom et votre prénom.");
       return;
     }
-    if (!email.trim() && !phone.trim()) {
-      setError("Un email ou un numéro de téléphone est requis.");
+    if (!phone.trim()) {
+      setError("Le numéro de téléphone est requis.");
       return;
     }
     setStep(2);
@@ -33,8 +33,8 @@ export default function Page() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (password.length < 6) {
-      setError("Le mot de passe doit contenir au moins 6 caractères.");
+    if (password.length < 8) {
+      setError("Le mot de passe doit contenir au moins 8 caractères.");
       return;
     }
     if (password !== confirm) {
@@ -136,7 +136,7 @@ export default function Page() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-label-sm font-semibold text-on-surface" htmlFor="email">Email</label>
+                      <label className="block text-label-sm font-semibold text-on-surface" htmlFor="email">Email (optionnel)</label>
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">mail</span>
                       <input
@@ -150,7 +150,7 @@ export default function Page() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-label-sm font-semibold text-on-surface" htmlFor="phone">Téléphone</label>
+                    <label className="block text-label-sm font-semibold text-on-surface" htmlFor="phone">Téléphone <span className="text-error">*</span></label>
                     <div className="relative flex">
                       <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-outline-variant bg-surface-container-low text-on-surface-variant text-sm">+225</span>
                       <input
@@ -158,6 +158,7 @@ export default function Page() {
                         id="phone"
                         placeholder="07 00 00 00 00"
                         type="tel"
+                        required
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                       />
@@ -215,7 +216,7 @@ export default function Page() {
                     <label className="text-xs text-on-surface-variant leading-relaxed" htmlFor="terms">
                       J&apos;accepte les{" "}
                       <a className="text-primary font-semibold underline" href="/conditions-g-n-rales-d-utilisation">Conditions Générales d&apos;Utilisation</a> et la{" "}
-                      <a className="text-primary font-semibold underline" href="/politique-de-confidentialit">Politique de Confidentialité</a> d&apos;Edukora.
+                      <Link className="text-primary font-semibold underline" href="/politique-de-confidentialit">Politique de Confidentialité</Link> d&apos;Edukora.
                     </label>
                   </div>
                   {error && <p className="text-sm text-error bg-error-container/40 rounded-lg px-4 py-3">{error}</p>}

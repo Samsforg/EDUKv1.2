@@ -4,7 +4,7 @@ import { run } from "@/lib/db";
 import { getCurrentUser, addXp, notify } from "@/lib/session";
 import { checkAIRateLimit } from "@/lib/ai/rate-limit";
 import { correctDissertation, isDissertationAIConfigured } from "@/lib/ai/dissertation";
-import { getDissertationQuota } from "@/lib/quotas";
+import { getDissertationQuota, DISSERTATION_MONTHLY_LIMIT } from "@/lib/quotas";
 import { getPremiumPlans } from "@/lib/plans";
 import { creditLigueChallenges } from "@/lib/ligue";
 
@@ -37,9 +37,10 @@ async function POSTHandler(req: NextRequest) {
     if (!quota.isPremium) {
       const plans = await getPremiumPlans().catch(() => []);
       const reussite = plans.find((p) => p.price_cents > 0 && p.interval === "month");
+      const monthlyLimit = DISSERTATION_MONTHLY_LIMIT;
       return NextResponse.json(
         {
-          error: `Vous avez utilisé votre correction de dissertation gratuite du mois. Passez au plan Réussite pour faire corriger jusqu'à ${quota.limit === 1 ? "5 dissertations par mois" : "vos dissertations"} par Kora !`,
+          error: `Vous avez utilisé votre correction de dissertation gratuite du mois. Passez au plan Réussite pour faire corriger jusqu'à ${monthlyLimit} dissertations par mois par Kora !`,
           code: "quota_exceeded",
           quota,
           plan: reussite

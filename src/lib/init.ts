@@ -3,9 +3,11 @@ import { seedIfEmpty } from "./seed";
 import { ensureBadges } from "./badges";
 import { hashPassword, verifyPassword } from "./auth";
 import { seedProgressionMENAET } from "./progression-menaet";
+import { seedProgressionGaps } from "./progression-gaps";
 import { seedCollegeContent, seedCollegeQuizzes } from "./college-content";
 import { resolveUserGradeIds } from "./level";
 import { ensureRentreePromo } from "./promo";
+import { cleanupRevokedSessions } from "./session";
 
 let readyPromise: Promise<void> | null = null;
 
@@ -69,6 +71,7 @@ async function doInit() {
     await migrate("lessons", "is_premium", "INTEGER");
     await migrate("lessons", "created_by", "INTEGER");
     await migrate("lessons", "created_at", "TEXT");
+    await migrate("lessons", "ai_generated", "INTEGER");
     await migrate("subjects", "coefficient_json", "TEXT");
     await migrate("users", "grade_id", "INTEGER");
     await migrate("push_subscriptions", "user_id", "INTEGER");
@@ -82,7 +85,18 @@ async function doInit() {
     await migrate("subscriptions", "price_cents", "INTEGER");
     await migrate("subscriptions", "ga_client_id", "TEXT");
     await migrate("subscriptions", "reminder_sent_at", "TEXT");
+    await migrate("subscriptions", "reminder_step", "INTEGER");
+    await migrate("subscriptions", "last_reminder_at", "TEXT");
+    await migrate("users", "reactivation_step", "INTEGER");
+    await migrate("users", "last_reactivation_at", "TEXT");
     await migrate("notifications", "type", "TEXT");
+    await migrate("quizzes", "share_token", "TEXT");
+    await migrate("lesson_comments", "user_id", "INTEGER");
+    await migrate("lesson_comments", "lesson_id", "INTEGER");
+    await migrate("lesson_comments", "content", "TEXT");
+    await migrate("lesson_comments", "parent_id", "INTEGER");
+    await migrate("lesson_comments", "is_resolved", "INTEGER");
+    await migrate("lesson_comments", "created_at", "TEXT");
   });
   await safeAsync("backfillUserGrades", backfillUserGrades);
   await safeAsync("normalizeDefaults", normalizeDefaults);
@@ -96,6 +110,9 @@ async function doInit() {
   await safeAsync("ensureReminderTable", ensureReminderTable);
   await safeAsync("ensureUserConsentsTable", ensureUserConsentsTable);
   await safeAsync("ensureParentTables", ensureParentTables);
+  await safeAsync("ensureLessonComments", ensureLessonComments);
+  await safeAsync("ensureRevokedSessions", ensureRevokedSessions);
+  await safeAsync("cleanupRevokedSessions", cleanupRevokedSessions);
   await safeAsync("ensureParentDemo", ensureParentDemo);
   await safeAsync("seedReferrals", seedReferrals);
   await safeAsync("seedPromoCodes", seedPromoCodes);
@@ -108,9 +125,13 @@ async function doInit() {
   await safeAsync("seedLigueChallenges", seedLigueChallenges);
   await safeAsync("seedMENAET", seedMENAET);
   await safeAsync("seedProgressionMENAET", seedProgressionMENAET);
+  await safeAsync("seedProgressionGaps", seedProgressionGaps);
+  await safeAsync("cleanupDuplicateSubjects", cleanupDuplicateSubjects);
+  await safeAsync("reconcileEdhc", reconcileEdhc);
   await safeAsync("seedCollegeContent", seedCollegeContent);
   await safeAsync("seedCollegeQuizzes", () => seedCollegeQuizzes(["philo"]));
   await safeAsync("seedSubscriptionPlans", ensureSubscriptionPlans);
+  await safeAsync("applyFreemiumLessons", applyFreemiumLessons);
   } finally {
     setInsideInit(false);
   }
@@ -243,6 +264,36 @@ async function ensureUserConsentsTable() {
   );
 }
 
+async function ensureLessonComments() {
+  const pgSql = (sql: string) => (IS_PG ? toPgSchema(sql) : sql);
+  await run(
+    pgSql(`CREATE TABLE IF NOT EXISTS lesson_comments (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+       lesson_id INTEGER NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+       content TEXT NOT NULL,
+       parent_id INTEGER REFERENCES lesson_comments(id) ON DELETE CASCADE,
+       is_resolved INTEGER NOT NULL DEFAULT 0,
+       created_at TEXT NOT NULL DEFAULT (datetime('now'))
+     )`),
+  );
+}
+
+async function ensureRevokedSessions() {
+  const pgSql = (sql: string) => (IS_PG ? toPgSchema(sql) : sql);
+  await run(
+    pgSql(`CREATE TABLE IF NOT EXISTS revoked_sessions (
+       token_hash TEXT PRIMARY KEY,
+       user_id INTEGER NOT NULL,
+       revoked_at TEXT NOT NULL DEFAULT (datetime('now'))
+     )`),
+  );
+  if (IS_PG) {
+    await run(`CREATE INDEX IF NOT EXISTS idx_revoked_sessions_user ON revoked_sessions(user_id)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_revoked_sessions_revoked ON revoked_sessions(revoked_at)`);
+  }
+}
+
 async function ensureParentTables() {
   const pgSql = (sql: string) => (IS_PG ? toPgSchema(sql) : sql);
   await run(
@@ -360,6 +411,69 @@ async function normalizeDefaults() {
   await run(
     "UPDATE subscriptions SET price_cents = (SELECT price_cents FROM subscription_plans WHERE subscription_plans.id = subscriptions.plan_id) WHERE price_cents IS NULL OR price_cents = 0",
   );
+}
+
+async function cleanupDuplicateSubjects() {
+  const dups = await query<{ id: number; code: string }>(
+    "SELECT id, code FROM subjects WHERE code = UPPER(code) AND code <> LOWER(code)",
+  );
+  for (const d of dups) {
+    const lower = d.code.toLowerCase();
+    const match = await queryOne<{ c: number }>(
+      "SELECT COUNT(*) AS c FROM subjects WHERE LOWER(code) = ? AND code = ?",
+      lower,
+      lower,
+    );
+    if (!match || match.c === 0) continue;
+    const chapters = await queryOne<{ c: number }>(
+      "SELECT COUNT(*) AS c FROM chapters WHERE subject_id = ?",
+      d.id,
+    );
+    if (chapters && chapters.c > 0) continue;
+    for (const t of ["quizzes", "exam_papers", "class_assignments", "teacher_subjects"]) {
+      try {
+        await run(`DELETE FROM ${t} WHERE subject_id = ?`, d.id);
+      } catch {
+        // table absente ou contrainte : on continue
+      }
+    }
+    await run("DELETE FROM subjects WHERE id = ?", d.id);
+    console.log(`[init] matière en double « ${d.code} » supprimée`);
+  }
+}
+
+async function reconcileEdhc() {
+  const dup = await queryOne<{ id: number }>("SELECT id FROM subjects WHERE code = 'edhc'");
+  const canon = await queryOne<{ id: number }>("SELECT id FROM subjects WHERE code = 'EDHC'");
+  if (!dup || !canon || dup.id === canon.id) return;
+  // 1. Déplacer les chapitres lycée du doublon vers la matière existante
+  const lyc = await query<{ id: number }>("SELECT id FROM grades WHERE cycle = 'lycee'");
+  for (const g of lyc) {
+    const chs = await query<{ id: number }>("SELECT id FROM chapters WHERE subject_id = ? AND grade_id = ?", dup.id, g.id);
+    for (const c of chs) {
+      await run("UPDATE chapters SET subject_id = ? WHERE id = ?", canon.id, c.id);
+      await run("UPDATE quizzes SET subject_id = ? WHERE chapter_id = ?", canon.id, c.id);
+    }
+  }
+  // 2. Supprimer les chapitres collège du doublon (l'EDHC existant les couvre déjà)
+  const coll = await query<{ id: number }>("SELECT id FROM grades WHERE cycle = 'college'");
+  for (const g of coll) {
+    await run(
+      "DELETE FROM quizzes WHERE subject_id = ? AND chapter_id IN (SELECT id FROM chapters WHERE subject_id = ? AND grade_id = ?)",
+      dup.id, dup.id, g.id,
+    );
+    await run(
+      "DELETE FROM lessons WHERE chapter_id IN (SELECT id FROM chapters WHERE subject_id = ? AND grade_id = ?)",
+      dup.id, g.id,
+    );
+    await run("DELETE FROM chapters WHERE subject_id = ? AND grade_id = ?", dup.id, g.id);
+  }
+  // 3. Supprimer le sujet doublon (libère le code 'edhc')
+  await run("DELETE FROM quizzes WHERE subject_id = ?", dup.id);
+  await run("DELETE FROM subjects WHERE id = ?", dup.id);
+  // 4. Normaliser le code de la matière existante maintenant que 'edhc' est libre
+  await run("UPDATE subjects SET code = 'edhc' WHERE id = ? AND code = 'EDHC'", canon.id);
+  console.log("[init] EDHC consolidé dans une seule matière");
 }
 
 async function seedForum() {
@@ -1097,18 +1211,21 @@ async function ensureSubscriptionPlans() {
   const DECOUVERTE_FEATURES = [
     "Accès à 10 fiches de révision / mois",
     "5 questions par mois à Kora IA",
-    "Simulateur d'examen (Accès limité)",
+    "1 sujet d'examen (Simulateur) par mois",
+    "1 correction de dissertation par mois",
   ].join("\n");
   const REUSSITE_FEATURES = [
-    "Accès illimité à toutes les fiches",
+    "Accès illimité à toutes les fiches de révision",
     "30 questions par mois à Kora IA",
-    "Simulateur complet + Correction détaillée",
+    "Sujets d'examen illimités (Simulateur BAC/BEPC)",
+    "5 corrections de dissertation par mois",
     "Support prioritaire par nos professeurs",
   ].join("\n");
   const REUSSITE_QUARTER_FEATURES = [
-    "Accès illimité à toutes les fiches",
+    "Accès illimité à toutes les fiches de révision",
     "100 questions par trimestre à Kora IA",
-    "Simulateur complet + Correction détaillée",
+    "Sujets d'examen illimités (Simulateur BAC/BEPC)",
+    "15 corrections de dissertation par trimestre",
     "Support prioritaire par nos professeurs",
   ].join("\n");
 
@@ -1205,4 +1322,51 @@ async function ensureSubscriptionPlans() {
   }
 
   console.log("Subscription plans ensured: Découverte (0 FCFA), Réussite (4 900 FCFA/mois, 30 questions IA), Réussite Trimestriel (14 700 FCFA/trimestre, 100 questions IA)");
+}
+
+/**
+ * Stratégie freemium PAR CHAPITRE : la (les) première(s) leçon(s) de chaque chapitre
+ * reste(nt) gratuite(s) (aperçu / accroche), le reste devient premium. L'élève peut
+ * démarrer n'importe quel chapitre mais doit s'abonner pour en voir la suite -> pousse
+ * à la conversion.
+ *
+ * Approche non destructive :
+ *  - ne touche JAMAIS au contenu des leçons, uniquement au flag is_premium ;
+ *  - idempotent : les leçons déjà premium (réglées manuellement via l'espace prof) ne sont
+ *    pas ré-écrasées. On ne s'active que si aucune leçon n'est déjà premium, pour respecter
+ *    d'éventuels réglages manuels ultérieurs.
+ */
+const FREE_LESSONS_PER_CHAPTER = 1;
+
+async function applyFreemiumLessons() {
+  try {
+    const chapters = await query<{ id: number }>(
+      "SELECT id FROM chapters WHERE status = 'approved' ORDER BY id",
+    );
+
+    let flagged = 0;
+    for (const ch of chapters) {
+      const lessons = await query<{ id: number }>(
+        "SELECT id FROM lessons WHERE chapter_id = ? AND status = 'approved' ORDER BY position ASC, id ASC",
+        ch.id,
+      );
+      // Toutes les leçons hors les FREE_LESSONS_PER_CHAPTER premières -> premium.
+      // Idempotent : on ne touche que les leçons encore gratuites (is_premium = 0),
+      // afin de ne pas écraser un éventuel réglage premium existant et de couvrir
+      // les chapitres ajoutés ultérieurement (ex : complétion du tronc commun).
+      const toFlag = lessons.slice(FREE_LESSONS_PER_CHAPTER);
+      for (const l of toFlag) {
+        const r = await run(
+          "UPDATE lessons SET is_premium = 1 WHERE id = ? AND is_premium = 0",
+          l.id,
+        );
+        if (r && Number(r.lastInsertRowid) >= 0) flagged++;
+      }
+    }
+    console.log(
+      `[init] freemium: ${flagged} leçon(s) premium vérifiées/activées (${FREE_LESSONS_PER_CHAPTER} gratuite(s) par chapitre).`,
+    );
+  } catch (e) {
+    console.error("[init] freemium: erreur", e instanceof Error ? e.message : e);
+  }
 }

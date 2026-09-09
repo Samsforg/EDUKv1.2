@@ -57,11 +57,17 @@ export default function ParrainagePage() {
         .catch(() => {});
     } else {
       window.open(
-        `https://wa.me/?text=${encodeURIComponent(`${text} — ${link}`)}`,
+        `https://wa.me/?text=${encodeURIComponent(`${text} — ${link}?ref=${code}`)}`,
         "_blank",
         "noopener",
       );
     }
+  };
+  const shareWhatsApp = () => {
+    if (!code) return;
+    const text = `Rejoins-moi sur Edukora ! Code parrain ${code} → +50 XP offerts. Inscris-toi : https://edukora.net/inscription-1-2-edukora?ref=${encodeURIComponent(code)}`;
+    trackEvent(EVENTS.referralLinkShared, { code, method: "whatsapp" });
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener");
   };
 
   return (
@@ -78,7 +84,7 @@ export default function ParrainagePage() {
             Partage ton code de parrainage avec tes amis, tes camarades de classe et ta famille.
             Chaque filleul qui s&apos;inscrit avec ton code te fait gagner
             <span className="text-primary font-semibold"> +150 XP immédiatement</span> (sans attendre
-            de paiement), et ton filleul reçoit <span className="text-primary font-semibold">+50 XP de bienvenue</span>.
+            de paiement), et ton filleul reçoit <span className="text-primary font-semibold">+50 XP de bienvenue</span> + <span className="text-primary font-semibold">-20% sur son 1er mois</span>.
             Tu grimpes aussi dans le <span className="text-primary font-semibold">classement Ambassadeurs</span>.
           </p>
         </section>
@@ -115,14 +121,22 @@ export default function ParrainagePage() {
                     <span className="material-symbols-outlined text-lg">share</span>
                     Partager
                   </button>
-                  <Link
-                    href="/classement?view=ambassadeurs"
-                    className="flex-1 bg-surface border border-outline-variant rounded-xl py-3 font-label-md font-semibold text-on-surface flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-150"
+                  <button
+                    type="button"
+                    onClick={shareWhatsApp}
+                    className="flex-1 bg-[#25D366] text-white rounded-xl py-3 font-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-150"
                   >
-                    <span className="material-symbols-outlined text-lg">leaderboard</span>
-                    Ambassadeurs
-                  </Link>
+                    <span className="material-symbols-outlined text-lg">chat</span>
+                    WhatsApp
+                  </button>
                 </div>
+                <Link
+                  href="/classement?view=ambassadeurs"
+                  className="w-full bg-surface border border-outline-variant rounded-xl py-3 font-label-md font-semibold text-on-surface flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-150"
+                >
+                  <span className="material-symbols-outlined text-lg">leaderboard</span>
+                  Voir le classement Ambassadeurs
+                </Link>
               </section>
             ) : (
               <section className="bg-surface border border-outline-variant rounded-2xl p-6 text-center space-y-4">
@@ -156,7 +170,7 @@ export default function ParrainagePage() {
             {[
               { icon: "badge", title: "1. Récupère ton code", text: "Ton code unique EDK-XXXXXX est généré automatiquement lors de ton inscription." },
               { icon: "send", title: "2. Partage-le autour de toi", text: "WhatsApp, Messenger, réseaux sociaux : chaque ami inscrit avec ton code devient ton filleul." },
-              { icon: "leaderboard", title: "3. Grimpe dans le classement", text: "Chaque filleul inscrit = +150 XP pour toi et +50 XP pour lui, dès l'inscription. Continue de partager pour devenir Ambassadeur (Novice, Expert, Élite)." },
+              { icon: "leaderboard", title: "3. Grimpe dans le classement", text: "Chaque filleul inscrit = +150 XP pour toi et +50 XP + -20% sur son 1er mois pour lui, dès l'inscription. Continue de partager pour devenir Ambassadeur (Novice, Expert, Élite)." },
             ].map((s) => (
               <li key={s.title} className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Page() {
   const [email, setEmail] = useState("");
@@ -81,7 +82,7 @@ export default function Page() {
         </Link>
         <header className="flex flex-col items-center text-center mb-8">
           <div className="w-14 h-14 mb-4 bg-surface-container-lowest rounded-2xl flex items-center justify-center p-1">
-            <img  src="/images/logo-edukora.webp" alt="Edukora" className="w-full h-full object-contain" loading="lazy" />
+            <Image  src="/images/logo-edukora.webp" alt="Edukora" className="w-full h-full object-contain" loading="lazy" width={56} height={56} />
           </div>
           <h1 className="font-headline-md text-2xl font-bold text-primary mb-2 tracking-tight">Mot de passe oublié</h1>
           <p className="text-on-surface-variant text-base">

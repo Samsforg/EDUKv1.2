@@ -1,5 +1,6 @@
 import { query, queryOne, run } from "./db";
 import { logAudit } from "./audit";
+import { parseDbDate } from "./date-parse";
 
 export interface ProctoringSessionRow {
   id: number;
@@ -97,7 +98,7 @@ async function expireStaleSessions() {
   );
   const now = Date.now();
   for (const r of rows) {
-    const started = new Date(r.started_at.replace(" ", "T") + "Z").getTime();
+    const started = parseDbDate(r.started_at)?.getTime() ?? 0;
     if (Number.isFinite(started) && now - started > (r.duration_minutes + 15) * 60000) {
       await run("UPDATE proctoring_sessions SET status = 'ended', ended_at = datetime('now') WHERE id = ?", r.id);
     }
@@ -127,7 +128,7 @@ export async function getProctoringOverview(): Promise<{
      ORDER BY ps.started_at DESC`,
   )).map((r) => ({
     ...r,
-    elapsed_min: Math.max(0, Math.floor((now - new Date(r.started_at.replace(" ", "T") + "Z").getTime()) / 60000)),
+    elapsed_min: Math.max(0, Math.floor((now - (parseDbDate(r.started_at)?.getTime() ?? 0)) / 60000)),
   }));
 
   const events = (await query<ProctoringEventRow>(
@@ -140,7 +141,7 @@ export async function getProctoringOverview(): Promise<{
   )).map((r) => ({
     ...r,
     relative: (() => {
-      const t = new Date(r.created_at.replace(" ", "T") + "Z").getTime();
+      const t = parseDbDate(r.created_at)?.getTime() ?? 0;
       if (Number.isNaN(t)) return r.created_at;
       const diff = Math.max(0, Math.floor((now - t) / 1000));
       if (diff < 60) return "à l'instant";

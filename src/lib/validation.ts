@@ -3,16 +3,22 @@ import { z } from "zod";
 // ===== AUTH =====
 export const LoginSchema = z.object({
   identifier: z.string().min(3).max(100),
-  password: z.string().min(4).max(128),
+  password: z.string().min(8).max(128),
 });
 
+const NAME_RE = /^[\p{L}\p{M}\s'""''\-\.]{1,50}$/u;
+const IVORIAN_PHONE_RE = /^(?:\+?225)?(?:0[1-9]|[1-9])\d{8}$/;
+
 export const RegisterSchema = z.object({
-  first_name: z.string().min(1).max(50),
-  last_name: z.string().min(1).max(50),
-  email: z.string().email().optional().or(z.literal("")).nullable(),
-  phone: z.string().min(8).max(20).optional().or(z.literal("")).nullable(),
-  password: z.string().min(6).max(128),
-  referral_code: z.string().optional(),
+  first_name: z.string().trim().min(1, "Le prénom est requis").max(50).regex(NAME_RE, "Le prénom ne doit contenir que des lettres, espaces, tirets ou apostrophes"),
+  last_name: z.string().trim().min(1, "Le nom est requis").max(50).regex(NAME_RE, "Le nom ne doit contenir que des lettres, espaces, tirets ou apostrophes"),
+  email: z.string().trim().email("Email invalide").max(200).optional().or(z.literal("")).nullable().transform((v) => (v === "" || v === undefined ? null : v)),
+  phone: z.string().min(8).max(20).refine(
+    (v) => IVORIAN_PHONE_RE.test(v.replace(/[\s\-().]/g, "")),
+    { message: "Numéro de téléphone ivoirien invalide (ex. 07 00 00 00 00)" }
+  ),
+  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères").max(128).regex(/[a-zA-Z]/, "Le mot de passe doit contenir au moins une lettre").regex(/\d/, "Le mot de passe doit contenir au moins un chiffre"),
+  referral_code: z.string().max(20).optional(),
   role: z.enum(["student", "teacher", "parent"]).optional().default("student"),
   serie_id: z.number().int().positive().nullable().optional(),
   gender: z.enum(["M", "F"]).nullable().optional(),
@@ -20,7 +26,7 @@ export const RegisterSchema = z.object({
   class_level: z.string().max(60).nullable().optional(),
   grade: z.string().max(60).nullable().optional(),
   accept_privacy: z.boolean().optional().default(false),
-}).refine((d) => d.email || d.phone, { message: "Email ou téléphone requis" });
+});
 
 // ===== QUIZ =====
 export const QuizSubmitSchema = z.object({

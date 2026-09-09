@@ -6,6 +6,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import PageHeader from "@/components/PageHeader";
 import { PairingCodeCard } from "@/components/PairingCodeCard";
 import { DisputeButton } from "@/components/DisputeButton";
+import LevelCertificate from "@/components/LevelCertificate";
 
 interface ProfileData {
   user: {
@@ -52,6 +53,7 @@ export default function ProfilePage() {
   const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", serie_id: "", class_level: "" as string });
   const [pw, setPw] = useState({ current_password: "", new_password: "", confirm: "" });
   const [copied, setCopied] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
 
   const shareReferral = () => {
     if (!data?.user.referral_code) return;
@@ -92,6 +94,10 @@ export default function ProfilePage() {
           });
         }
       });
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => setIsPremium(!!d?.user?.is_premium))
+      .catch(() => {});
   }, []);
 
   const saveProfile = async (e: React.FormEvent) => {
@@ -195,9 +201,8 @@ export default function ProfilePage() {
           <>
             <ThemeToggle />
             <button
-              onClick={async () => {
-                await fetch("/api/auth/logout", { method: "POST" });
-                location.href = "/connexion-edukora";
+              onClick={() => {
+                window.location.href = "/api/auth/logout";
               }}
               aria-label="Se déconnecter"
               className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100"
@@ -298,27 +303,54 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-sm font-medium text-on-surface">Série</label>
+                  <label className="block text-sm font-medium text-on-surface flex items-center gap-1.5">
+                    Série
+                    {!isPremium && (
+                      <span className="inline-flex items-center gap-1 text-label-xs text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded-full">
+                        <span className="material-symbols-outlined text-[12px]">lock</span>
+                        Premium
+                      </span>
+                    )}
+                  </label>
                   <select
                     value={form.serie_id}
+                    disabled={!isPremium}
                     onChange={(e) => setForm({ ...form, serie_id: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm"
+                    className={`w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm ${!isPremium ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <option value="">Non renseignée</option>
                     {SERIES.map((s) => (
                       <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
                     ))}
                   </select>
+                  {!isPremium && (
+                    <Link href="/plans-d-abonnement-edukora-1" className="text-xs text-primary font-semibold flex items-center gap-1 hover:underline">
+                      <span className="material-symbols-outlined text-[14px]">workspace_premium</span>
+                      Changer de série avec un abonnement Premium
+                    </Link>
+                  )}
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-sm font-medium text-on-surface">Niveau</label>
+                  <label className="block text-sm font-medium text-on-surface flex items-center gap-1.5">
+                    Niveau
+                    {!isPremium && (
+                      <span className="inline-flex items-center gap-1 text-label-xs text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded-full">
+                        <span className="material-symbols-outlined text-[12px]">lock</span>
+                        Premium
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="text"
                     value={form.class_level}
+                    disabled={!isPremium}
                     onChange={(e) => setForm({ ...form, class_level: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className={`w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${!isPremium ? "opacity-60 cursor-not-allowed" : ""}`}
                     placeholder="ex: Terminale C"
                   />
+                  {!isPremium && (
+                    <p className="text-[11px] text-on-surface-variant">Réservé aux abonnés Premium — change de classe en 1-clic.</p>
+                  )}
                 </div>
               </div>
 
@@ -496,6 +528,14 @@ export default function ProfilePage() {
         </Link>
 
         <PairingCodeCard />
+
+        <LevelCertificate
+          firstName={user.first_name}
+          level={user.xp >= 5000 ? "Maître" : user.xp >= 3500 ? "Diamant" : user.xp >= 2000 ? "Or" : user.xp >= 1000 ? "Argent" : "Bronze"}
+          xp={user.xp}
+          streak={user.streak}
+          globalScore={stats.global_score}
+        />
 
         <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5">
           <div className="flex justify-between items-center mb-2">

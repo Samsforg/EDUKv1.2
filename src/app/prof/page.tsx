@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
+import { parseDbDate } from "@/lib/date-parse";
 
 interface ProfLive {
   id: number;
@@ -28,8 +29,7 @@ interface Board {
 }
 
 function parseDate(s: string) {
-  const t = s.includes("T") ? s : s.replace(" ", "T");
-  return new Date(t.endsWith("Z") ? t : t + "Z");
+  return parseDbDate(s) ?? new Date(0);
 }
 
 function fmtDate(s: string) {

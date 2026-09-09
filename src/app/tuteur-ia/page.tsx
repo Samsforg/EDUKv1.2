@@ -4,7 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import { PremiumUpsell } from "@/components/PremiumUpsell";
+import dynamic from "next/dynamic";
 import { EVENTS, trackEvent } from "@/lib/analytics";
+
+const VoiceInput = dynamic(() => import("@/components/VoiceInput"), {
+  ssr: false,
+  loading: () => (
+    <button
+      type="button"
+      disabled
+      className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant"
+    >
+      <span className="material-symbols-outlined text-primary animate-pulse">mic</span>
+    </button>
+  ),
+});
 
 interface Msg {
   id: number;
@@ -246,6 +260,7 @@ export default function TutorPage() {
 
       <footer className="fixed bottom-0 left-0 right-0 bg-surface border-t border-outline-variant px-4 py-3">
         <div className="max-w-lg mx-auto flex items-end gap-2">
+          <VoiceInput onResult={(t) => setInput((prev) => (prev ? prev + " " : "") + t)} />
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}

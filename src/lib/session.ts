@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { cache } from "react";
-import { createHmac, timingSafeEqual } from "node:crypto";
-import { getDb, queryOne, run } from "@/lib/db";
+import { createHmac, timingSafeEqual, createHash } from "node:crypto";
+import { getDb, queryOne, run, IS_PG } from "@/lib/db";
 import { creditChallengeContribution } from "@/lib/defis";
 import type { User } from "@/lib/types";
 
@@ -64,6 +64,14 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   if (!token) return null;
   const session = verifySessionToken(token);
   if (!session) return null;
+
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const revoked = await queryOne<{ token_hash: string }>(
+    "SELECT token_hash FROM revoked_sessions WHERE token_hash = ?",
+    tokenHash,
+  );
+  if (revoked) return null;
+
   const user = await queryOne<User>(
     `SELECT id, role, email, phone, first_name, last_name, serie_id, class_level,
             xp, streak, referral_code, commune, blocked, goal
@@ -79,8 +87,21 @@ export async function createSession(userId: number): Promise<string> {
   return signPayload(userId, Date.now() + SESSION_DAYS * 24 * 3600 * 1000);
 }
 
-export async function destroySession(): Promise<void> {
-  // Token sans état : aucune révocation en base nécessaire.
+export async function destroySession(token?: string): Promise<void> {
+  if (!token) return;
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const session = verifySessionToken(token);
+  const userId = session?.uid ?? 0;
+  const sql = IS_PG
+    ? "INSERT INTO revoked_sessions (token_hash, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING"
+    : "INSERT OR IGNORE INTO revoked_sessions (token_hash, user_id) VALUES (?, ?)";
+  await run(sql, tokenHash, userId);
+}
+
+export async function cleanupRevokedSessions(): Promise<void> {
+  await run(
+    "DELETE FROM revoked_sessions WHERE revoked_at < datetime('now', '-30 days')",
+  );
 }
 
 export function setSessionCookie(res: NextResponse, token: string) {
@@ -99,6 +120,7 @@ export function clearSessionCookie(res: NextResponse) {
     sameSite: "lax",
     path: "/",
     maxAge: 0,
+    secure: process.env.NODE_ENV === "production",
   });
 }
 

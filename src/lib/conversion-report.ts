@@ -1,4 +1,5 @@
 import { query, queryOne, type SqlParam } from "@/lib/db";
+import { realUsersWhere, testUsersWhere } from "@/lib/test-users";
 
 export interface ConversionStats {
   date: string;
@@ -29,17 +30,22 @@ export async function getConversionStats(days = 7): Promise<ConversionStats> {
   const count = async (sql: string, ...args: SqlParam[]) =>
     (await queryOne<{ c: number }>(sql, ...args))?.c ?? 0;
 
-  const totalUsers = await count("SELECT COUNT(*) AS c FROM users");
-  const newUsersToday = await count("SELECT COUNT(*) AS c FROM users WHERE substr(created_at,1,10) = ?", today);
-  const newUsersWeek = await count("SELECT COUNT(*) AS c FROM users WHERE created_at >= datetime('now','-7 days')");
+  const totalUsers = await count(`SELECT COUNT(*) AS c FROM users u WHERE ${realUsersWhere()}`);
+  const newUsersToday = await count(
+    `SELECT COUNT(*) AS c FROM users u WHERE ${realUsersWhere()} AND substr(u.created_at,1,10) = ?`,
+    today,
+  );
+  const newUsersWeek = await count(
+    `SELECT COUNT(*) AS c FROM users u WHERE ${realUsersWhere()} AND u.created_at >= datetime('now','-7 days')`,
+  );
 
-  const activeSubs = await count("SELECT COUNT(*) AS c FROM subscriptions WHERE status = 'active'");
+  const activeSubs = await count(`SELECT COUNT(*) AS c FROM subscriptions s WHERE s.status = 'active' AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`);
   const subsToday = await count(
-    "SELECT COUNT(*) AS c FROM subscriptions WHERE status='active' AND substr(started_at,1,10) = ?",
+    `SELECT COUNT(*) AS c FROM subscriptions s WHERE s.status='active' AND substr(s.started_at,1,10) = ? AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`,
     today,
   );
   const cancelledToday = await count(
-    "SELECT COUNT(*) AS c FROM subscriptions WHERE status IN ('cancelled','unpaid') AND substr(started_at,1,10) = ?",
+    `SELECT COUNT(*) AS c FROM subscriptions s WHERE s.status IN ('cancelled','unpaid') AND substr(s.started_at,1,10) = ? AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`,
     today,
   );
 
@@ -47,17 +53,17 @@ export async function getConversionStats(days = 7): Promise<ConversionStats> {
     (await queryOne<{ v: number | null }>(sql, ...args))?.v ?? 0;
 
   const revenueToday = await sum(
-    "SELECT COALESCE(SUM(price_cents),0) AS v FROM subscriptions WHERE status='active' AND substr(started_at,1,10)=?",
+    `SELECT COALESCE(SUM(s.price_cents),0) AS v FROM subscriptions s WHERE s.status='active' AND substr(s.started_at,1,10)=? AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`,
     today,
   );
   const revenueWeek = await sum(
-    "SELECT COALESCE(SUM(price_cents),0) AS v FROM subscriptions WHERE status='active' AND started_at >= datetime('now','-7 days')",
+    `SELECT COALESCE(SUM(s.price_cents),0) AS v FROM subscriptions s WHERE s.status='active' AND s.started_at >= datetime('now','-7 days') AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`,
   );
   const revenueMonth = await sum(
-    "SELECT COALESCE(SUM(price_cents),0) AS v FROM subscriptions WHERE status='active' AND started_at >= datetime('now','-30 days')",
+    `SELECT COALESCE(SUM(s.price_cents),0) AS v FROM subscriptions s WHERE s.status='active' AND s.started_at >= datetime('now','-30 days') AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`,
   );
   const mrr = await sum(
-    "SELECT COALESCE(SUM(price_cents),0) AS v FROM subscriptions WHERE status='active'",
+    `SELECT COALESCE(SUM(s.price_cents),0) AS v FROM subscriptions s WHERE s.status='active' AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`,
   );
 
   const avgRevenueToday =
@@ -67,6 +73,7 @@ export async function getConversionStats(days = 7): Promise<ConversionStats> {
     `SELECT COALESCE(p.name, 'Premium') AS name, COUNT(*) AS count, COALESCE(SUM(s.price_cents),0) AS revenue_cents
      FROM subscriptions s LEFT JOIN subscription_plans p ON p.id = s.plan_id
      WHERE s.status='active' AND substr(s.started_at,1,10)=?
+       AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))
      GROUP BY COALESCE(p.name, 'Premium') ORDER BY count DESC LIMIT 5`,
     today,
   );
@@ -79,9 +86,12 @@ export async function getConversionStats(days = 7): Promise<ConversionStats> {
   const trends: { date: string; users: number; subs: number }[] = [];
   for (let i = days - 1; i >= 0; i--) {
     const d = dayStr(i);
-    const users = await count("SELECT COUNT(*) AS c FROM users WHERE substr(created_at,1,10)=?", d);
+    const users = await count(
+      `SELECT COUNT(*) AS c FROM users u WHERE ${realUsersWhere()} AND substr(u.created_at,1,10)=?`,
+      d,
+    );
     const subs = await count(
-      "SELECT COUNT(*) AS c FROM subscriptions WHERE status='active' AND substr(started_at,1,10)=?",
+      `SELECT COUNT(*) AS c FROM subscriptions s WHERE s.status='active' AND substr(s.started_at,1,10)=? AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`,
       d,
     );
     trends.push({ date: d, users, subs });

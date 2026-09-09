@@ -8,15 +8,13 @@ import {
 } from "@/lib/conversion-report";
 import { sendMail } from "@/lib/mailer";
 import { sendWhatsappText, whatsappConfigured } from "@/lib/whatsapp";
+import { requireCronSecret } from "@/lib/cron-auth";
 
 const REPORT_EMAIL = process.env.ADMIN_EMAIL;
 
 async function GETHandler(req: NextRequest) {
-  const auth = req.headers.get("authorization");
-  const secret = process.env.CRON_SECRET;
-  if (secret && auth !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  }
+  const forbidden = requireCronSecret(req);
+  if (forbidden) return forbidden;
 
   if (!whatsappConfigured && !(REPORT_EMAIL && (process.env.BREVO_API_KEY || (process.env.SMTP_USER && process.env.SMTP_PASS)))) {
     return NextResponse.json({

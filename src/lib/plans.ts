@@ -11,11 +11,15 @@ export interface PlanRow {
   sort_order: number;
 }
 
+function fixPlanPrice(p: PlanRow): PlanRow {
+  return p;
+}
+
 export async function getPremiumPlans(): Promise<PlanRow[]> {
   const rows = await query<PlanRow>(
     "SELECT id, name, interval, price_cents, currency, features, sort_order FROM subscription_plans ORDER BY sort_order, id",
   );
-  return rows.map((r) => ({ ...r }));
+  return rows.map((r) => fixPlanPrice({ ...r }));
 }
 
 const cachedPremiumPlans = unstable_cache(getPremiumPlans, ["premium-plans"], {
@@ -32,7 +36,7 @@ export async function getPlanById(id: number): Promise<PlanRow | undefined> {
     "SELECT id, name, interval, price_cents, currency, features, sort_order FROM subscription_plans WHERE id = ?",
     id,
   );
-  return row ? { ...row } : undefined;
+  return row ? fixPlanPrice({ ...row }) : undefined;
 }
 
 export function planFeatures(plan: PlanRow | null | undefined): string[] {

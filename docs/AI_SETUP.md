@@ -7,10 +7,10 @@ Copier `.env.example` vers `.env.local` et renseigner (côté serveur uniquement
 ```env
 # ===== AI Gateway =====
 AI_GATEWAY_ENABLED=true
-# "true" : chaîne Groq → HF → Cloudflare → Gemini → OpenAI
-# "false" : mode legacy OpenAI → Gemini
+# "true" : chaîne Groq → HF → Cloudflare → Gemini → OpenRouter → OpenAI
+# "false" : mode legacy OpenRouter → Gemini
 # Non défini : activé automatiquement dès qu'une clé Groq/HF/Cloudflare est présente
-AI_PRIMARY_PROVIDER=groq            # groq | huggingface | cloudflare | gemini | openai
+AI_PRIMARY_PROVIDER=openrouter   # groq | huggingface | cloudflare | gemini | openrouter | openai
 
 # Groq (principal) — https://console.groq.com/keys
 GROQ_API_KEY=
@@ -28,6 +28,10 @@ CLOUDFLARE_MODEL=@cf/meta/llama-3.1-8b-instruct
 # Fallbacks legacy (déjà configurés en prod)
 GEMINI_API_KEY=
 GEMINI_TUTOR_MODEL=gemini-3.1-flash-lite
+
+# OpenRouter (compatible OpenAI) — https://openrouter.ai/keys
+OPENROUTER_API_KEY=
+OPENROUTER_TUTOR_MODEL=openai/gpt-4o-mini
 OPENAI_API_KEY=
 OPENAI_TUTOR_MODEL=gpt-4o-mini
 

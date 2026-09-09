@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
+import { useChapterOffline } from "@/lib/offline-chapter";
 
 interface Lesson {
   id: number;
@@ -12,6 +13,7 @@ interface Lesson {
   duration_min: number;
   difficulty: number;
   is_premium: number;
+  locked?: boolean;
   progress: { completed: number; score: number };
 }
 
@@ -21,6 +23,7 @@ export default function ChapitreLessonsPage() {
   const params = useParams<{ chapterId: string }>();
   const [lessons, setLessons] = useState<Lesson[] | null>(null);
   const [error, setError] = useState(false);
+  const offline = useChapterOffline();
 
   useEffect(() => {
     fetch(`/api/cours/chapitres/${params.chapterId}/lecons`)
@@ -61,6 +64,32 @@ export default function ChapitreLessonsPage() {
       <PageHeader title="Leçons du chapitre" subtitle={`${lessons.length} leçon${lessons.length > 1 ? "s" : ""}`} backHref="/cours" />
 
       <main className="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+        {lessons.length > 0 && (
+          <div className="mb-5 bg-surface-container-low border border-outline-variant rounded-xl p-4 flex items-center gap-4">
+            <span className="material-symbols-outlined text-primary text-3xl">offline_bolt</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-label-md font-bold text-on-surface">Mode hors-ligne</p>
+              <p className="text-xs text-on-surface-variant">
+                {offline.downloading
+                  ? `Téléchargement ${offline.progress}%…`
+                  : offline.error
+                    ? offline.error
+                    : "Télécharge les fiches de ce chapitre pour les réviser sans connexion."}
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={offline.downloading}
+              onClick={() => offline.downloadChapter(Number(params.chapterId), lessons.map((l) => ({ id: l.id, title: l.title })))}
+              className={`shrink-0 px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 active:scale-95 transition-transform ${
+                offline.downloading ? "bg-surface-container-high text-on-surface-variant" : "bg-primary text-on-primary"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">{offline.downloading ? "progress_activity" : "download"}</span>
+              {offline.downloading ? `${offline.progress}%` : "Télécharger"}
+            </button>
+          </div>
+        )}
         {lessons.length === 0 ? (
           <div className="text-center py-16 space-y-3">
             <span className="material-symbols-outlined text-5xl text-outline">menu_book</span>
@@ -72,21 +101,22 @@ export default function ChapitreLessonsPage() {
             {lessons.map((l) => (
               <Link
                 key={l.id}
-                href={`/cours/lecon/${l.id}`}
-                className="block bg-surface border border-outline-variant rounded-xl p-4 hover:border-primary transition-colors"
+                href={l.locked ? "/plans-d-abonnement-edukora-1" : `/cours/lecon/${l.id}`}
+                className={`block bg-surface border border-outline-variant rounded-xl p-4 hover:border-primary transition-colors ${l.locked ? "opacity-90" : ""}`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${l.progress.completed === 1 ? "bg-impact-emerald/15 text-impact-emerald" : "bg-primary-container/20 text-primary"}`}>
-                    <span className="material-symbols-outlined">{l.progress.completed === 1 ? "check_circle" : "play_circle"}</span>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${l.locked ? "bg-tertiary-container/50 text-on-tertiary-container" : l.progress.completed === 1 ? "bg-impact-emerald/15 text-impact-emerald" : "bg-primary-container/20 text-primary"}`}>
+                    <span className="material-symbols-outlined">{l.locked ? "lock" : l.progress.completed === 1 ? "check_circle" : "play_circle"}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-label-md font-semibold text-on-surface truncate">{l.title}</h3>
                     <p className="font-label-xs text-on-surface-variant">
-                      {DIFFICULTY_LABELS[l.difficulty as 1 | 2 | 3] ?? "—"} · {l.duration_min} min
-                      {l.progress.completed === 1 ? " · Terminée" : ""}
+                      {l.locked
+                        ? "Contenu Premium"
+                        : `${DIFFICULTY_LABELS[l.difficulty as 1 | 2 | 3] ?? "—"} · ${l.duration_min} min${l.progress.completed === 1 ? " · Terminée" : ""}`}
                     </p>
                   </div>
-                  <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+                  <span className="material-symbols-outlined text-on-surface-variant">{l.locked ? "workspace_premium" : "chevron_right"}</span>
                 </div>
               </Link>
             ))}

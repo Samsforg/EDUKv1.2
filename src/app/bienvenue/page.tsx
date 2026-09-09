@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface OnboardingData {
   goal: string | null;
@@ -106,7 +107,7 @@ export default function Page() {
       <main className="w-full max-w-md bg-surface-container-lowest rounded-xl shadow-sm border border-surface-variant p-6 sm:p-8 flex flex-col">
         <header className="flex flex-col items-center text-center mb-6">
           <div className="w-14 h-14 mb-4 rounded-2xl flex items-center justify-center p-1">
-            <img  src="/images/logo-edukora.webp" alt="Edukora" className="w-full h-full object-contain" loading="lazy" />
+            <Image  src="/images/logo-edukora.webp" alt="Edukora" className="w-full h-full object-contain" loading="lazy" width={56} height={56} />
           </div>
           <div className="flex items-center gap-2 mb-3">
             {[0, 1, 2].map((i) => (

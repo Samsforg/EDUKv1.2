@@ -1,5 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { queryOne } from "./db";
+import { realUsersWhere } from "./test-users";
 
 export interface PlatformStats {
   students: number;
@@ -9,18 +10,18 @@ export interface PlatformStats {
 }
 
 const FALLBACK_STATS: PlatformStats = {
-  students: 50000,
-  quizzesCorrected: 150000,
-  lessonsRead: 200000,
-  xpEarned: 2000000,
+  students: 150,
+  quizzesCorrected: 1200,
+  lessonsRead: 3500,
+  xpEarned: 48000,
 };
 
 async function collectStats(): Promise<PlatformStats> {
-  const students = await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM users WHERE role = 'student'");
+  const students = await queryOne<{ c: number }>(`SELECT COUNT(*) AS c FROM users u WHERE u.role = 'student' AND ${realUsersWhere()}`);
   const quizzes = await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM quiz_attempts");
   const lessons = await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM lesson_reads");
   const xp = await queryOne<{ s: number | null }>(
-    "SELECT COALESCE(SUM(xp), 0) AS s FROM users WHERE role = 'student'",
+    `SELECT COALESCE(SUM(u.xp), 0) AS s FROM users u WHERE u.role = 'student' AND ${realUsersWhere()}`,
   );
   return {
     students: students?.c ?? 0,

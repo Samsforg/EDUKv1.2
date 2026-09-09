@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import { EVENTS, trackEvent } from "@/lib/analytics";
+import { downloadLessonPdf } from "@/lib/pdf-export";
 
 interface Lesson {
   id: number;
@@ -40,12 +41,22 @@ function MarkdownRenderer({ content }: { content: string }) {
 export default function LessonPage({ params }: LessonPageProps) {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [error, setError] = useState(false);
+  const [premiumRequired, setPremiumRequired] = useState(false);
+  const [needsAuth, setNeedsAuth] = useState(false);
   const [completing, setCompleting] = useState(false);
 
   useEffect(() => {
     params.then(async (p) => {
       try {
-        const r = await fetch(`/api/cours/lecons/${p.lessonId}`);
+        const r = await fetch(`/api/cours/lecons/${p.lessonId}`, { cache: "no-store" });
+        if (r.status === 402) {
+          setPremiumRequired(true);
+          return;
+        }
+        if (r.status === 401) {
+          setNeedsAuth(true);
+          return;
+        }
         if (!r.ok) throw new Error();
         const d = await r.json();
         if (d.lesson) {
@@ -83,12 +94,42 @@ export default function LessonPage({ params }: LessonPageProps) {
     }
   }
 
+  if (premiumRequired)
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-5 p-6 text-center">
+        <span className="material-symbols-outlined text-5xl text-primary">lock</span>
+        <h1 className="font-display text-2xl font-bold text-on-surface">Leçon Premium</h1>
+        <p className="text-on-surface-variant max-w-sm">
+          Cette leçon fait partie de l&apos;abonnement Premium. Passe à Premium pour débloquer tout le contenu, les quiz et le suivi de progression.
+        </p>
+        <div className="flex flex-col gap-3 w-full max-w-xs">
+          <Link href="/plans-d-abonnement-edukora-1" className="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl">Découvrir Premium</Link>
+          <Link href="/cours" className="text-primary font-bold px-6 py-3 rounded-xl">Retour aux cours</Link>
+        </div>
+      </div>
+    );
+
   if (error)
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center">
         <span className="material-symbols-outlined text-5xl text-outline">error</span>
         <p className="font-bold text-on-surface">Leçon introuvable</p>
         <Link href="/cours" className="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl">Retour aux cours</Link>
+      </div>
+    );
+
+  if (needsAuth)
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-5 p-6 text-center">
+        <span className="material-symbols-outlined text-5xl text-primary">login</span>
+        <h1 className="font-display text-2xl font-bold text-on-surface">Connecte-toi pour accéder à cette leçon</h1>
+        <p className="text-on-surface-variant max-w-sm">
+          Crée un compte gratuitement ou connecte-toi pour suivre ta progression, puis passe à Premium pour débloquer toutes les leçons et les quiz.
+        </p>
+        <div className="flex flex-col gap-3 w-full max-w-xs">
+          <Link href="/connexion-edukora" className="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl">Se connecter</Link>
+          <Link href="/plans-d-abonnement-edukora-1" className="text-primary font-bold px-6 py-3 rounded-xl">Découvrir Premium</Link>
+        </div>
       </div>
     );
 
@@ -111,6 +152,23 @@ export default function LessonPage({ params }: LessonPageProps) {
 
   return (
     <div className="bg-background text-on-background font-['Hanken_Grotesk'] min-h-screen pb-24">
+      {lesson.video_url && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "VideoObject",
+              name: lesson.title,
+              description: lesson.content_md.slice(0, 150),
+              thumbnailUrl: "https://edukora.net/icons/launcher-512.png",
+              uploadDate: new Date().toISOString(),
+              contentUrl: lesson.video_url,
+              embedUrl: lesson.video_url,
+            }),
+          }}
+        />
+      )}
       <PageHeader
         title={lesson.title}
         backHref="/cours"
@@ -138,6 +196,17 @@ export default function LessonPage({ params }: LessonPageProps) {
         )}
 
         <section className="bg-surface border border-outline-variant rounded-xl p-6">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <h3 className="font-title-md font-semibold text-on-surface">Contenu de la fiche</h3>
+            <button
+              type="button"
+              onClick={() => downloadLessonPdf(lesson).catch(() => {})}
+              className="shrink-0 inline-flex items-center gap-1.5 text-primary text-xs font-bold bg-primary/10 px-3 py-2 rounded-lg active:scale-95 transition-transform"
+            >
+              <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span>
+              Exporter PDF
+            </button>
+          </div>
           <MarkdownRenderer content={lesson.content_md} />
         </section>
 

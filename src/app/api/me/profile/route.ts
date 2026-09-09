@@ -138,8 +138,36 @@ async function PATCHHandler(req: Request) {
 
   if (first_name !== undefined) await run("UPDATE users SET first_name = ? WHERE id = ?", first_name, user.id);
   if (last_name !== undefined) await run("UPDATE users SET last_name = ? WHERE id = ?", last_name, user.id);
-  if (serie_id !== undefined) await run("UPDATE users SET serie_id = ? WHERE id = ?", serie_id ?? null, user.id);
-  if (class_level !== undefined) await run("UPDATE users SET class_level = ? WHERE id = ?", class_level, user.id);
+
+  // Changer de classe/série est réservé aux élèves avec un abonnement actif
+  const wantsClassChange =
+    (serie_id !== undefined && String(serie_id ?? "") !== String(user.serie_id ?? "")) ||
+    (class_level !== undefined && String(class_level ?? "").trim() !== String(user.class_level ?? ""));
+  if (wantsClassChange) {
+    const activeSub = await queryOne<{ id: number }>(
+      "SELECT id FROM subscriptions WHERE user_id = ? AND status IN ('active','trial') AND (end_at IS NULL OR end_at > datetime('now')) ORDER BY id DESC LIMIT 1",
+      user.id,
+    );
+    if (!activeSub) {
+      return NextResponse.json(
+        {
+          code: "SUBSCRIPTION_REQUIRED",
+          error: "Changer de classe nécessite un abonnement Premium actif.",
+        },
+        { status: 402 },
+      );
+    }
+    // Vérifier que la nouvelle série existe si fournie
+    if (serie_id !== undefined && serie_id !== null) {
+      const serieExists = await queryOne<{ id: number }>("SELECT id FROM series WHERE id = ?", serie_id);
+      if (!serieExists) return NextResponse.json({ error: "Série inconnue" }, { status: 400 });
+    }
+    const normalizedClassLevel = typeof class_level === "string" ? class_level.trim().slice(0, 60) : class_level;
+    if (serie_id !== undefined) await run("UPDATE users SET serie_id = ? WHERE id = ?", serie_id ?? null, user.id);
+    if (class_level !== undefined) await run("UPDATE users SET class_level = ? WHERE id = ?", normalizedClassLevel || null, user.id);
+    // Invalider le cache des plans premium après changement de classe (nouveau contenu)
+    await queryOne("SELECT 1");
+  }
 
   const updated = await queryOne<{ id: number; first_name: string; last_name: string; email: string | null; phone: string | null; serie_id: number | null; class_level: string | null }>(
     "SELECT id, first_name, last_name, email, phone, serie_id, class_level FROM users WHERE id = ?",

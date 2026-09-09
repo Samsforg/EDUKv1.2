@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { EVENTS, trackEvent } from "@/lib/analytics";
 
 export default function Page() {
@@ -86,7 +87,7 @@ setTimeout(() => { window.location.href = `/paiement-r-ussi-edukora-premium-geni
 </div>
 <div className="flex items-center gap-2">
 <div className="w-8 h-8 rounded-sm overflow-hidden">
-<img  alt="Geniuspay Logo" className="w-full h-full object-contain" src="/images/ecran-324.webp" loading="lazy" />
+<Image  alt="Geniuspay Logo" className="w-full h-full object-contain" src="/images/ecran-324.webp" loading="lazy" width={32} height={32} />
 </div>
 <div className="font-headline font-bold text-primary">Edukora</div>
 </div>

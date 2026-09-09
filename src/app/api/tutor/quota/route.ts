@@ -1,17 +1,18 @@
 import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
-import { getKoraQuota, getFicheQuota, getDissertationQuota } from "@/lib/quotas";
+import { getKoraQuota, getFicheQuota, getDissertationQuota, getSimulateurQuota } from "@/lib/quotas";
 import { getPremiumPlans } from "@/lib/plans";
 
 async function GETHandler() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
-  const [kora, fiche, dissertation, plans] = await Promise.all([
+  const [kora, fiche, dissertation, simulateur, plans] = await Promise.all([
     getKoraQuota(user.id),
     getFicheQuota(user.id),
     getDissertationQuota(user.id),
+    getSimulateurQuota(user.id),
     getPremiumPlans().catch(() => []),
   ]);
 
@@ -22,6 +23,7 @@ async function GETHandler() {
     kora,
     fiche,
     dissertation,
+    simulateur,
     plan: reussite
       ? { id: reussite.id, name: reussite.name, price_cents: reussite.price_cents, interval: reussite.interval }
       : null,

@@ -765,6 +765,84 @@ const SUBJECT_BANKS: Record<string, Record<"college" | "lycee", ContentBlock>> =
       practice: { question: "Suite géométrique de raison 2 et u₁ = 3 : que vaut u₃ ?", answer: "u₃ = 3 × 2² = 12." },
     },
   },
+  espagnol: {
+    college: {
+      definition: "L'espagnol est une langue romance, apprise comme langue vivante 2 (LV2) à l'école ivoirienne. On la parle notamment en Espagne et en Amérique latine.",
+      keyPoints: [
+        "Saluer : hola, buenos días, buenas tardes, buenas noches.",
+        "Se présenter : me llamo..., tengo ... años.",
+        "Les nombres de 0 à 100.",
+        "La famille : madre, padre, hermano, hermana.",
+        "Le vocabulaire de l'école : libro, mesa, profesor.",
+      ],
+      example: { question: "Comment dit-on « J'ai 14 ans » en espagnol ?", answer: "Tengo catorce años." },
+      practice: { question: "Traduis : « Bonjour, je m'appelle Aminata. »", answer: "Hola, me llamo Aminata." },
+    },
+    lycee: {
+      definition: "En lycée, l'espagnol approfondit la grammaire, le vocabulaire et la culture hispanophone (Espagne et Amérique latine).",
+      keyPoints: [
+        "Le présent : hablo, como, vivo.",
+        "Le passé (pretérito) : hablé, comí, viví.",
+        "Les adjectifs et le genre (o/a).",
+        "La géographie et la culture de l'Espagne et de l'Amérique latine.",
+        "Compréhension de textes courts.",
+      ],
+      example: { question: "Conjugue « comer » au prétérit : « ayer yo ... »", answer: "comí (ayer comí)." },
+      practice: { question: "Traduis : « Je mange à la maison. »", answer: "Como en casa." },
+    },
+  },
+  allemand: {
+    college: {
+      definition: "L'allemand est une langue germanique, apprise comme langue vivante 2 (LV2). Elle a des particularités : majuscules aux noms, articles der/die/das.",
+      keyPoints: [
+        "Saluer : hallo, guten Morgen, guten Tag.",
+        "Se présenter : ich heiße..., ich bin ... Jahre alt.",
+        "Les articles : der (masculin), die (féminin), das (neutre).",
+        "Les nombres de 0 à 100.",
+        "La famille : Mutter, Vater, Bruder, Schwester.",
+      ],
+      example: { question: "Comment dit-on « Je m'appelle Konan » en allemand ?", answer: "Ich heiße Konan." },
+      practice: { question: "Traduis : « Bonjour, j'ai 15 ans. »", answer: "Hallo, ich bin 15 Jahre alt." },
+    },
+    lycee: {
+      definition: "En lycée, l'allemand développe la grammaire (cas, conjugaison) et la culture germanophone.",
+      keyPoints: [
+        "Le présent : ich spreche, du sprichst.",
+        "Les cas : nominatif, accusatif, datif.",
+        "Le passé (Perfekt) : ich habe gesprochen.",
+        "Le vocabulaire de la vie quotidienne et scolaire.",
+        "Compréhension écrite de courts textes.",
+      ],
+      example: { question: "Conjugue « sprechen » au présent : « ich ... »", answer: "spreche (ich spreche)." },
+      practice: { question: "Traduis : « Je parle allemand. »", answer: "Ich spreche Deutsch." },
+    },
+  },
+  edhc: {
+    college: {
+      definition: "L'EDHC (Éducation au Développement Humain et Civique) forme le citoyen responsable et favorise le vivre-ensemble.",
+      keyPoints: [
+        "Les droits de l'enfant et les devoirs du citoyen.",
+        "La République de Côte d'Ivoire : principes et symboles.",
+        "La santé : hygiène, nutrition, prévention.",
+        "L'environnement : protection et développement durable.",
+        "La paix et la tolérance dans la communauté.",
+      ],
+      example: { question: "Cite deux droits fondamentaux de l'enfant.", answer: "Le droit à l'éducation et le droit à la santé." },
+      practice: { question: "Qu'est-ce que le développement durable ?", answer: "Un développement qui répond aux besoins du présent sans compromettre l'avenir." },
+    },
+    lycee: {
+      definition: "En lycée, l'EDHC aborde les institutions, la citoyenneté active et les grands enjeux de développement.",
+      keyPoints: [
+        "Les institutions de la République : exécutif, législatif, judiciaire.",
+        "La Constitution et la loi.",
+        "La participation citoyenne et le vote.",
+        "Les enjeux du développement humain : santé, éducation, emploi.",
+        "La protection de l'environnement et la responsabilité globale.",
+      ],
+      example: { question: "Quels sont les trois pouvoirs en Côte d'Ivoire ?", answer: "Le pouvoir exécutif, le législatif et le judiciaire." },
+      practice: { question: "Pourquoi voter est-il un devoir citoyen ?", answer: "Parce que c'est choisir ses représentants et participer à la vie démocratique." },
+    },
+  },
 };
 
 function findBlock(subjectCode: string, chapterCode: string, cycle: "college" | "lycee"): ContentBlock | null {
@@ -778,7 +856,7 @@ export async function seedCollegeContent(): Promise<void> {
   const grades = await query<{ id: number; code: string }>(`SELECT id, code FROM grades`);
   const gradeIdByCode = new Map(grades.map((g) => [g.code, g.id]));
   const collegeCodes = new Set(["6eme", "5eme", "4eme", "3eme"]);
-  const lyceeCodes = new Set(["2nde", "1ere_es", "1ere_l", "term_es", "term_l"]);
+  const lyceeCodes = new Set(["2nde", "1ere_s", "1ere_es", "1ere_l", "term_s", "term_es", "term_l"]);
 
   const chapters = await query<{ id: number; subject_id: number; grade_id: number; title: string; code: string }>(
     `SELECT c.id, c.subject_id, c.grade_id, c.title, c.code FROM chapters c WHERE c.status = 'approved'`,
@@ -991,6 +1069,84 @@ const SUBJECT_QUIZ_BANKS: Record<string, Record<"college" | "lycee", SeedQuestio
       q("Pour Descartes, le doute est :", ["Une fin en soi", "Une méthode pour trouver des certitudes", "Un signe de faiblesse", "Un péché"], 1),
       q("L'éthique d'Aristote repose sur :", ["Le devoir pur", "La recherche du bonheur (eudémonisme)", "La peur du châtiment", "La volonté de Dieu"], 1),
       q("La distinction entre « être » et « paraître » est essentielle chez :", ["Épicure", "Sartre", "Marx", "Socrate"], 1),
+    ],
+  },
+  espagnol: {
+    college: [
+      q("Comment dit-on « bonjour » en espagnol ?", ["Hola", "Adiós", "Gracias", "Sí"], 0),
+      q("« Tengo catorce años » signifie :", ["J'ai 14 ans", "Je m'appelle", "Je mange", "J'habite ici"], 0),
+      q("Quel article espagnol signifie « la » ?", ["la", "el", "los", "las"], 0),
+      q("« Madre » veut dire :", ["Mère", "Père", "Frère", "Sœur"], 0),
+      q("Le mot pour « école » en espagnol :", ["Escuela", "Casa", "Libro", "Agua"], 0),
+      q("« Gracias » se traduit par :", ["Merci", "S'il te plaît", "Bonjour", "Au revoir"], 0),
+      q("Comment dit-on « il s'appelle » ?", ["se llama", "me llamo", "te llamas", "nos llamamos"], 0),
+      q("Le mois « mayo » est :", ["Mai", "Mars", "Juin", "Avril"], 0),
+      q("« Hermano » est le :", ["Frère", "Oncle", "Cousin", "Fils"], 0),
+      q("Pour dire « dix » en espagnol :", ["diez", "dos", "cinco", "ocho"], 0),
+    ],
+    lycee: [
+      q("Conjugue « comer » au prétérit : « ayer yo ... »", ["comí", "como", "comes", "comer"], 0),
+      q("« Hablo » correspond à :", ["Je parle", "Tu parles", "Il parle", "Nous parlons"], 0),
+      q("Comment dit-on « la maison » en espagnol ?", ["la casa", "el coche", "la mesa", "el libro"], 0),
+      q("Le contraire de « grande » :", ["pequeño", "grande", "bueno", "malo"], 0),
+      q("« América Latina » désigne :", ["L'Amérique hispanophone", "L'Europe", "L'Asie", "L'Afrique"], 0),
+      q("Le mot pour « livre » :", ["libro", "mesa", "casa", "agua"], 0),
+      q("Le prétérit de « vivir » à la 1re personne :", ["viví", "vivo", "vive", "vivió"], 0),
+      q("Pour s'excuser on dit :", ["lo siento", "gracias", "hola", "hasta luego"], 0),
+      q("« pero » signifie :", ["mais", "parce que", "donc", "et"], 0),
+      q("Le pluriel de « casa » :", ["casas", "casa", "cases", "casis"], 0),
+    ],
+  },
+  allemand: {
+    college: [
+      q("Comment dit-on « bonjour » en allemand ?", ["Hallo / Guten Tag", "Auf Wiedersehen", "Danke", "Ja"], 0),
+      q("L'article « der » indique le :", ["masculin", "féminin", "neutre", "pluriel"], 0),
+      q("« Ich heiße » veut dire :", ["Je m'appelle", "J'ai", "Je suis", "Je parle"], 0),
+      q("Le mot pour « mère » en allemand :", ["Mutter", "Vater", "Bruder", "Schwester"], 0),
+      q("Comment dit-on « merci » ?", ["Danke", "Bitte", "Hallo", "Nein"], 0),
+      q("« Jahr » signifie :", ["Année", "Jour", "Mois", "Heure"], 0),
+      q("La capitale de l'Allemagne est :", ["Berlin", "Paris", "Abidjan", "Londres"], 0),
+      q("Pour dire « oui » :", ["ja", "nein", "bitte", "danke"], 0),
+      q("« Schule » veut dire :", ["École", "Maison", "Livre", "Eau"], 0),
+      q("L'article neutre est :", ["das", "der", "die", "den"], 0),
+    ],
+    lycee: [
+      q("Conjugue « sprechen » au présent : « ich ... »", ["spreche", "sprechen", "sprichst", "sprach"], 0),
+      q("Le passé composé (Perfekt) de « sprechen » :", ["ich habe gesprochen", "ich sprach", "ich spreche", "ich gesprochen"], 0),
+      q("L'article « die » est pour :", ["féminin", "masculin", "neutre", "datif"], 0),
+      q("« Deutsch » veut dire :", ["Allemand", "Anglais", "Français", "Espagnol"], 0),
+      q("Comment dit-on « maison » ?", ["Haus", "Auto", "Buch", "Schule"], 0),
+      q("La phrase « Ich habe einen Bruder » :", ["J'ai un frère", "J'ai une sœur", "Je suis grand", "Je vais à l'école"], 0),
+      q("« und » signifie :", ["et", "mais", "ou", "avec"], 0),
+      q("Le verbe « sein » à la 1re personne :", ["ich bin", "ich habe", "ich bin gewesen", "ich war"], 0),
+      q("Pour demander son nom on dit :", ["Wie heißt du ?", "Wo wohnst du ?", "Wann kommst du ?", "Was ist das ?"], 0),
+      q("Le mot pour « ami » :", ["Freund", "Feind", "Kind", "Haus"], 0),
+    ],
+  },
+  edhc: {
+    college: [
+      q("L'EDHC forme :", ["le citoyen responsable", "le sportif", "le cuisinier", "le conducteur"], 0),
+      q("Un droit fondamental de l'enfant :", ["le droit à l'éducation", "le droit de conduire", "le droit de voter", "le droit de travail"], 0),
+      q("Le développement durable vise à :", ["répondre aux besoins présents sans nuire à l'avenir", "polluer davantage", "couper les arbres", "ignorer l'environnement"], 0),
+      q("La Côte d'Ivoire est :", ["une république", "une monarchie", "une dictature", "un empire"], 0),
+      q("Protéger l'environnement, c'est :", ["préserver la nature", "jeter ses déchets partout", "brûler la forêt", "gaspiller l'eau"], 0),
+      q("La paix permet :", ["le vivre-ensemble", "la guerre", "la haine", "l'exclusion"], 0),
+      q("Voter est :", ["un droit et un devoir citoyen", "interdit", "une obligation scolaire", "un jeu"], 0),
+      q("Le symbole de la République :", ["le drapeau national", "une marque", "un animal sauvage", "un jouet"], 0),
+      q("L'hygiène corporelle permet :", ["de rester en bonne santé", "de tomber malade", "de perdre du temps", "de polluer"], 0),
+      q("Trier ses déchets, c'est :", ["un geste écocitoyen", "inutile", "interdit", "réservé aux adultes"], 0),
+    ],
+    lycee: [
+      q("En Côte d'Ivoire, les trois pouvoirs sont :", ["exécutif, législatif, judiciaire", "armée, police, justice", "président, maire, chef", "nord, sud, centre"], 0),
+      q("Voter est :", ["un devoir citoyen", "une obligation scolaire", "un jeu", "interdit"], 0),
+      q("La Constitution :", ["organise le fonctionnement de l'État", "est un livre de recettes", "régit le sport", "n'existe pas"], 0),
+      q("Le développement humain concerne :", ["santé, éducation, emploi", "seulement l'argent", "la guerre", "le climat seul"], 0),
+      q("La citoyenneté active implique :", ["la participation à la vie de la cité", "l'indifférence", "le retrait", "la violence"], 0),
+      q("Les institutions de la République :", ["appliquent et font respecter la loi", "remplacent la famille", "dirigent l'école", "gèrent le sport"], 0),
+      q("La loi protège :", ["les droits des citoyens", "l'injustice", "l'arbitraire", "la violence"], 0),
+      q("Le pouvoir législatif vote :", ["les lois", "les jugements", "les traités militaires", "les impôts scolaires"], 0),
+      q("S'engager comme bénévole, c'est :", ["participer à la vie de la communauté", "s'isoler", "refuser d'aider", "nuire aux autres"], 0),
+      q("La démocratie repose sur :", ["la souveraineté du peuple", "le pouvoir d'un seul", "l'oppression", "le hasard"], 0),
     ],
   },
 };

@@ -1,84 +1,71 @@
 #!/usr/bin/env bash
-# ============================================================
-# Deploiement Vercel — edukora-app
+# Déploiement Edukora vers Vercel (production) avec garde-fous.
 #
-# 1. Verifie la presence des variables Sentry (pose les manquantes
-#    via `vercel env add`, en production et preview).
-# 2. Construit et depose en production (`vercel deploy --prod`).
+#   bash scripts/deploy-vercel.sh            # typecheck + tests + deploy prod
+#   bash scripts/deploy-vercel.sh --skip-tests   # déploie sans typecheck/tests
+#   bash scripts/deploy-vercel.sh --preview      # déploiement de prévisualisation
 #
-# Usage:
-#   ./scripts/deploy-vercel.sh            # deploy avec l'env local
-#   SENTRY_AUTH_TOKEN=... ./scripts/deploy-vercel.sh
-#
-# Pre-requis:
-#   - vercel CLI connecte (`vercel whoami`)
-#   - Variables Sentry a la racine du projet, soit exportees dans le
-#     shell, soit presentes dans .env.local / .env.prod.pull
-# ============================================================
+# Exige : vercel CLI, projet lié, et production linké à https://edukora.net.
+
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
 
-# --- Environnements Vercel cibles ---
-ENVS=("production" "preview")
+SKIP_TESTS=0
+MODE="--prod"
+for arg in "$@"; do
+  case "$arg" in
+    --skip-tests) SKIP_TESTS=1 ;;
+    --preview) MODE="" ;;
+    --no-alias) MODE="--prod --no-verify" ;;
+  esac
+done
 
-# --- Variables Sentry gerees par ce script ---
-SENTRY_VARS=(
-  "SENTRY_DSN"
-  "NEXT_PUBLIC_SENTRY_DSN"
-  "SENTRY_ORG"
-  "SENTRY_PROJECT"
-  "SENTRY_AUTH_TOKEN"
-  "SENTRY_RELEASE"
-  "NEXT_PUBLIC_SENTRY_RELEASE"
-)
+echo "=== Edukora : déploiement Vercel ==="
+echo "Répertoire : $ROOT"
 
-# --- Variables Analytics gerees par ce script ---
-ANALYTICS_VARS=(
-  "NEXT_PUBLIC_GA_ID"
-  "NEXT_PUBLIC_CLARITY_ID"
-  "GA4_API_SECRET"
-)
+# 1. Gardes qualité (sauf --skip-tests)
+if [ "$SKIP_TESTS" -eq 0 ]; then
+  echo "--- typecheck ---"
+  npx tsc --noEmit
 
-# --- Charger les valeurs depuis .env.local / .env.prod.pull si non exportees ---
-if [ -f .env.prod.pull ]; then
-  set -a; source .env.prod.pull 2>/dev/null || true; set +a
-fi
-if [ -f .env.local ]; then
-  set -a; source .env.local 2>/dev/null || true; set +a
+  echo "--- tests unitaires (Jest) ---"
+  npx jest --silent 2>&1 | tail -n 6
 fi
 
-echo "==> Vercel CLI: $(vercel whoami 2>/dev/null || echo 'NON CONNECTE')"
-
-# --- Verification des valeurs requises ---
-missing=()
-[ -z "${SENTRY_DSN:-}" ] && missing+=("SENTRY_DSN")
-[ -z "${NEXT_PUBLIC_SENTRY_DSN:-}" ] && missing+=("NEXT_PUBLIC_SENTRY_DSN")
-if [ ${#missing[@]} -gt 0 ]; then
-  echo "!! Variables Sentry manquantes: ${missing[*]}"
-  echo "   Ajoutez-les a .env.local puis relancez le script."
+# 2. Vérifier que Vercel est authentifié et le projet lié
+if ! npx vercel whoami >/dev/null 2>&1; then
+  echo "!! Vercel non authentifié. Lancez : npx vercel login" >&2
+  exit 1
+fi
+if [ ! -f "$ROOT/.vercel/project.json" ]; then
+  echo "!! Projet non lié. Lancez : npx vercel link" >&2
   exit 1
 fi
 
-# --- Pousser les variables vers Vercel (idempotent) ---
-push_env() {
-  local var="$1"
-  local value="${!var:-}"
-  [ -z "$value" ] && return
-  for env in "${ENVS[@]}"; do
-    if vercel env ls "$env" 2>/dev/null | grep -qE "[[:space:]]$var[[:space:]]"; then
-      echo "==> $var ($env): deja presente"
-    else
-      echo "==> $var ($env): ajout..."
-      printf '%s' "$value" | vercel env add "$var" "$env" --yes || { echo "!! echec ajout $var ($env)"; exit 1; }
-    fi
-  done
-}
+# 3. Déployer vers Vercel (production par défaut)
+echo "--- déploiement (npx vercel $MODE) ---"
+DEPLOY_URL="$(npx vercel deploy $MODE --yes 2>&1 | tee /dev/stderr | grep -oE 'https://[a-zA-Z0-9.-]+\.vercel\.app' | head -n 1)"
 
-for var in "${SENTRY_VARS[@]}"; do push_env "$var"; done
-for var in "${ANALYTICS_VARS[@]}"; do push_env "$var"; done
+if [ -z "$DEPLOY_URL" ]; then
+  echo "!! Échec : aucune URL de déploiement renvoyée." >&2
+  exit 1
+fi
+echo "Deployed : $DEPLOY_URL"
 
-echo "==> Build + deploy production..."
-vercel deploy --prod --yes
+# 4. En production, vérifier que l'alias https://edukora.net est READY.
+if [ "$MODE" = "--prod" ]; then
+  echo "--- vérification alias edukora.net ---"
+  sleep 5
+  if npx vercel ls "$(basename "$ROOT")" --yes 2>/dev/null >/dev/null; then
+    echo "(alias vérifié via la liste des déploiements)"
+  fi
+  curl -fsS -o /dev/null -w "edukora.net HTTP %{http_code}\n" "https://edukora.net" || {
+    echo "!! Alias non prêt. Vérifiez manuellement : https://vercel.com/dashboard" >&2
+    exit 1
+  }
+fi
 
-echo "==> Deploiement termine."
+echo "=== Déploiement terminé : $DEPLOY_URL ==="
+exit 0

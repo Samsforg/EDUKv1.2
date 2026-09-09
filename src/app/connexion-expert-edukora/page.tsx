@@ -1,144 +1,175 @@
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = { title: "Edukora | Connexion Expert", robots: { index: false, follow: false } };
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 
 export default function Page() {
+  const router = useRouter();
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.user) router.replace(d.user.role === "teacher" ? "/espace-prof" : "/accueil-edukora");
+      })
+      .catch(() => {})
+      .finally(() => setChecking(false));
+  }, [router]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!identifier || !password) {
+      setError("Renseignez votre identifiant et votre mot de passe.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Identifiant ou mot de passe incorrect.");
+      } else if (data.user?.role !== "teacher") {
+        setError("Ce compte n'est pas un compte enseignant.");
+      } else {
+        trackEvent(EVENTS.loginCompleted, {
+          method: /^\d[\d\s+()-]*$/.test(identifier) ? "phone" : "email",
+          role: "teacher",
+        });
+        router.push("/espace-prof");
+      }
+    } catch {
+      setError("Erreur réseau. Réessayez.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (checking) {
+    return (
+      <div className="min-h-dvh bg-surface flex items-center justify-center">
+        <span className="material-symbols-outlined text-primary text-3xl animate-spin">progress_activity</span>
+      </div>
+    );
+  }
+
+  const inputClass =
+    "peer block w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 pb-3 pt-3 text-base text-on-surface focus:outline-none focus:ring-0 focus:border-primary transition-colors";
+  const labelClass =
+    "pointer-events-none absolute top-3 left-4 text-base text-on-surface transition-all duration-200 peer-focus:-top-3 peer-focus:left-3 peer-focus:text-xs peer-focus:text-primary peer-focus:bg-surface-container-lowest peer-focus:px-1 peer-[:not(:placeholder-shown)]:-top-3 peer-[:not(:placeholder-shown)]:left-3 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-primary peer-[:not(:placeholder-shown)]:bg-surface-container-lowest peer-[:not(:placeholder-shown)]:px-1";
+
   return (
-    <div className="bg-background font-body text-on-background min-h-screen flex flex-col" style={{ minHeight: "max(884px, 100dvh)" }}>
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 bg-surface">
+      <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-12 gap-0 overflow-hidden bg-surface-container-lowest rounded-xl shadow-2xl border border-outline-variant/30">
+        <div className="hidden md:flex md:col-span-5 bg-primary relative items-center justify-center p-12 overflow-hidden">
+          <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "radial-gradient(#ffffff 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
+          <div className="relative z-10 text-center flex flex-col items-center">
+            <Image alt="Edukora Logo" className="w-24 h-24 mb-8 rounded-xl shadow-lg ring-4 ring-on-primary/10" src="/images/logo-edukora.webp" loading="lazy" width={96} height={96} />
+            <h1 className="text-on-primary text-4xl font-headline font-bold leading-tight mb-4 tracking-tight">
+              Enseigner avec<br />impact.
+            </h1>
+            <p className="text-on-primary-container font-body text-lg max-w-xs mx-auto opacity-90">
+              Créez des quiz, gérez vos sujets d&apos;examen et suivez la progression de vos élèves.
+            </p>
+          </div>
+        </div>
 
-<header className="flex items-center px-4 md:px-8 h-16 w-full bg-surface border-b border-surface-border sticky top-0 z-50">
-<div className="flex items-center gap-3">
-<span className="material-symbols-outlined text-primary text-[32px]">school</span>
-<span className="font-headline text-2xl font-extrabold text-primary tracking-tight">Edukora</span>
-</div>
-<div className="ml-auto">
-<a className="text-label-sm font-semibold text-primary hover:bg-surface-container-low px-4 py-2 rounded-lg transition-colors" href="#">
-                Contacter l'assistance
-            </a>
-</div>
-</header>
-<main className="flex-grow flex items-center justify-center p-4 md:p-8">
-<div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        <div className="col-span-1 md:col-span-7 p-8 sm:p-12 lg:p-16 flex flex-col justify-center bg-surface-container-lowest">
+          <div className="md:hidden flex justify-center mb-8">
+            <Image alt="Edukora Logo" className="w-16 h-16 rounded-lg" src="/images/logo-edukora.webp" loading="lazy" width={64} height={64} />
+          </div>
+          <div className="mb-10 text-center md:text-left">
+            <h2 className="text-on-surface text-3xl font-headline font-bold mb-2">Espace Enseignant</h2>
+            <p className="text-on-surface-variant font-body">Connectez-vous pour gérer vos cours et vos élèves.</p>
+          </div>
 
-<div className="hidden lg:flex lg:col-span-7 flex-col justify-between p-12 expert-gradient rounded-xl text-on-primary relative overflow-hidden">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="relative">
+              <input
+                id="identifier"
+                type="text"
+                inputMode="email"
+                autoComplete="username"
+                placeholder=" "
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                className={inputClass}
+              />
+              <label htmlFor="identifier" className={labelClass}>Email ou Numéro de téléphone</label>
+            </div>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                placeholder=" "
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`${inputClass} pr-12`}
+              />
+              <label htmlFor="password" className={labelClass}>Mot de passe</label>
+              <button
+                type="button"
+                aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface hover:text-primary transition-colors focus:outline-none"
+              >
+                <span className="material-symbols-outlined">{showPassword ? "visibility_off" : "visibility"}</span>
+              </button>
+            </div>
 
-<div className="absolute inset-0 opacity-10 pointer-events-none" style={{"backgroundImage":"radial-gradient(circle at 2px 2px, white 1px, transparent 0)","backgroundSize":"24px 24px"}}></div>
-<div className="relative z-10">
-<span className="inline-flex items-center gap-2 bg-on-primary/10 border border-on-primary/20 rounded-full px-4 py-1 text-label-xs mb-8 uppercase tracking-widest">
-<span className="w-2 h-2 rounded-full bg-tertiary-fixed animate-pulse"></span>
-                        Expert Faculty Portal
-                    </span>
-<h1 className="font-display text-5xl font-bold leading-tight mb-6">
-                        Shape the Future of <br />Ivorian Excellence.
-                    </h1>
-<p className="text-on-primary-container text-body-lg max-w-md">
-                        Access your pedagogical tools, monitor student progress in real-time, and refine the BEPC/BAC preparation experience with AI-driven insights.
-                    </p>
-</div>
-<div className="relative z-10 mt-12 grid grid-cols-2 gap-6">
-<div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-lg bento-shadow">
-<div className="text-3xl font-bold mb-1">15k+</div>
-<div className="text-label-sm opacity-80">Students Guided</div>
-</div>
-<div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-lg bento-shadow">
-<div className="text-3xl font-bold mb-1">98%</div>
-<div className="text-label-sm opacity-80">Success Rate</div>
-</div>
-</div>
+            <div className="flex justify-end -mt-2">
+              <Link href="/mot-de-passe-oubli-edukora" className="text-sm font-medium text-primary hover:text-primary-container transition-colors">
+                Mot de passe oublié ?
+              </Link>
+            </div>
 
-<div className="absolute bottom-[-10%] right-[-5%] w-2/3 h-2/3 opacity-20 pointer-events-none">
-<img  className="w-full h-full object-contain" src="/images/ecran-084.webp" alt="A professional portrait of a confident West African educator in a modern academic setting, looking thoughtfully at a digital tablet. The background is a blurred university library with soft, warm golden hour lighting and Academic Blue architectural details. The image evokes deep trust, pedagogical authority, and national pride." loading="lazy" />
-</div>
-</div>
+            {error && <p className="text-sm text-error bg-error-container/40 rounded-lg px-4 py-3" role="alert">{error}</p>}
 
-<div className="lg:col-span-5 flex flex-col justify-center">
-<div className="bg-surface-container-lowest border border-outline-variant p-8 md:p-12 rounded-xl bento-shadow">
-<div className="mb-8">
-<h2 className="font-display text-2xl font-bold text-primary mb-2">Vérification d'identité</h2>
-<p className="text-on-surface-variant text-body-md">Bon retour, Expert. Saisissez vos identifiants pour accéder au tableau de bord professeur.</p>
-</div>
-<form className="space-y-6">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 bg-primary text-on-primary rounded-lg font-semibold text-base tracking-wide hover:bg-primary-container active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-60"
+            >
+              {loading ? (
+                <span className="material-symbols-outlined text-xl animate-spin">progress_activity</span>
+              ) : (
+                <>
+                  <span>Se connecter</span>
+                  <span className="material-symbols-outlined text-xl">arrow_forward</span>
+                </>
+              )}
+            </button>
+          </form>
 
-<div className="group">
-<label className="block text-label-sm font-semibold text-on-surface mb-2 transition-colors group-focus-within:text-primary" htmlFor="email">
-                                Adresse e-mail professionnelle
-                            </label>
-<div className="relative">
-<span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">mail</span>
-<input className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-body-md" id="email" name="email" placeholder="name@edukora.ci" required={true} type="email" />
-</div>
-</div>
-
-<div className="group">
-<label className="block text-label-sm font-semibold text-on-surface mb-2 transition-colors group-focus-within:text-primary" htmlFor="password">
-                                Mot de passe
-                            </label>
-<div className="relative">
-<span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">lock</span>
-<input className="w-full pl-10 pr-12 py-3 bg-surface border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-body-md" id="password" name="password" placeholder="••••••••" required={true} type="password" />
-<button className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary" type="button">
-<span className="material-symbols-outlined text-[20px]">visibility</span>
-</button>
-</div>
-</div>
-<div className="flex items-center justify-between">
-<label className="flex items-center cursor-pointer select-none">
-<input className="w-4 h-4 text-primary border-outline-variant rounded focus:ring-primary" type="checkbox" />
-<span className="ml-2 text-label-sm text-on-surface-variant">Keep me logged in</span>
-</label>
-<a className="text-label-sm font-semibold text-primary hover:underline" href="#">Mot de passe oublié ?</a>
-</div>
-<button className="w-full bg-secondary-container text-on-secondary-container font-bold py-4 rounded-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg" type="submit">
-<span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>login</span>
-                            Connexion Expert
-                        </button>
-</form>
-<div className="mt-8 pt-8 border-t border-outline-variant text-center">
-<p className="text-body-md text-on-surface-variant mb-4">Are you a qualified educator looking to join?</p>
-<a className="inline-flex items-center gap-2 border-2 border-primary text-primary font-bold px-6 py-3 rounded-lg hover:bg-primary-fixed transition-colors w-full justify-center" href="#">
-<span className="material-symbols-outlined">assignment_ind</span>
-                            Apply as an Expert
-                        </a>
-</div>
-</div>
-<div className="mt-6 flex justify-center gap-4 text-label-xs text-outline font-medium">
-<a className="hover:text-primary transition-colors" href="#">Politique de sécurité</a>
-<span className="text-outline-variant">•</span>
-<a className="hover:text-primary transition-colors" href="#">Teaching Guidelines</a>
-<span className="text-outline-variant">•</span>
-<a className="hover:text-primary transition-colors" href="#">Help Center</a>
-</div>
-</div>
-</div>
-</main>
-
-<footer className="p-6 text-center text-label-xs text-outline-variant">
-<p>© 2024 Edukora Côte d'Ivoire. Academic Excellence Secured. v2.4.0-faculty</p>
-</footer>
-<script>
-        // Micro-interactions for input focus
-        document.querySelectorAll('input').forEach(input =&gt; &#123;
-            input.addEventListener('focus', () =&gt; &#123;
-                input.parentElement.parentElement.classList.add('scale-[1.01]');
-            &#125;);
-            input.addEventListener('blur', () =&gt; &#123;
-                input.parentElement.parentElement.classList.remove('scale-[1.01]');
-            &#125;);
-        &#125;);
-
-        // Form submission ripple simulation
-        const form = document.querySelector('form');
-        form.addEventListener('submit', (e) =&gt; &#123;
-            const btn = e.target.querySelector('button[type="submit"]');
-            btn.innerHTML = '&lt;span class="material-symbols-outlined animate-spin"&gt;progress_activity&lt;/span&gt; Authenticating...';
-            setTimeout(() =&gt; &#123;
-                btn.innerHTML = '&lt;span class="material-symbols-outlined"&gt;verified&lt;/span&gt; Welcome, Dr. Thorne';
-                btn.classList.replace('bg-secondary-container', 'bg-tertiary-container');
-                btn.classList.replace('text-on-secondary-container', 'text-on-tertiary-container');
-            &#125;, 1500);
-        &#125;);
-    </script>
-
+          <div className="mt-12 text-center">
+            <p className="text-on-surface-variant font-body">
+              Pas encore de compte enseignant ?{" "}
+              <Link href="/inscription-expert-1-3-infos-personnelles" className="text-primary font-bold hover:text-primary-container transition-colors ml-1 px-4 py-2 border border-primary/20 rounded-full hover:bg-primary/5">
+                Postuler comme expert
+              </Link>
+            </p>
+          </div>
+          <div className="mt-4 text-center">
+            <Link href="/connexion-edukora" className="text-sm font-semibold text-primary hover:underline underline-offset-4">
+              Espace élève
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

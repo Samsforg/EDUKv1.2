@@ -4,6 +4,7 @@ import { queryOne, run } from "@/lib/db";
 import { getCurrentUser, notify } from "@/lib/session";
 import { refreshBadges } from "@/lib/badges";
 import { creditLigueChallenges } from "@/lib/ligue";
+import { moderateContent } from "@/lib/moderation";
 
 async function POSTHandler(
   req: NextRequest,
@@ -23,6 +24,11 @@ async function POSTHandler(
     postId,
   );
   if (!post) return NextResponse.json({ error: "Sujet introuvable" }, { status: 404 });
+
+  const mod = moderateContent(content);
+  if (!mod.approved) {
+    return NextResponse.json({ error: `Contenu inapproprié : ${mod.reason}`, code: "MODERATION_FAILED" }, { status: 422 });
+  }
 
   const r = await run(
     "INSERT INTO forum_replies (post_id, user_id, content) VALUES (?, ?, ?)",

@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { EVENTS, trackEvent } from "@/lib/analytics";
 
 interface Serie {
@@ -38,6 +39,8 @@ function InscriptionPage() {
   const CLASSES = ["6ème", "5ème", "4ème", "3ème", "2nde", "1ère", "Terminale"];
   const LYCEE_LEVELS = ["2nde", "1ère", "Terminale"];
   const showSerie = LYCEE_LEVELS.includes(classLevel.trim());
+  const COMMUNES = ["Abobo", "Adjamé", "Attécoubé", "Cocody", "Koumassi", "Marcory", "Plateau", "Port-Bouët", "Treichville", "Yopougon", "Bouaké", "Yamoussoukro", "Daloa", "Korhogo", "San-Pédro", "Man", "Gagnoa", "Divo", "Abengourou", "Anyama", "Bingerville", "Grand-Bassam"];
+  const NAME_RE = /^[\p{L}\p{M}\s'""''\-\.]{1,50}$/u;
 
   useEffect(() => {
     fetch("/api/series")
@@ -49,20 +52,51 @@ function InscriptionPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!firstName.trim() || !lastName.trim()) {
+    const fn = firstName.trim();
+    const ln = lastName.trim();
+    if (!fn || !ln) {
       setError("Veuillez renseigner votre prénom et votre nom.");
       return;
     }
-    if (!email.trim() && !phone.trim()) {
-      setError("Un email ou un numéro de téléphone est requis.");
+    if (!NAME_RE.test(fn)) {
+      setError("Le prénom ne doit contenir que des lettres, espaces, tirets ou apostrophes.");
       return;
     }
-    if (password.length < 6) {
-      setError("Le mot de passe doit contenir au moins 6 caractères.");
+    if (!NAME_RE.test(ln)) {
+      setError("Le nom ne doit contenir que des lettres, espaces, tirets ou apostrophes.");
+      return;
+    }
+    const phoneClean = phone.replace(/[\s\-().]/g, "");
+    if (!phoneClean) {
+      setError("Le numéro de téléphone est requis.");
+      return;
+    }
+    if (!/^(?:\+?225)?(?:0[1-9]|[1-9])\d{8}$/.test(phoneClean)) {
+      setError("Numéro de téléphone ivoirien invalide (ex. 07 00 00 00 00).");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Le mot de passe doit contenir au moins 8 caractères.");
+      return;
+    }
+    if (!/[a-zA-Z]/.test(password)) {
+      setError("Le mot de passe doit contenir au moins une lettre.");
+      return;
+    }
+    if (!/\d/.test(password)) {
+      setError("Le mot de passe doit contenir au moins un chiffre.");
+      return;
+    }
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError("L'adresse email n'est pas valide.");
       return;
     }
     if (role === "student" && !classLevel.trim()) {
       setError("Veuillez choisir votre classe ou votre niveau.");
+      return;
+    }
+    if (role === "student" && showSerie && !serieId) {
+      setError("Veuillez choisir votre série.");
       return;
     }
     if (!acceptPrivacy) {
@@ -76,10 +110,10 @@ function InscriptionPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
+          first_name: fn,
+          last_name: ln,
           email: email.trim() || null,
-          phone: phone.trim() || null,
+          phone: phoneClean || null,
           password,
           role,
           accept_privacy: acceptPrivacy,
@@ -131,7 +165,7 @@ function InscriptionPage() {
       <main className="w-full max-w-md bg-surface-container-lowest rounded-xl shadow-sm border border-surface-variant p-6 sm:p-8 flex flex-col">
         <header className="flex flex-col items-center text-center mb-8">
           <div className="w-14 h-14 mb-4 bg-surface-container-lowest rounded-2xl flex items-center justify-center p-1">
-            <img  src="/images/logo-edukora.webp" alt="Edukora" className="w-full h-full object-contain" loading="lazy" />
+            <Image  src="/images/logo-edukora.webp" alt="Edukora" className="w-full h-full object-contain" loading="lazy" width={56} height={56} />
           </div>
           <h1 className="font-headline-md text-3xl font-bold text-primary mb-2 tracking-tight">Créer un compte</h1>
           <p className="text-on-surface-variant text-base">Rejoignez Edukora et préparez votre BAC ou BEPC.</p>
@@ -189,7 +223,7 @@ function InscriptionPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="email" className="block text-sm font-semibold text-on-surface">Email</label>
+            <label htmlFor="email" className="block text-sm font-semibold text-on-surface">Email (optionnel)</label>
             <input
               id="email"
               type="email"
@@ -202,17 +236,18 @@ function InscriptionPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="phone" className="block text-sm font-semibold text-on-surface">Numéro de téléphone</label>
-            <input
-              id="phone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="+225 07 00 00 00 00"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className={inputClass}
-            />
+            <label htmlFor="phone" className="block text-sm font-semibold text-on-surface">Numéro de téléphone <span className="text-error">*</span></label>
+              <input
+                id="phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="+225 07 00 00 00 00"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                className={inputClass}
+              />
           </div>
 
           <div className="space-y-1.5">
@@ -235,7 +270,7 @@ function InscriptionPage() {
                 <span className="material-symbols-outlined">{showPassword ? "visibility_off" : "visibility"}</span>
               </button>
             </div>
-            <p className="text-xs text-on-surface-variant">Minimum 6 caractères.</p>
+            <p className="text-xs text-on-surface-variant">Minimum 8 caractères, 1 lettre et 1 chiffre.</p>
           </div>
 
           {role === "student" && (
@@ -255,15 +290,17 @@ function InscriptionPage() {
                 </div>
                 <div className="space-y-1.5">
                   <label htmlFor="commune" className="block text-sm font-semibold text-on-surface">Commune</label>
-                  <input
+                  <select
                     id="commune"
-                    type="text"
-                    autoComplete="address-level2"
-                    placeholder="Ex. Cocody, Yopougon…"
                     value={commune}
                     onChange={(e) => setCommune(e.target.value)}
                     className={inputClass}
-                  />
+                  >
+                    <option value="">—</option>
+                    {COMMUNES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

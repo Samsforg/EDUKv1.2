@@ -30,6 +30,7 @@ const NO_ID_TABLES = new Set([
   "lesson_reads",
   "password_resets",
   "sessions",
+  "revoked_sessions",
   "user_progress",
   "rate_limits",
   "reminder_settings",
@@ -39,6 +40,8 @@ const NO_ID_TABLES = new Set([
   "daily_challenges",
   "teacher_subjects",
   "teacher_grades",
+  "idempotency_keys",
+  "webhook_events",
 ]);
 
 const UNIT_MAP: Record<string, string> = {
@@ -68,9 +71,10 @@ async function withPgRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   for (let i = 0; i < attempts; i++) {
     try {
       return await fn();
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const code = e && typeof e === "object" && "code" in e ? (e as { code: string }).code : undefined;
       const transient =
-        e && (e.code === "ECONNRESET" || e.code === "ETIMEDOUT" || e.code === "ECONNREFUSED" || e.code === "57P01");
+        code === "ECONNRESET" || code === "ETIMEDOUT" || code === "ECONNREFUSED" || code === "57P01";
       if (!transient || i === attempts - 1) throw e;
       await new Promise((r) => setTimeout(r, 500 * (i + 1)));
     }
@@ -752,6 +756,47 @@ CREATE TABLE IF NOT EXISTS dissertation_corrections (
 );
 
 CREATE INDEX IF NOT EXISTS idx_dissertation_corrections_user ON dissertation_corrections (user_id, created_at);
+
+CREATE TABLE IF NOT EXISTS idempotency_keys (
+  key TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  response TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_idempotency_user ON idempotency_keys(user_id, created_at);
+
+CREATE TABLE IF NOT EXISTS webhook_events (
+  event_id TEXT PRIMARY KEY,
+  provider TEXT NOT NULL DEFAULT 'geniuspay',
+  processed_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_active_sub ON subscriptions(user_id) WHERE status = 'active';
+
+CREATE TABLE IF NOT EXISTS duels (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  challenger_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  opponent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  quiz_id INTEGER NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+  challenger_pct INTEGER,
+  opponent_pct INTEGER,
+  winner_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','done')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_duels_challenger ON duels(challenger_id);
+CREATE INDEX IF NOT EXISTS idx_duels_opponent ON duels(opponent_id);
+
+CREATE TABLE IF NOT EXISTS spaced_reviews (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  quiz_id INTEGER NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+  repetitions INTEGER NOT NULL DEFAULT 0,
+  interval_days INTEGER NOT NULL DEFAULT 1,
+  ease_factor REAL NOT NULL DEFAULT 2.5,
+  due_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, quiz_id)
+);
 `;
 
 export function getDb() {
@@ -1123,10 +1168,23 @@ CREATE INDEX IF NOT EXISTS idx_dissertation_corrections_user ON dissertation_cor
           if (trimmed) await pool.query(trimmed);
         }
       }
+      try { await withPgRetry(() => pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS has_used_trial INTEGER NOT NULL DEFAULT 0")); } catch {}
+      try { await withPgRetry(() => pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_canonical TEXT")); } catch {}
+      try { await withPgRetry(() => pool.query("CREATE UNIQUE INDEX IF NOT EXISTS uniq_active_sub ON subscriptions(user_id) WHERE status = 'active'")); } catch {}
+      try { await withPgRetry(() => pool.query("CREATE INDEX IF NOT EXISTS idx_users_phone_canonical ON users(phone_canonical)")); } catch {}
+      try { await withPgRetry(() => pool.query("CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_email ON users(email) WHERE email IS NOT NULL AND email != ''")); } catch {}
+      try { await withPgRetry(() => pool.query("CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_phone ON users(phone) WHERE phone IS NOT NULL AND phone != ''")); } catch {}
+      try { await withPgRetry(() => pool.query("CREATE TABLE IF NOT EXISTS idempotency_keys (key TEXT PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, response TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now())")); } catch {}
+      try { await withPgRetry(() => pool.query("CREATE TABLE IF NOT EXISTS webhook_events (event_id TEXT PRIMARY KEY, provider TEXT NOT NULL DEFAULT 'geniuspay', processed_at TIMESTAMPTZ NOT NULL DEFAULT now())")); } catch {}
     }
     return;
   }
   db.exec(SCHEMA);
+  try { db.exec("ALTER TABLE users ADD COLUMN has_used_trial INTEGER NOT NULL DEFAULT 0"); } catch {}
+  try { db.exec("ALTER TABLE users ADD COLUMN phone_canonical TEXT"); } catch {}
+  try { db.exec("CREATE INDEX IF NOT EXISTS idx_users_phone_canonical ON users(phone_canonical)"); } catch {}
+  try { db.exec("CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_email ON users(email) WHERE email IS NOT NULL AND email != ''"); } catch {}
+  try { db.exec("CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_phone ON users(phone) WHERE phone IS NOT NULL AND phone != ''"); } catch {}
 }
 
 export async function query<T = unknown>(sql: string, ...params: SqlParam[]): Promise<T[]> {
