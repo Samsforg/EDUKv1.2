@@ -114,8 +114,8 @@ export default function Page() {
 <span className="material-symbols-outlined">verified</span>
 </div>
 <div>
-<p className="font-headline font-bold text-on-surface">Fiches certifiées</p>
-<p className="text-[13px] text-on-surface-variant">Contenu validé par des experts de l'éducation.</p>
+<p className="font-headline font-bold text-on-surface">Fiches de révision</p>
+<p className="text-[13px] text-on-surface-variant">Contenu adapté au programme scolaire ivoirien.</p>
 </div>
 </div>
 

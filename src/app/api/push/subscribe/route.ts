@@ -9,7 +9,7 @@ let vapidConfigured = false;
 
 function ensureVapid() {
   if (vapidConfigured) return;
-  const pub = process.env.VAPID_PUBLIC_KEY;
+  const pub = process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const priv = process.env.VAPID_PRIVATE_KEY;
   if (pub && priv) {
     webPush.setVapidDetails("mailto:admin@edukora.ci", pub, priv);

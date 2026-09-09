@@ -1,6 +1,7 @@
 import { query, queryOne } from "@/lib/db";
 import { notify } from "@/lib/session";
 import { parseDbDate } from "@/lib/date-parse";
+import { sendPushToUser } from "@/lib/push";
 
 const COOLDOWN_MS: Record<string, number> = {
   welcome: 365 * 24 * 3600 * 1000,
@@ -49,6 +50,12 @@ async function notifyStreakMilestone(userId: number, streak: number): Promise<vo
     msg,
     "local_fire_department",
   );
+  await sendPushToUser(userId, {
+    title: `Série de ${streak} jours ! 🔥`,
+    body: msg,
+    url: "/accueil-edukora",
+    tag: `streak-${streak}`,
+  });
 }
 
 export async function notifyOnLogin(userId: number): Promise<void> {

@@ -149,7 +149,7 @@ export default async function Page({ params }: { params: Promise<Params> }) {
         <div className="mt-12 bg-primary rounded-3xl p-8 md:p-10 text-center text-white">
           <h2 className="text-headline-md font-bold mb-3">Prêt à réussir ton examen ?</h2>
           <p className="text-body-md mb-6 opacity-90">
-            Entraîne-toi avec les fiches certifiées, le simulateur d'examen et le tuteur IA Kora.
+            Entraîne-toi avec les fiches de révision, le simulateur d&apos;examen et le tuteur IA Kora.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link

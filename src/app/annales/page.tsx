@@ -109,7 +109,7 @@ export default async function AnnalesIndexPage() {
         <section className="bg-primary rounded-[28px] p-8 text-center text-white mt-12">
           <h2 className="text-[26px] md:text-[34px] font-extrabold mb-4">Réussis ton examen avec Edukora</h2>
           <p className="text-on-primary-container mb-6 max-w-xl mx-auto">
-            Fiches certifiées MENAET, tuteur IA Kora 24h/24 et simulateur chronométré :
+            Fiches conformes au programme MENAET, tuteur IA Kora 24h/24 et simulateur chronométré :
             tout ce qu&apos;il faut pour décrocher ton BAC ou ton BEPC.
           </p>
           <Link

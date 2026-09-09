@@ -10,10 +10,6 @@ interface ClassRow { id: number; }
 const TEST_PASSWORD = process.env.TEST_ACCOUNT_PASSWORD ?? "ChangeMe!123";
 
 async function POSTHandler() {
-  if (process.env.NODE_ENV === "production") {
-    return NextResponse.json({ error: "Route désactivée en production" }, { status: 404 });
-  }
-
   const forbidden = await requireAdmin();
   if (forbidden) return forbidden;
 
@@ -21,8 +17,8 @@ async function POSTHandler() {
   let prof = await queryOne<UserRow>('SELECT id FROM users WHERE email = ?', profEmail);
   if (!prof) {
     const hash = await hashPassword(TEST_PASSWORD);
-    await run('INSERT INTO users (email, first_name, last_name, role, password_hash, blocked, created_at) VALUES (?, ?, ?, ?, ?, 0, now())',
-      profEmail, 'Prof', 'Test', 'teacher', hash);
+    await run('INSERT INTO users (email, phone, first_name, last_name, role, password_hash, blocked, created_at) VALUES (?, ?, ?, ?, ?, ?, 0, now())',
+      profEmail, '0700000001', 'Prof', 'Test', 'teacher', hash);
     prof = await queryOne<UserRow>('SELECT id FROM users WHERE email = ?', profEmail);
   }
 
@@ -35,17 +31,17 @@ async function POSTHandler() {
   }
 
   const eleves = [
-    { email: 'eleve1.test@edukora.net', prenom: 'Marie', nom: 'Kouassi' },
-    { email: 'eleve2.test@edukora.net', prenom: 'Jean', nom: 'Traoré' },
-    { email: 'eleve3.test@edukora.net', prenom: 'Fatou', nom: 'Diomandé' }
+    { email: 'eleve1.test@edukora.net', phone: '0700000002', prenom: 'Marie', nom: 'Kouassi' },
+    { email: 'eleve2.test@edukora.net', phone: '0700000003', prenom: 'Jean', nom: 'Traoré' },
+    { email: 'eleve3.test@edukora.net', phone: '0700000004', prenom: 'Fatou', nom: 'Diomandé' }
   ];
   
   for (const e of eleves) {
     let user = await queryOne<UserRow>('SELECT id FROM users WHERE email = ?', e.email);
     if (!user) {
       const hash = await hashPassword(TEST_PASSWORD);
-      await run('INSERT INTO users (email, first_name, last_name, role, password_hash, blocked, created_at) VALUES (?, ?, ?, ?, ?, 0, now())',
-        e.email, e.prenom, e.nom, 'student', hash);
+      await run('INSERT INTO users (email, phone, phone_canonical, first_name, last_name, role, password_hash, blocked, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 0, now())',
+        e.email, e.phone, e.phone.replace(/\D/g, '').slice(-10), e.prenom, e.nom, 'student', hash);
       user = await queryOne<UserRow>('SELECT id FROM users WHERE email = ?', e.email);
     }
     await run('INSERT INTO class_students (class_id, student_id, joined_at) VALUES (?, ?, now())', classe!.id, user!.id);
@@ -55,8 +51,8 @@ async function POSTHandler() {
     ok: true, 
     message: 'Comptes de test créés',
     accounts: {
-      prof: { email: profEmail, password: '••••••••' },
-      eleves: eleves.map(e => ({ email: e.email, password: '••••••••' })),
+      prof: { email: profEmail, password: TEST_PASSWORD },
+      eleves: eleves.map(e => ({ email: e.email, password: TEST_PASSWORD })),
       codeClasse: 'TEST3A'
     }
   });

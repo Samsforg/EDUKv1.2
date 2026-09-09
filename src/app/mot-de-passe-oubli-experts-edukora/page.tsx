@@ -133,9 +133,9 @@ export default function Page() {
             <div className="bg-surface-container-high/50 p-4 rounded-lg flex items-start gap-4">
               <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
               <div>
-                <div className="text-sm font-bold text-on-surface">Sécurité certifiée AES-256</div>
+                <div className="text-sm font-bold text-on-surface">Chiffrement AES-256</div>
                 <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-                  Vos données sont protégées par un cryptage de grade militaire conforme aux normes académiques internationales.
+                  Vos données sont protégées par un chiffrement de niveau bancaire pour garantir leur confidentialité.
                 </p>
               </div>
             </div>

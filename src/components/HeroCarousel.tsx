@@ -11,8 +11,8 @@ const SLIDES = [
   },
   {
     src: "/images/ecran-001.webp",
-    alt: "Cours et fiches de révision certifiées Edukora",
-    label: "Fiches certifiées",
+    alt: "Cours et fiches de révision Edukora",
+    label: "Fiches de révision",
   },
   {
     src: "/images/landing-6-hd.webp",

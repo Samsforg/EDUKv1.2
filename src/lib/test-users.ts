@@ -9,6 +9,7 @@
  */
 
 const TEST_EMAIL_SUFFIXES = ["@test.ci", "@test.dev", "@e2e.test", "@mailtest.fr"] as const;
+const TEST_EMAIL_PATTERNS = [/\.test@edukora\.net$/i] as const;
 
 const SAFE_ALIAS_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
@@ -22,7 +23,7 @@ function sanitizeAlias(alias: string): string {
 export function isTestEmail(email: string | null | undefined): boolean {
   if (!email) return false;
   const e = email.trim().toLowerCase();
-  return TEST_EMAIL_SUFFIXES.some((suffix) => e.endsWith(suffix));
+  return TEST_EMAIL_SUFFIXES.some((suffix) => e.endsWith(suffix)) || TEST_EMAIL_PATTERNS.some((re) => re.test(e));
 }
 
 /**
@@ -31,9 +32,11 @@ export function isTestEmail(email: string | null | undefined): boolean {
  */
 export function realUsersWhere(alias = "u"): string {
   const a = sanitizeAlias(alias);
-  return TEST_EMAIL_SUFFIXES.map(
+  const suffixConditions = TEST_EMAIL_SUFFIXES.map(
     (suffix) => `LOWER(COALESCE(${a}.email, '')) NOT LIKE '%${suffix}'`,
-  ).join(" AND ");
+  );
+  suffixConditions.push(`LOWER(COALESCE(${a}.email, '')) NOT LIKE '%.test@edukora.net'`);
+  return suffixConditions.join(" AND ");
 }
 
 /**
@@ -42,7 +45,9 @@ export function realUsersWhere(alias = "u"): string {
  */
 export function testUsersWhere(alias = "u"): string {
   const a = sanitizeAlias(alias);
-  return TEST_EMAIL_SUFFIXES.map(
+  const suffixConditions = TEST_EMAIL_SUFFIXES.map(
     (suffix) => `LOWER(COALESCE(${a}.email, '')) LIKE '%${suffix}'`,
-  ).join(" OR ");
+  );
+  suffixConditions.push(`LOWER(COALESCE(${a}.email, '')) LIKE '%.test@edukora.net'`);
+  return suffixConditions.join(" OR ");
 }
