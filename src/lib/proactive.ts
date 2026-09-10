@@ -7,6 +7,7 @@ const COOLDOWN_MS: Record<string, number> = {
   welcome: 365 * 24 * 3600 * 1000,
   inactive_7d: 30 * 24 * 3600 * 1000,
   streak_milestone: 7 * 24 * 3600 * 1000,
+  streak_daily: 24 * 3600 * 1000,
   quiz_recap: 24 * 3600 * 1000,
   exam_countdown: 24 * 3600 * 1000,
 };
@@ -95,4 +96,21 @@ export async function notifyOnActivity(userId: number): Promise<void> {
   const user = await queryOne<{ streak: number }>("SELECT streak FROM users WHERE id = ?", userId);
   if (!user) return;
   await notifyStreakMilestone(userId, user.streak);
+  if (user.streak >= 1) {
+    const sent = await maybeNotify(
+      userId,
+      "streak_daily",
+      `Série de ${user.streak} jour${user.streak > 1 ? "s" : ""} ! 🔥`,
+      `Continue comme ça ! ${user.streak} jour${user.streak > 1 ? "s" : ""} consécutif${user.streak > 1 ? "s" : ""}.`,
+      "local_fire_department",
+    );
+    if (sent) {
+      await sendPushToUser(userId, {
+        title: `Série de ${user.streak} jour${user.streak > 1 ? "s" : ""} ! 🔥`,
+        body: `Continue comme ça ! ${user.streak} jour${user.streak > 1 ? "s" : ""} consécutif${user.streak > 1 ? "s" : ""}.`,
+        url: "/accueil-edukora",
+        tag: "streak-daily",
+      });
+    }
+  }
 }
