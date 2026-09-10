@@ -9,6 +9,7 @@ import { RENTREE_PROMO_CODE, RENTREE_PROMO_PERCENT, RENTREE_PROMO_ENDS_AT } from
 import { AB_PRICING_COOKIE, isPricingAbEnabled, isValidPricingVariant, parsePricingVariant, type PricingVariant } from "@/lib/ab-test";
 import SubscriptionCta from "@/components/SubscriptionCta";
 import PricingVariantTracker from "@/components/PricingVariantTracker";
+import { ProductJsonLd } from "@/components/JsonLd";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -79,6 +80,14 @@ export default async function Page({ searchParams }: { searchParams?: Promise<{ 
   return (
     <div className="bg-background text-on-background min-h-screen font-body">
       <MarketingHeader />
+
+      <ProductJsonLd
+        name={reussite.name}
+        description="Accès illimité aux fiches de révision, tuteur IA Kora, simulateur d'examen et support prioritaire pour réussir le BAC et le BEPC."
+        price={reussite.price_cents}
+        currency="XOF"
+        url="https://edukora.net/tarifs"
+      />
 
       <main role="main">
         <section className="relative overflow-hidden pt-16 pb-20 px-4 md:px-8">

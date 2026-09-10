@@ -118,3 +118,122 @@ export function BreadcrumbJsonLd({ items }: { items: Array<{ name: string; url: 
     />
   );
 }
+
+export function ProductJsonLd({
+  name,
+  description,
+  price,
+  currency,
+  url,
+}: {
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  url: string;
+}) {
+  return (
+    <JsonLd
+      data={{
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name,
+        description,
+        url,
+        offers: {
+          "@type": "Offer",
+          priceCurrency: currency,
+          price: price === 0 ? "0" : (price / 100).toString(),
+          availability: "https://schema.org/InStock",
+          url,
+        },
+        brand: {
+          "@type": "Organization",
+          name: "Edukora",
+        },
+      }}
+    />
+  );
+}
+
+export function ArticleJsonLd({
+  title,
+  description,
+  url,
+  datePublished,
+  dateModified,
+  image,
+}: {
+  title: string;
+  description: string;
+  url: string;
+  datePublished: string;
+  dateModified?: string;
+  image?: string;
+}) {
+  return (
+    <JsonLd
+      data={{
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: title,
+        description,
+        url,
+        datePublished,
+        dateModified: dateModified ?? datePublished,
+        image: image ?? "https://edukora.net/images/og-cover.png",
+        author: {
+          "@type": "Organization",
+          name: "Edukora",
+          url: "https://edukora.net",
+        },
+        publisher: {
+          "@type": "Organization",
+          name: "Edukora",
+          logo: {
+            "@type": "ImageObject",
+            url: "https://edukora.net/images/og-cover.png",
+          },
+        },
+      }}
+    />
+  );
+}
+
+export function SoftwareApplicationJsonLd({
+  name,
+  description,
+  url,
+  applicationCategory,
+  operatingSystem,
+}: {
+  name: string;
+  description: string;
+  url: string;
+  applicationCategory: string;
+  operatingSystem: string;
+}) {
+  return (
+    <JsonLd
+      data={{
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name,
+        description,
+        url,
+        applicationCategory,
+        operatingSystem,
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "XOF",
+        },
+        author: {
+          "@type": "Organization",
+          name: "Edukora",
+          url: "https://edukora.net",
+        },
+      }}
+    />
+  );
+}

@@ -1,4 +1,5 @@
 import TutorDemoPageWrapper from "@/components/TutorDemoPageWrapper";
+import { SoftwareApplicationJsonLd } from "@/components/JsonLd";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,5 +10,16 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <TutorDemoPageWrapper />;
+  return (
+    <>
+      <SoftwareApplicationJsonLd
+        name="Kora — Tuteur IA Edukora"
+        description="Tuteur IA intelligent pour réviser le BAC et le BEPC en Côte d'Ivoire. Questions-réponses, explications pas à pas et remédiation ciblée."
+        url="https://edukora.net/tuteur-ia-edukora"
+        applicationCategory="EducationalApplication"
+        operatingSystem="Web"
+      />
+      <TutorDemoPageWrapper />
+    </>
+  );
 }

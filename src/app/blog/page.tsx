@@ -3,6 +3,7 @@ import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
 import NewsletterSection from "@/components/NewsletterSection";
 import { getAllPosts, formatPostDate } from "@/lib/blog";
+import JsonLd from "@/components/JsonLd";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -23,6 +24,29 @@ export default function Page() {
   return (
     <div className="bg-background text-on-background min-h-screen font-body">
       <MarketingHeader />
+
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          name: "Blog Edukora",
+          url: "https://edukora.net/blog",
+          description:
+            "Conseils, méthodes et guides pour réussir le BAC et le BEPC en Côte d'Ivoire.",
+          publisher: {
+            "@type": "Organization",
+            name: "Edukora",
+            logo: { "@type": "ImageObject", url: "https://edukora.net/images/og-cover.png" },
+          },
+          blogPost: posts.map((p) => ({
+            "@type": "BlogPosting",
+            headline: p.title,
+            url: `https://edukora.net/blog/${p.slug}`,
+            datePublished: p.publishedAt,
+            dateModified: p.updatedAt ?? p.publishedAt,
+          })),
+        }}
+      />
 
       <section className="relative overflow-hidden pt-16 pb-12 px-4 md:px-8">
         <div className="max-w-4xl mx-auto text-center">

@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 
-export const metadata: Metadata = { title: "Edukora | Réussis ton BAC & BEPC en Côte d'Ivoire" };
+export const metadata: Metadata = {
+  title: "Edukora | Réussis ton BAC & BEPC en Côte d'Ivoire",
+  description:
+    "Fiches de révision, tuteur IA et simulateur d'examen pour réussir le BAC et le BEPC en Côte d'Ivoire. Gratuit, sans inscription.",
+};
 
 export default function Page() {
   return (

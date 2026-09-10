@@ -4,7 +4,11 @@ import { getLigueLadder, getLigueStatus, LIGUE_ORDER, LIGUES } from "@/lib/rank"
 import PageHeader from "@/components/PageHeader";
 import ShareLeagueButton from "@/components/ShareLeagueButton";
 
-export const metadata = { title: "Ligues Académiques - Edukora" };
+export const metadata = {
+  title: "Ligues Académiques - Edukora",
+  description:
+    "Classement des ligues académiques Edukora : Maître, Diamant, Or, Argent, Bronze. Grimpez dans le rang en complétant des quiz et des fiches de révision.",
+};
 
 const STYLE: Record<string, { icon: string; circle: string; desc: string }> = {
   maitre: { icon: "workspace_premium", circle: "bg-on-tertiary-fixed text-tertiary-fixed", desc: "Les meilleurs de la plateforme" },

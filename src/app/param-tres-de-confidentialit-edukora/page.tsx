@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import DataControls from "./DataControls";
 
-export const metadata: Metadata = { title: "Paramètres de Confidentialité - Edukora" };
+export const metadata: Metadata = {
+  title: "Paramètres de Confidentialité - Edukora",
+  description:
+    "Gérez vos préférences de confidentialité Edukora : cookies, données personnelles, notifications et partage de données.",
+};
 
 export default function Page() {
   return (

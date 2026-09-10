@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Edukora - Finalisation de l'inscription" };
+export const metadata: Metadata = {
+  title: "Edukora - Finalisation de l'inscription",
+  description:
+    "Complétez votre inscription Edukora en renseignant vos informations académiques : classe, série et filière.",
+};
 
 export default function Page() {
   return (

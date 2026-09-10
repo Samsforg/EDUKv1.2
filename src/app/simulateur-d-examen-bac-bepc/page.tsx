@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SoftwareApplicationJsonLd } from "@/components/JsonLd";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -11,6 +12,13 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <div className="bg-surface text-on-surface min-h-screen flex flex-col items-center overflow-x-hidden" style={{ minHeight: "max(884px, 100dvh)" }}>
+      <SoftwareApplicationJsonLd
+        name="Simulateur d'examen BAC & BEPC — Edukora"
+        description="Simulateur d'examen en conditions réelles pour le BAC et le BEPC en Côte d'Ivoire. Épreuves chronométrées, correction par IA."
+        url="https://edukora.net/simulateur-d-examen-bac-bepc"
+        applicationCategory="EducationalApplication"
+        operatingSystem="Web"
+      />
 
 <header className="w-full max-w-md mx-auto sticky top-0 bg-surface z-40 flex justify-between items-center px-4 py-4">
 <div className="flex items-center gap-2">
