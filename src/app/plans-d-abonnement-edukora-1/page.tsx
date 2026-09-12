@@ -49,9 +49,9 @@ export default async function Page() {
     <>
       <header className="fixed top-0 w-full bg-surface dark:bg-on-background border-b border-outline-variant dark:border-on-surface-variant flex items-center justify-between px-margin-mobile h-16 z-50">
         <div className="flex items-center gap-4">
-          <button className="transition-colors duration-200 active:scale-95 text-primary dark:text-primary-fixed">
+          <Link href="/" className="transition-colors duration-200 active:scale-95 text-primary dark:text-primary-fixed">
             <span className="material-symbols-outlined">arrow_back</span>
-          </button>
+          </Link>
           <h1 className="font-headline text-headline-md font-semibold text-primary dark:text-primary-fixed">Paiement Sécurisé</h1>
         </div>
         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-surface-container-low">
