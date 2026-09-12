@@ -88,6 +88,7 @@ async function GETHandler() {
       phone: user.phone,
       commune: user.commune ?? null,
       gender: user.gender ?? null,
+      avatar_url: user.avatar_url ?? null,
       serie: serie ?? null,
       serie_id: user.serie_id,
       class_level: user.class_level,

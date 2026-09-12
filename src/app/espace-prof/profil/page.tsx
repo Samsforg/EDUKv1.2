@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import AvatarUpload from "@/components/AvatarUpload";
 
 const COMMUNES = ["Abobo", "Adjamé", "Attécoubé", "Cocody", "Koumassi", "Marcory", "Plateau", "Port-Bouët", "Treichville", "Yopougon", "Bouaké", "Yamoussoukro", "Daloa", "Korhogo", "San-Pédro", "Man", "Gagnoa", "Divo", "Abengourou", "Anyama", "Bingerville", "Grand-Bassam"];
 
@@ -12,6 +13,7 @@ interface Profile {
   phone: string | null;
   commune: string | null;
   gender: string | null;
+  avatar_url: string | null;
   role: string;
 }
 
@@ -29,7 +31,16 @@ export default function ProfilEnseignantPage() {
       .then((r) => r.json())
       .then((d) => {
         if (d.user) {
-          setProfile(d.user);
+          setProfile({
+            first_name: d.user.first_name ?? "",
+            last_name: d.user.last_name ?? "",
+            email: d.user.email ?? "",
+            phone: d.user.phone ?? "",
+            commune: d.user.commune ?? "",
+            gender: d.user.gender ?? "",
+            avatar_url: d.user.avatar_url ?? null,
+            role: d.user.role ?? "teacher",
+          });
           setForm({
             first_name: d.user.first_name ?? "",
             last_name: d.user.last_name ?? "",
@@ -129,11 +140,14 @@ export default function ProfilEnseignantPage() {
       </header>
 
       <main className="max-w-lg mx-auto px-4 pt-6 space-y-6">
-        <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-on-primary font-headline-md shrink-0">
-            {profile.first_name[0]}{profile.last_name[0]}
-          </div>
-          <div className="flex-1 min-w-0">
+        <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex flex-col items-center gap-4">
+          <AvatarUpload
+            currentAvatar={profile.avatar_url ?? null}
+            initials={`${profile.first_name[0]}${profile.last_name[0]}`}
+            size="lg"
+            onUploaded={(url) => setProfile((p) => p ? { ...p, avatar_url: url } : p)}
+          />
+          <div className="flex-1 min-w-0 text-center">
             <h2 className="font-title-md text-on-surface truncate">{profile.first_name} {profile.last_name}</h2>
             <p className="text-sm text-on-surface-variant truncate">{profile.email}</p>
             <span className="inline-flex items-center gap-1 mt-1.5 bg-secondary-container/15 text-secondary px-2.5 py-0.5 rounded-full text-xs font-semibold">

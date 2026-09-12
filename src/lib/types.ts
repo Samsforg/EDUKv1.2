@@ -15,6 +15,7 @@ export interface User {
   blocked?: number;
   commune?: string | null;
   gender?: string | null;
+  avatar_url?: string | null;
 }
 
 export interface Subject {

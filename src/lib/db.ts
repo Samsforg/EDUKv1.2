@@ -176,6 +176,7 @@ CREATE TABLE IF NOT EXISTS users (
   referred_by INTEGER REFERENCES users(id),
   commune TEXT,
   gender TEXT,
+  avatar_url TEXT,
   goal TEXT,
   seen_onboarding INTEGER NOT NULL DEFAULT 0,
   blocked INTEGER NOT NULL DEFAULT 0,
@@ -1170,6 +1171,7 @@ CREATE INDEX IF NOT EXISTS idx_dissertation_corrections_user ON dissertation_cor
       }
       try { await withPgRetry(() => pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS has_used_trial INTEGER NOT NULL DEFAULT 0")); } catch {}
       try { await withPgRetry(() => pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_canonical TEXT")); } catch {}
+      try { await withPgRetry(() => pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT")); } catch {}
       try { await withPgRetry(() => pool.query("CREATE UNIQUE INDEX IF NOT EXISTS uniq_active_sub ON subscriptions(user_id) WHERE status = 'active'")); } catch {}
       try { await withPgRetry(() => pool.query("CREATE INDEX IF NOT EXISTS idx_users_phone_canonical ON users(phone_canonical)")); } catch {}
       try { await withPgRetry(() => pool.query("CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_email ON users(email) WHERE email IS NOT NULL AND email != ''")); } catch {}
@@ -1182,6 +1184,7 @@ CREATE INDEX IF NOT EXISTS idx_dissertation_corrections_user ON dissertation_cor
   db.exec(SCHEMA);
   try { db.exec("ALTER TABLE users ADD COLUMN has_used_trial INTEGER NOT NULL DEFAULT 0"); } catch {}
   try { db.exec("ALTER TABLE users ADD COLUMN phone_canonical TEXT"); } catch {}
+  try { db.exec("ALTER TABLE users ADD COLUMN avatar_url TEXT"); } catch {}
   try { db.exec("CREATE INDEX IF NOT EXISTS idx_users_phone_canonical ON users(phone_canonical)"); } catch {}
   try { db.exec("CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_email ON users(email) WHERE email IS NOT NULL AND email != ''"); } catch {}
   try { db.exec("CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_phone ON users(phone) WHERE phone IS NOT NULL AND phone != ''"); } catch {}

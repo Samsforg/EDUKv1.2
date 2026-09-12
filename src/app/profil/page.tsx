@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
+import AvatarUpload from "@/components/AvatarUpload";
 import PageHeader from "@/components/PageHeader";
 import { PairingCodeCard } from "@/components/PairingCodeCard";
 import { DisputeButton } from "@/components/DisputeButton";
@@ -17,6 +18,7 @@ interface ProfileData {
     phone: string | null;
     commune: string | null;
     gender: string | null;
+    avatar_url: string | null;
     serie: { code: string; name: string } | null;
     serie_id: number | null;
     class_level: string | null;
@@ -220,11 +222,14 @@ export default function ProfilePage() {
       />
 
       <main className="px-margin-mobile pt-6 pb-10 space-y-6">
-        <section className="bg-surface border border-outline-variant rounded-xl p-5 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-on-primary font-headline-md shrink-0">
-            {user.first_name[0]}{user.last_name[0]}
-          </div>
-          <div className="flex-1 min-w-0">
+        <section className="bg-surface border border-outline-variant rounded-xl p-5 flex flex-col items-center gap-4">
+          <AvatarUpload
+            currentAvatar={user.avatar_url ?? null}
+            initials={`${user.first_name[0]}${user.last_name[0]}`}
+            size="lg"
+            onUploaded={(url) => setData((prev) => prev ? { ...prev, user: { ...prev.user, avatar_url: url } } : prev)}
+          />
+          <div className="flex-1 min-w-0 text-center">
             <h2 className="font-title-md text-title-md text-on-surface truncate">{user.first_name} {user.last_name}</h2>
             <p className="font-label-sm text-on-surface-variant truncate">{user.email}</p>
             {user.serie ? (

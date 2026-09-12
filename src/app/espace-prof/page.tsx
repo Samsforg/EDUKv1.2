@@ -69,6 +69,7 @@ interface ProfInfo {
   first_name: string;
   last_name: string;
   email: string;
+  avatar_url?: string | null;
 }
 
 interface ProfSubjectChip {
@@ -200,8 +201,12 @@ export default function TeacherDashboardPage() {
           <span className="font-headline-md text-headline-md font-bold text-on-primary">Edukora Pro</span>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/espace-prof/profil" className="w-9 h-9 rounded-full bg-primary-container/30 text-on-primary flex items-center justify-center hover:opacity-90" aria-label="Mon profil">
-            <span className="material-symbols-outlined text-[18px]">person</span>
+          <Link href="/espace-prof/profil" className="w-9 h-9 rounded-full bg-primary-container/30 text-on-primary flex items-center justify-center hover:opacity-90 overflow-hidden" aria-label="Mon profil">
+            {prof?.avatar_url ? (
+              <img src={prof.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span className="material-symbols-outlined text-[18px]">person</span>
+            )}
           </Link>
           <Link href="/" className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs hover:opacity-90">↗</Link>
           <button
@@ -215,8 +220,12 @@ export default function TeacherDashboardPage() {
 
       <main className="px-4 md:px-8 py-6 max-w-4xl mx-auto pb-24">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-14 h-14 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-headline-md font-bold">
-            {prof?.first_name?.[0] ?? "P"}{prof?.last_name?.[0] ?? ""}
+          <div className="w-14 h-14 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-headline-md font-bold overflow-hidden shrink-0">
+            {prof?.avatar_url ? (
+              <img src={prof.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span>{prof?.first_name?.[0] ?? "P"}{prof?.last_name?.[0] ?? ""}</span>
+            )}
           </div>
           <div>
             <h1 className="font-headline-md text-headline-md text-on-surface">Prof. {prof?.first_name} {prof?.last_name}</h1>
