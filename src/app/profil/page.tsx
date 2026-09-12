@@ -15,6 +15,8 @@ interface ProfileData {
     last_name: string;
     email: string;
     phone: string | null;
+    commune: string | null;
+    gender: string | null;
     serie: { code: string; name: string } | null;
     serie_id: number | null;
     class_level: string | null;
@@ -50,7 +52,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", serie_id: "", class_level: "" as string });
+  const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", commune: "", gender: "" as string, serie_id: "", class_level: "" as string });
   const [pw, setPw] = useState({ current_password: "", new_password: "", confirm: "" });
   const [copied, setCopied] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
@@ -89,6 +91,8 @@ export default function ProfilePage() {
             last_name: d.user.last_name,
             email: d.user.email,
             phone: d.user.phone ?? "",
+            commune: d.user.commune ?? "",
+            gender: d.user.gender ?? "",
             serie_id: d.user.serie_id ? String(d.user.serie_id) : "",
             class_level: d.user.class_level ?? "",
           });
@@ -128,6 +132,8 @@ export default function ProfilePage() {
                     last_name: json.user.last_name,
                     email: json.user.email,
                     phone: json.user.phone,
+                    commune: json.user.commune,
+                    gender: json.user.gender,
                     serie_id: json.user.serie_id,
                     class_level: json.user.class_level,
                   },
@@ -301,6 +307,31 @@ export default function ProfilePage() {
                     className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="Optionnel"
                   />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-on-surface">Genre</label>
+                  <select
+                    value={form.gender}
+                    onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  >
+                    <option value="">—</option>
+                    <option value="M">Masculin</option>
+                    <option value="F">Féminin</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-on-surface">Commune</label>
+                  <select
+                    value={form.commune}
+                    onChange={(e) => setForm({ ...form, commune: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  >
+                    <option value="">—</option>
+                    {["Abobo", "Adjamé", "Attécoubé", "Cocody", "Koumassi", "Marcory", "Plateau", "Port-Bouët", "Treichville", "Yopougon", "Bouaké", "Yamoussoukro", "Daloa", "Korhogo", "San-Pédro", "Man", "Gagnoa", "Divo", "Abengourou", "Anyama", "Bingerville", "Grand-Bassam"].map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-on-surface flex items-center gap-1.5">

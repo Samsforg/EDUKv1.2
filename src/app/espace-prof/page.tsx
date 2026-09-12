@@ -200,6 +200,9 @@ export default function TeacherDashboardPage() {
           <span className="font-headline-md text-headline-md font-bold text-on-primary">Edukora Pro</span>
         </div>
         <div className="flex items-center gap-3">
+          <Link href="/espace-prof/profil" className="w-9 h-9 rounded-full bg-primary-container/30 text-on-primary flex items-center justify-center hover:opacity-90" aria-label="Mon profil">
+            <span className="material-symbols-outlined text-[18px]">person</span>
+          </Link>
           <Link href="/" className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs hover:opacity-90">↗</Link>
           <button
             onClick={() => { window.location.href = "/api/auth/logout"; }}

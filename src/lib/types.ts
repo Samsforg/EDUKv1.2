@@ -14,6 +14,7 @@ export interface User {
   referral_code: string | null;
   blocked?: number;
   commune?: string | null;
+  gender?: string | null;
 }
 
 export interface Subject {

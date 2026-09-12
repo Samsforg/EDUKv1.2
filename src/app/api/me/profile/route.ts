@@ -86,6 +86,8 @@ async function GETHandler() {
       last_name: user.last_name,
       email: user.email,
       phone: user.phone,
+      commune: user.commune ?? null,
+      gender: user.gender ?? null,
       serie: serie ?? null,
       serie_id: user.serie_id,
       class_level: user.class_level,
@@ -114,7 +116,7 @@ async function PATCHHandler(req: Request) {
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
-  const { first_name, last_name, email, phone, serie_id, class_level, current_password, new_password } = body;
+  const { first_name, last_name, email, phone, commune, gender, serie_id, class_level, current_password, new_password } = body;
 
   if (new_password) {
     if (!current_password) return NextResponse.json({ error: "Mot de passe actuel requis" }, { status: 400 });
@@ -138,6 +140,8 @@ async function PATCHHandler(req: Request) {
 
   if (first_name !== undefined) await run("UPDATE users SET first_name = ? WHERE id = ?", first_name, user.id);
   if (last_name !== undefined) await run("UPDATE users SET last_name = ? WHERE id = ?", last_name, user.id);
+  if (commune !== undefined) await run("UPDATE users SET commune = ? WHERE id = ?", commune || null, user.id);
+  if (gender !== undefined && ["M", "F", ""].includes(gender)) await run("UPDATE users SET gender = ? WHERE id = ?", gender || null, user.id);
 
   // Changer de classe/série est réservé aux élèves avec un abonnement actif
   const wantsClassChange =
@@ -169,8 +173,8 @@ async function PATCHHandler(req: Request) {
     await queryOne("SELECT 1");
   }
 
-  const updated = await queryOne<{ id: number; first_name: string; last_name: string; email: string | null; phone: string | null; serie_id: number | null; class_level: string | null }>(
-    "SELECT id, first_name, last_name, email, phone, serie_id, class_level FROM users WHERE id = ?",
+  const updated = await queryOne<{ id: number; first_name: string; last_name: string; email: string | null; phone: string | null; commune: string | null; gender: string | null; serie_id: number | null; class_level: string | null }>(
+    "SELECT id, first_name, last_name, email, phone, commune, gender, serie_id, class_level FROM users WHERE id = ?",
     user.id,
   );
 
