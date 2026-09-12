@@ -74,7 +74,7 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
 
   const user = await queryOne<User>(
     `SELECT id, role, email, phone, first_name, last_name, serie_id, class_level,
-            xp, streak, referral_code, commune, blocked, goal
+            xp, streak, referral_code, commune, gender, avatar_url, blocked, goal
      FROM users WHERE id = ?`,
     session.uid,
   );
