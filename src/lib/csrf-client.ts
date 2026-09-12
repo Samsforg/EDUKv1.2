@@ -1,35 +1,7 @@
 "use client";
 
-let csrfToken: string | null = null;
-let csrfPromise: Promise<string | null> | null = null;
-
-async function fetchCsrfToken(): Promise<string | null> {
-  try {
-    const res = await fetch("/api/csrf");
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.csrfToken ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export async function getCsrfToken(): Promise<string | null> {
-  if (csrfToken) return csrfToken;
-  if (!csrfPromise) {
-    csrfPromise = fetchCsrfToken().then((t) => {
-      csrfToken = t;
-      csrfPromise = null;
-      return t;
-    });
-  }
-  return csrfPromise;
-}
-
-export function invalidateCsrfToken(): void {
-  csrfToken = null;
-  csrfPromise = null;
-}
+export { getCsrfToken, invalidateCsrfToken } from "./csrf-core";
+import { getCsrfToken, refreshCsrfToken } from "./csrf-core";
 
 if (typeof window !== "undefined") {
   const originalFetch = window.fetch;
@@ -51,7 +23,10 @@ if (typeof window !== "undefined") {
       !url.startsWith("/api/cron/") &&
       (method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE")
     ) {
-      const token = await getCsrfToken();
+      let token = await getCsrfToken();
+      if (!token) {
+        token = await refreshCsrfToken();
+      }
       if (token) {
         const headers = new Headers(init?.headers);
         if (!headers.has("x-csrf-token")) {
@@ -61,6 +36,19 @@ if (typeof window !== "undefined") {
       }
     }
 
-    return originalFetch.call(window, input, init);
+    const res = await originalFetch.call(window, input, init);
+
+    if (res.status === 403) {
+      try {
+        const body = await res.clone().json();
+        if (typeof body.error === "string" && body.error.includes("CSRF")) {
+          await refreshCsrfToken();
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    return res;
   };
 }

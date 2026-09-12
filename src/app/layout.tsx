@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
-import "@/lib/csrf-client";
+import CsrfInit from "@/components/CsrfInit";
 import RegisterSW from "@/components/RegisterSW";
 import VercelAnalytics from "@/components/VercelAnalytics";
 import EdukoraAnalytics from "@/components/EdukoraAnalytics";
@@ -83,6 +83,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         ) : null}
       </head>
       <body className="bg-background text-on-background">
+        <CsrfInit />
         <OrganizationJsonLd />
         <WebSiteJsonLd />
         {children}
