@@ -54,7 +54,3 @@ export function handleApiCrash(err: unknown, label?: string): NextResponse {
   captureException(err, { tags: { api: label ?? "unknown" } });
   return NextResponse.json({ error: "Erreur interne du serveur" }, { status: 500 });
 }
-
-export function apiError(status: number, message: string, details?: unknown): NextResponse {
-  return NextResponse.json({ error: message, ...(details ? { details } : {}) }, { status });
-}

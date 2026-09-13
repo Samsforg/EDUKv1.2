@@ -24,7 +24,3 @@ export function parseDbDate(iso: string | null | undefined): Date | null {
   const d = new Date(s);
   return Number.isNaN(d.getTime()) ? null : d;
 }
-
-export function dbDateMs(iso: string | null | undefined): number {
-  return parseDbDate(iso)?.getTime() ?? Date.now(); // fallback : maintenant (évite NaN)
-}

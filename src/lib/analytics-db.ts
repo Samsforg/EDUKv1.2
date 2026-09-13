@@ -44,11 +44,3 @@ export async function trackDb(event: string, props: Record<string, unknown>, use
     url
   );
 }
-
-export async function getRecentEvents(limit = 100) {
-  await ensureAnalyticsTable();
-  return query<{ id: number; event: string; props: string; url: string | null; created_at: string; user_id: number | null }>(
-    "SELECT id, event, props, url, created_at, user_id FROM analytics_events ORDER BY id DESC LIMIT ?",
-    limit
-  );
-}

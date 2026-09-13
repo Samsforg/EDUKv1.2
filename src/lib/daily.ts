@@ -49,12 +49,3 @@ export async function creditDailyChallenge(userId: number, quizId: number): Prom
   );
   return res.changes > 0;
 }
-
-/** Nombre de défis du jour relevés (pour le badge « Série d'acier »). */
-export async function countDailyChallenges(userId: number): Promise<number> {
-  const row = await queryOne<{ c: number }>(
-    "SELECT COUNT(*) AS c FROM daily_challenges WHERE user_id = ?",
-    userId,
-  );
-  return row?.c ?? 0;
-}

@@ -11,8 +11,6 @@ import { trackMarketing } from "./marketing";
 export const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? "";
 export const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID ?? "";
 
-export const ANALYTICS_ENABLED = GA_ID !== "" || CLARITY_ID !== "";
-
 // ------------------------------------------------------------------
 // Événements Edukora (noms stables : ne pas modifier sans mettre à
 // jour les rapports GA4 / tableaux de bord)

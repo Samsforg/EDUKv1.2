@@ -88,18 +88,3 @@ export async function sendBrevoTemplate(to: string, templateId: number, params: 
     return false;
   }
 }
-
-export async function deleteContact(email: string): Promise<boolean> {
-  const key = apiKey();
-  if (!key) return false;
-  try {
-    const res = await brevoFetch(`/contacts/${encodeURIComponent(email)}`, { method: "DELETE" });
-    return res.ok || res.status === 204;
-  } catch {
-    return false;
-  }
-}
-
-export function isBrevoConfigured(): boolean {
-  return !!apiKey();
-}

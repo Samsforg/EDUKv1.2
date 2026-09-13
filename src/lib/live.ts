@@ -55,24 +55,6 @@ export async function getLiveHub(): Promise<{ live_now: LiveSession | null; upco
   return { live_now: liveNow, upcoming, replays, categories };
 }
 
-export async function getReplays(q = "", cat = ""): Promise<LiveSession[] >{
-  const params: (string | number)[] = [];
-  let where = "status = 'ended'";
-  if (q) {
-    params.push(`%${q}%`);
-    where += " AND (title LIKE ? OR subject_name LIKE ? OR animator_name LIKE ?)";
-    params.push(`%${q}%`, `%${q}%`);
-  }
-  if (cat) {
-    params.push(cat);
-    where += " AND category = ?";
-  }
-  return (await query<LiveSession>(
-    `SELECT ${SESSION_COLS} FROM live_sessions WHERE ${where} ORDER BY starts_at DESC`,
-    ...params,
-  )).map(toSession);
-}
-
 export async function getLiveSession(id: number, userId?: number): Promise<LiveDetail | null >{
   const s = await queryOne<LiveSession>(`SELECT ${SESSION_COLS} FROM live_sessions WHERE id = ?`, id);
   if (!s) return null;
