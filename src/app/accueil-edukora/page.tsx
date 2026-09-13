@@ -502,7 +502,7 @@ Lancer un sujet <span className="material-symbols-outlined text-[18px]">play_cir
 <span className="material-symbols-outlined">description</span>
 <span className="font-label-xs text-label-xs">Examens</span>
 </Link>
-<Link prefetch href="/profil" className="flex-1 flex flex-col items-center justify-center gap-0.5 text-on-surface hover:bg-surface-container-high transition-colors active:scale-95 duration-200">
+<Link prefetch href="/espace-eleve/profil" className="flex-1 flex flex-col items-center justify-center gap-0.5 text-on-surface hover:bg-surface-container-high transition-colors active:scale-95 duration-200">
 <span className="material-symbols-outlined">person</span>
 <span className="font-label-xs text-label-xs">Profil</span>
 </Link>
