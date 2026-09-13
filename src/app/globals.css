@@ -2341,27 +2341,27 @@ html.dark .text-on-background{ color: #e3e3e8 !important; }
 html.dark .text-on-surface-variant{ color: #a2a6b3 !important; }
 html.dark .border-outline-variant{ border-color: #2e313a !important; }
 html.dark .border-outline{ border-color: #4a4e59 !important; }
-html.dark .text-primary{ color: #9ec0ff !important; }
-html.dark .bg-primary\/10{ background-color: rgba(158, 192, 255, 0.1) !important; }
-html.dark .bg-primary\/15{ background-color: rgba(158, 192, 255, 0.15) !important; }
-html.dark .bg-primary\/5{ background-color: rgba(158, 192, 255, 0.08) !important; }
-html.dark .bg-primary-container\/15{ background-color: rgba(158, 192, 255, 0.15) !important; }
-html.dark .bg-primary-container\/20{ background-color: rgba(158, 192, 255, 0.18) !important; }
-html.dark .bg-primary-container\/30{ background-color: rgba(158, 192, 255, 0.22) !important; }
+html.dark .text-primary{ color: #b1c5ff !important; }
+html.dark .bg-primary\/10{ background-color: rgba(177, 197, 255, 0.1) !important; }
+html.dark .bg-primary\/15{ background-color: rgba(177, 197, 255, 0.15) !important; }
+html.dark .bg-primary\/5{ background-color: rgba(177, 197, 255, 0.08) !important; }
+html.dark .bg-primary-container\/15{ background-color: rgba(177, 197, 255, 0.15) !important; }
+html.dark .bg-primary-container\/20{ background-color: rgba(177, 197, 255, 0.18) !important; }
+html.dark .bg-primary-container\/30{ background-color: rgba(177, 197, 255, 0.22) !important; }
 html.dark .bg-secondary-container\/15{ background-color: rgba(255, 183, 133, 0.15) !important; }
 html.dark .bg-secondary-container\/10{ background-color: rgba(255, 183, 133, 0.12) !important; }
-html.dark .bg-tertiary-container\/10{ background-color: rgba(97, 221, 152, 0.12) !important; }
-html.dark .bg-tertiary-container\/20{ background-color: rgba(97, 221, 152, 0.18) !important; }
+html.dark .bg-tertiary-container\/10{ background-color: rgba(126, 250, 179, 0.12) !important; }
+html.dark .bg-tertiary-container\/20{ background-color: rgba(126, 250, 179, 0.18) !important; }
 html.dark .bg-error-container\/10{ background-color: rgba(255, 218, 214, 0.1) !important; }
 html.dark .bg-error-container\/20{ background-color: rgba(255, 218, 214, 0.16) !important; }
 html.dark .bg-error-container\/30{ background-color: rgba(255, 218, 214, 0.2) !important; }
 html.dark .bg-error-container\/40{ background-color: rgba(255, 218, 214, 0.24) !important; }
 html.dark .bg-surface-variant{ background-color: #242730 !important; }
 html.dark .bg-outline-variant\/30{ background-color: rgba(46, 49, 58, 0.9) !important; }
-html.dark .text-error{ color: #ffb4ab !important; }
+html.dark .text-error{ color: #ffc9c9 !important; }
 html.dark .bg-error{ background-color: #ba1a1a !important; }
-html.dark .bg-secondary{ background-color: #ffb785 !important; }
-html.dark .text-secondary{ color: #ffb785 !important; }
+html.dark .bg-secondary{ background-color: #d97706 !important; }
+html.dark .text-secondary{ color: #ffd6a5 !important; }
 html.dark .bg-primary{ background-color: #4a83e8 !important; }
 html.dark .bg-surface\/\[0\.5\]{ background-color: rgba(22, 24, 29, 0.5) !important; }
 html.dark .text-on-primary{ color: #ffffff !important; }

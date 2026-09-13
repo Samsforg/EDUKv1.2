@@ -219,8 +219,8 @@ export default function Page() {
 <p className="text-label-sm font-label-sm text-on-surface">Score Global {exam ?? "Edukora"}</p>
 <p className="text-display-lg-mobile font-display-lg-mobile text-primary">{progress?.global_score != null ? `${progress.global_score}%` : "—"}</p>
 <div className="flex gap-2">
-<p className="text-label-xs font-label-xs text-secondary-container bg-secondary-container/10 px-2 py-0.5 rounded-full flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">local_fire_department</span> {streakInfo?.current ?? progress?.streak ?? 0} jour{(streakInfo?.current ?? progress?.streak ?? 0) > 1 ? "s" : ""} {streakInfo?.isTodayDone ? "✓" : ""}</p>
-<p className="text-label-xs font-label-xs text-on-tertiary-container bg-tertiary-container/10 px-2 py-0.5 rounded-full flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">bolt</span> {progress?.xp ?? 0} XP</p>
+<p className="text-label-xs font-label-xs text-on-surface bg-secondary-container/10 px-2 py-0.5 rounded-full flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">local_fire_department</span> {streakInfo?.current ?? progress?.streak ?? 0} jour{(streakInfo?.current ?? progress?.streak ?? 0) > 1 ? "s" : ""} {streakInfo?.isTodayDone ? "✓" : ""}</p>
+<p className="text-label-xs font-label-xs text-on-surface bg-tertiary-container/10 px-2 py-0.5 rounded-full flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">bolt</span> {progress?.xp ?? 0} XP</p>
 </div>
 {streakInfo?.nextMilestone && (
 <p className="text-label-xs text-on-surface mt-1">Prochain palier {streakInfo.nextMilestone}j → +{streakInfo.bonusXp} XP</p>
@@ -255,7 +255,7 @@ Relevé
 <p className="text-label-xs text-on-surface truncate mt-0.5">{daily.title}</p>
 </div>
 <div className="shrink-0 text-right">
-<p className="text-label-xs font-bold text-secondary">+{daily.bonus_xp} XP bonus</p>
+<p className="text-label-xs font-bold text-on-primary">+{daily.bonus_xp} XP bonus</p>
 <span className="text-label-xs text-on-surface group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-0.5">{daily.done_today ? "Rejouer" : "Lancer"}<span className="material-symbols-outlined text-[14px]">chevron_right</span></span>
 </div>
 </Link>
@@ -269,7 +269,7 @@ Relevé
       <p className="font-label-sm font-semibold text-on-surface">Révisions à faire</p>
       <p className="text-label-xs text-on-surface-variant">{revisionDue} quiz à réviser aujourd&apos;hui</p>
     </div>
-    <span className="material-symbols-outlined text-tertiary shrink-0">chevron_right</span>
+<span className="material-symbols-outlined text-on-surface shrink-0">chevron_right</span>
   </Link>
 )}
 {reReads.length > 0 && (
@@ -305,7 +305,7 @@ Lancer un sujet <span className="material-symbols-outlined text-[18px]">play_cir
 </div>
 </Link>
 <Link href="/mes-classes" className="col-span-2 bento-card bg-surface-container-high border border-outline-variant p-4 rounded-xl flex items-center gap-4 group active:bg-inverse-surface active:text-inverse-on-surface transition-colors">
-<div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-secondary shadow-sm">
+<div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-surface shadow-sm">
 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
 </div>
 <div className="text-left">
@@ -332,7 +332,7 @@ Lancer un sujet <span className="material-symbols-outlined text-[18px]">play_cir
 <p className="font-label-sm text-on-surface">Mes fiches de cours</p>
 <p className="text-label-xs text-on-surface">Relire et réviser hors-ligne</p>
 </div>
-<span className="material-symbols-outlined ml-auto text-secondary">chevron_right</span>
+<span className="material-symbols-outlined ml-auto text-on-surface">chevron_right</span>
 </Link>
 <Link href="/parcours" className="col-span-2 bento-card bg-surface-container-high border border-outline-variant p-4 rounded-xl flex items-center gap-4 group active:scale-95 transition-transform duration-100">
 <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center text-primary shadow-sm">
@@ -372,17 +372,17 @@ Lancer un sujet <span className="material-symbols-outlined text-[18px]">play_cir
 <p className="font-label-sm text-on-surface">Parrainage</p>
 <p className="text-label-xs text-on-surface">Partager ton code et monter au classement</p>
 </div>
-<span className="material-symbols-outlined ml-auto text-tertiary">chevron_right</span>
+<span className="material-symbols-outlined ml-auto text-on-surface">chevron_right</span>
 </Link>
 <Link href="/ligues" className="col-span-2 bento-card bg-surface-container-high border border-outline-variant p-4 rounded-xl flex items-center gap-4 group active:scale-95 transition-transform duration-100">
-<div className="w-12 h-12 rounded-full bg-secondary-container/40 flex items-center justify-center text-secondary shadow-sm">
+<div className="w-12 h-12 rounded-full bg-secondary-container/40 flex items-center justify-center text-on-surface shadow-sm">
 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
 </div>
 <div className="text-left">
 <p className="font-label-sm text-on-surface">Ligue Académique</p>
 <p className="text-label-xs text-on-surface">Ton échelon et tes rivaux</p>
 </div>
-<span className="material-symbols-outlined ml-auto text-secondary">chevron_right</span>
+<span className="material-symbols-outlined ml-auto text-on-surface">chevron_right</span>
 </Link>
 <Link href="/defis" className="col-span-2 bento-card bg-surface-container-high border border-outline-variant p-4 rounded-xl flex items-center gap-4 group active:scale-95 transition-transform duration-100">
 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shadow-sm">
@@ -415,14 +415,14 @@ Lancer un sujet <span className="material-symbols-outlined text-[18px]">play_cir
 <span className="material-symbols-outlined ml-auto text-primary">chevron_right</span>
 </Link>
 <Link href="/planning" className="col-span-2 bento-card bg-surface-container-high border border-outline-variant p-4 rounded-xl flex items-center gap-4 group active:scale-95 transition-transform duration-100">
-<div className="w-12 h-12 rounded-full bg-secondary/15 flex items-center justify-center text-secondary shadow-sm">
+<div className="w-12 h-12 rounded-full bg-secondary/15 flex items-center justify-center text-on-surface shadow-sm">
 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>calendar_month</span>
 </div>
 <div className="text-left">
 <p className="font-label-sm text-on-surface">Planning de révisions</p>
 <p className="text-label-xs text-on-surface">Ta semaine générée automatiquement</p>
 </div>
-<span className="material-symbols-outlined ml-auto text-secondary">chevron_right</span>
+<span className="material-symbols-outlined ml-auto text-on-surface">chevron_right</span>
 </Link>
 </section>
 <section className="space-y-stack-md pb-8">
