@@ -8,6 +8,23 @@ import EdukoraAnalytics from "@/components/EdukoraAnalytics";
 import ConsentBanner from "@/components/ConsentBanner";
 import AdSenseLoader from "@/components/AdSenseLoader";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/JsonLd";
+import { Hanken_Grotesk, Inter } from "next/font/google";
+
+const hankenGrotesk = Hanken_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-hanken",
+  display: "swap",
+  preload: true,
+  fallback: ["system-ui", "sans-serif"],
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+  preload: true,
+  fallback: ["system-ui", "sans-serif"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://edukora.net"),
@@ -69,11 +86,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const nonce = h.get("x-nonce") ?? undefined;
 
   return (
-    <html lang="fr" className="light">
+    <html lang="fr" className={`${hankenGrotesk.variable} ${inter.variable} light`}>
       <head>
         <link rel="preload" as="font" type="font/woff2" href="/fonts/MaterialSymbols-subset.woff2" crossOrigin="anonymous" />
-        <link rel="preload" as="font" type="font/woff2" href="/fonts/HankenGrotesk-latin.woff2" crossOrigin="anonymous" />
-        <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-latin.woff2" crossOrigin="anonymous" />
         <script nonce={nonce} src="/theme-init.js" />
         {process.env.GSC_VERIFICATION ? (
           <meta
