@@ -5,6 +5,7 @@ import { logAudit } from "./audit";
 import { getAdminChallenges, getAdminLeagueChallenges } from "./admin-content";
 import { realUsersWhere, testUsersWhere, isTestEmail } from "./test-users";
 import { parseDbDate } from "./date-parse";
+import { PasswordSchema } from "./validation";
 
 const ROLES = ["student", "teacher", "admin", "parent", "expert"] as const;
 export type AdminRole = (typeof ROLES)[number];
@@ -882,8 +883,10 @@ export async function resetUserPassword(
   newPassword: string,
   actorId: number,
 ): Promise<{ ok: true } | { error: string }> {
-  if (!newPassword || newPassword.length < 6) {
-    return { error: "Le mot de passe doit contenir au moins 6 caractères" };
+  const result = PasswordSchema.safeParse(newPassword);
+  if (!result.success) {
+    const msg = result.error.issues[0]?.message ?? "Mot de passe trop faible";
+    return { error: msg };
   }
   if (targetId === actorId) return { error: "Vous ne pouvez pas réinitialiser votre propre mot de passe" };
   const target = await queryOne<{ id: number; first_name: string; last_name: string }>(

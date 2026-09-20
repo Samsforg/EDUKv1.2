@@ -1,6 +1,12 @@
 import { z } from "zod";
 
 // ===== AUTH =====
+export const PasswordSchema = z.string()
+  .min(8, "Le mot de passe doit contenir au moins 8 caractères")
+  .max(128)
+  .regex(/[a-zA-Z]/, "Le mot de passe doit contenir au moins une lettre")
+  .regex(/\d/, "Le mot de passe doit contenir au moins un chiffre");
+
 export const LoginSchema = z.object({
   identifier: z.string().min(3).max(100),
   password: z.string().min(8).max(128),
@@ -17,7 +23,7 @@ export const RegisterSchema = z.object({
     (v) => IVORIAN_PHONE_RE.test(v.replace(/[\s\-().]/g, "")),
     { message: "Numéro de téléphone ivoirien invalide (ex. 07 00 00 00 00)" }
   ),
-  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères").max(128).regex(/[a-zA-Z]/, "Le mot de passe doit contenir au moins une lettre").regex(/\d/, "Le mot de passe doit contenir au moins un chiffre"),
+  password: PasswordSchema,
   referral_code: z.string().max(20).optional(),
   role: z.enum(["student", "teacher", "parent"]).optional().default("student"),
   serie_id: z.number().int().positive().nullable().optional(),

@@ -26,7 +26,9 @@ export async function generateAICorrection(
     const prompt = `Tu es un professeur ivoirien du secondaire. Explique en 3 phrases max pourquoi la bonne réponse à cette question de ${subjectName ?? "cours"} est "${correct}" et pourquoi "${chosen}" est incorrect. Question: ${question.question}${rag}`;
     const res = await generateWithGateway({ messages: [{ role: "user", content: prompt }], maxTokens: 220, temperature: 0.6 });
     if (res?.text) return { explanation: res.text.trim(), tip: "Astuce: relis la leçon associée pour approfondir." };
-  } catch {}
+  } catch (err) {
+    console.warn("[quiz-ai] explanation generation failed:", err instanceof Error ? err.message : err);
+  }
   return { explanation: question.explanation ?? "Bonne réponse : option " + (question.answer_index + 1) + ".", tip: null };
 }
 

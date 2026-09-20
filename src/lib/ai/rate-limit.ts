@@ -22,22 +22,22 @@ export interface AIRateLimitResult {
 }
 
 async function bumpWindow(key: string, max: number, windowMs: number, now: number) {
+  // Opération atomique : INSERT ou UPDATE en une seule requête SQL
+  const resetAt = now + windowMs;
+  await run(
+    `INSERT INTO rate_limits (key, count, reset_at) VALUES (?, 1, ?)
+     ON CONFLICT(key) DO UPDATE SET
+       count = CASE WHEN rate_limits.reset_at < ? THEN 1 ELSE rate_limits.count + 1 END,
+       reset_at = CASE WHEN rate_limits.reset_at < ? THEN ? ELSE rate_limits.reset_at END`,
+    key, resetAt, now, now, resetAt,
+  );
+
   const row = await queryOne<{ count: number; reset_at: number }>(
     "SELECT count, reset_at FROM rate_limits WHERE key = ?",
     key,
   );
-  if (!row || now > row.reset_at) {
-    await run(
-      "INSERT INTO rate_limits (key, count, reset_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = 1, reset_at = ?",
-      key,
-      now + windowMs,
-      now + windowMs,
-    );
-    return { count: 1, resetAt: now + windowMs, remaining: max - 1 };
-  }
-  const nextCount = row.count + 1;
-  await run("UPDATE rate_limits SET count = ? WHERE key = ?", nextCount, key);
-  return { count: nextCount, resetAt: row.reset_at, remaining: Math.max(0, max - nextCount) };
+  if (!row) return { count: 1, resetAt, remaining: max - 1 };
+  return { count: row.count, resetAt: row.reset_at, remaining: Math.max(0, max - row.count) };
 }
 
 export async function checkAIRateLimit(subject: string): Promise<AIRateLimitResult> {

@@ -180,8 +180,12 @@ function sendToInternal(name: EdukoraEventName, params: TrackParams) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ event: name, props: params, url: location.href }),
       keepalive: true,
-    }).catch(() => {});
-  } catch {}
+    }).catch((err) => {
+      if (process.env.NODE_ENV === "development") console.warn("[analytics] track failed:", err);
+    });
+  } catch (err) {
+    if (process.env.NODE_ENV === "development") console.warn("[analytics] track failed:", err);
+  }
 }
 
 export function trackEvent(

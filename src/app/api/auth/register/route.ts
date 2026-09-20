@@ -34,6 +34,9 @@ async function POSTHandler(req: NextRequest) {
   if (role === "parent") {
     return NextResponse.json({ error: "Veuillez utiliser la page d'inscription parent" }, { status: 400 });
   }
+  if (role === "teacher") {
+    return NextResponse.json({ error: "L'inscription enseignant nécessite une validation admin. Contactez le support." }, { status: 403 });
+  }
   const db = getDb();
 
   const cleanFirstName = sanitizeName(first_name);

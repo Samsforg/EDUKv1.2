@@ -42,6 +42,8 @@ async function doInit() {
     await migrate("quizzes", "created_at", "TEXT");
     await migrate("exam_papers", "created_at", "TEXT");
     await migrate("users", "blocked", "INTEGER");
+    await migrate("users", "failed_login_count", "INTEGER");
+    await migrate("users", "locked_until", "TEXT");
     await migrate("users", "commune");
     await migrate("users", "gender", "TEXT");
     await migrate("users", "goal", "TEXT");
@@ -105,33 +107,44 @@ async function doInit() {
   // l'administrateur existe toujours sur une base fraîche.
   await safeAsync("ensureAdminDemo", ensureAdminDemo);
   await safeAsync("seedDemoUsers", seedDemoUsers);
-  await safeAsync("seedForum", seedForum);
-  await safeAsync("ensureBadges", ensureBadges);
-  await safeAsync("ensureReminderTable", ensureReminderTable);
-  await safeAsync("ensureUserConsentsTable", ensureUserConsentsTable);
-  await safeAsync("ensureParentTables", ensureParentTables);
-  await safeAsync("ensureLessonComments", ensureLessonComments);
-  await safeAsync("ensureRevokedSessions", ensureRevokedSessions);
+
+  // Seeds indépendants exécutés en parallèle pour réduire le cold start
+  await Promise.all([
+    safeAsync("seedForum", seedForum),
+    safeAsync("ensureBadges", ensureBadges),
+    safeAsync("ensureReminderTable", ensureReminderTable),
+    safeAsync("ensureUserConsentsTable", ensureUserConsentsTable),
+    safeAsync("ensureParentTables", ensureParentTables),
+    safeAsync("ensureLessonComments", ensureLessonComments),
+    safeAsync("ensureRevokedSessions", ensureRevokedSessions),
+    safeAsync("seedSubscriptionPlans", ensureSubscriptionPlans),
+  ]);
+
   await safeAsync("cleanupRevokedSessions", cleanupRevokedSessions);
   await safeAsync("ensureParentDemo", ensureParentDemo);
-  await safeAsync("seedReferrals", seedReferrals);
-  await safeAsync("seedPromoCodes", seedPromoCodes);
-  await safeAsync("seedDisputes", seedDisputes);
-  await safeAsync("seedAuditLogs", seedAuditLogs);
-  await safeAsync("seedProctoring", seedProctoring);
-  await safeAsync("seedRankings", seedRankings);
-  await safeAsync("seedChallenges", seedChallenges);
-  await safeAsync("seedLive", seedLive);
-  await safeAsync("seedLigueChallenges", seedLigueChallenges);
-  await safeAsync("seedMENAET", seedMENAET);
-  await safeAsync("seedProgressionMENAET", seedProgressionMENAET);
-  await safeAsync("seedProgressionGaps", seedProgressionGaps);
-  await safeAsync("cleanupDuplicateSubjects", cleanupDuplicateSubjects);
-  await safeAsync("reconcileEdhc", reconcileEdhc);
-  await safeAsync("seedCollegeContent", seedCollegeContent);
-  await safeAsync("seedCollegeQuizzes", () => seedCollegeQuizzes(["philo"]));
-  await safeAsync("seedSubscriptionPlans", ensureSubscriptionPlans);
-  await safeAsync("applyFreemiumLessons", applyFreemiumLessons);
+
+  await Promise.all([
+    safeAsync("seedReferrals", seedReferrals),
+    safeAsync("seedPromoCodes", seedPromoCodes),
+    safeAsync("seedDisputes", seedDisputes),
+    safeAsync("seedAuditLogs", seedAuditLogs),
+    safeAsync("seedProctoring", seedProctoring),
+    safeAsync("seedRankings", seedRankings),
+    safeAsync("seedChallenges", seedChallenges),
+    safeAsync("seedLive", seedLive),
+    safeAsync("seedLigueChallenges", seedLigueChallenges),
+  ]);
+
+  await Promise.all([
+    safeAsync("seedMENAET", seedMENAET),
+    safeAsync("seedProgressionMENAET", seedProgressionMENAET),
+    safeAsync("seedProgressionGaps", seedProgressionGaps),
+    safeAsync("cleanupDuplicateSubjects", cleanupDuplicateSubjects),
+    safeAsync("reconcileEdhc", reconcileEdhc),
+    safeAsync("seedCollegeContent", seedCollegeContent),
+    safeAsync("seedCollegeQuizzes", () => seedCollegeQuizzes(["philo"])),
+    safeAsync("applyFreemiumLessons", applyFreemiumLessons),
+  ]);
   } finally {
     setInsideInit(false);
   }

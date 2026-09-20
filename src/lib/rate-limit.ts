@@ -27,27 +27,31 @@ export async function rateLimit(key: string, preset?: string): Promise<{ allowed
   const now = Date.now();
 
   try {
+    // Opération atomique : INSERT ou UPDATE en une seule requête SQL
+    // Si la fenêtre est expirée, on réinitialise le compteur
+    const resetAt = now + config.windowMs;
+    await run(
+      `INSERT INTO rate_limits (key, count, reset_at) VALUES (?, 1, ?)
+       ON CONFLICT(key) DO UPDATE SET
+         count = CASE WHEN rate_limits.reset_at < ? THEN 1 ELSE rate_limits.count + 1 END,
+         reset_at = CASE WHEN rate_limits.reset_at < ? THEN ? ELSE rate_limits.reset_at END`,
+      key, resetAt, now, now, resetAt,
+    );
+
+    // Lire le résultat final (une seule requête supplémentaire, pas de race condition)
     const row = await queryOne<{ count: number; reset_at: number }>(
       "SELECT count, reset_at FROM rate_limits WHERE key = ?",
       key,
     );
 
-    if (!row || now > row.reset_at) {
-      await run(
-        "INSERT INTO rate_limits (key, count, reset_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = 1, reset_at = ?",
-        key,
-        now + config.windowMs,
-        now + config.windowMs,
-      );
-      return { allowed: true, remaining: config.max - 1, resetAt: now + config.windowMs };
+    if (!row) {
+      return { allowed: true, remaining: config.max, resetAt };
     }
 
-    const nextCount = row.count + 1;
-    await run("UPDATE rate_limits SET count = ? WHERE key = ?", nextCount, key);
-    if (nextCount > config.max) {
+    if (row.count > config.max) {
       return { allowed: false, remaining: 0, resetAt: row.reset_at };
     }
-    return { allowed: true, remaining: config.max - nextCount, resetAt: row.reset_at };
+    return { allowed: true, remaining: config.max - row.count, resetAt: row.reset_at };
   } catch (err) {
     // Si la table n'existe pas encore (premier boot), on autorise la requête.
     console.error("[rate-limit] erreur (requête autorisée):", err);

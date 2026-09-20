@@ -128,7 +128,7 @@ function getPool(): Pool {
       max: 10,
       ssl: process.env.DATABASE_SSL_DISABLED === "true"
         ? undefined
-        : { rejectUnauthorized: false },
+        : { rejectUnauthorized: true },
     });
     pool.on("error", (err) => {
       if (process.env.NODE_ENV !== "test") console.error("pg pool error:", err);

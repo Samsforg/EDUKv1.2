@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { resetUserPassword } from "@/lib/admin";
 import { requireAdmin } from "@/lib/admin-guard";
 import { getCurrentUser } from "@/lib/session";
+import { PasswordSchema } from "@/lib/validation";
 
 async function POSTHandler(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const forbidden = await requireAdmin();
@@ -12,6 +13,12 @@ async function POSTHandler(req: Request, { params }: { params: Promise<{ id: str
   const body = await req.json().catch(() => null);
   if (!body || typeof body.password !== "string") {
     return NextResponse.json({ error: "Mot de passe requis" }, { status: 400 });
+  }
+
+  const pwdResult = PasswordSchema.safeParse(body.password);
+  if (!pwdResult.success) {
+    const msg = pwdResult.error.issues[0]?.message ?? "Mot de passe trop faible";
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
 
   const actor = await getCurrentUser();
