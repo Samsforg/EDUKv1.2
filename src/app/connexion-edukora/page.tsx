@@ -246,7 +246,7 @@ export default function Page() {
         </div>
 
         {/* Right: illustration (desktop only) */}
-        <div className="hidden md:flex w-1/2 relative bg-primary-container items-center justify-center overflow-hidden">
+        <div className="hidden md:block w-1/2 relative bg-primary-container overflow-hidden self-stretch">
           <Image
             src="/images/landing-6-hd.webp"
             alt="Élèves ivoiriens prêts pour l'école"
