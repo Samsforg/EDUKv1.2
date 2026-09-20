@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Paramètres de Confidentialité - Edukora",
   description:
     "Gérez vos préférences de confidentialité Edukora : cookies, données personnelles, notifications et partage de données.",
+  robots: { index: false },
 };
 
 export default function Page() {

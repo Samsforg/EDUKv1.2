@@ -9,6 +9,13 @@ export const metadata: Metadata = {
   description:
     "Découvrez les résultats de la communauté Edukora en Côte d'Ivoire : fiches de révision, quiz corrigés et progression des élèves.",
   alternates: { canonical: "/resultats" },
+  openGraph: {
+    title: "Résultats et réussites Edukora",
+    description: "Fiches de révision, quiz corrigés et progression des élèves en Côte d'Ivoire.",
+    url: "https://edukora.net/resultats",
+    siteName: "Edukora",
+    type: "website",
+  },
 };
 
 // Chiffres réels de la plateforme (base PostgreSQL) : pas de pré-rendu figé au build.

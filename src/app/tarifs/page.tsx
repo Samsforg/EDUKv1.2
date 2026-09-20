@@ -17,6 +17,13 @@ export const metadata: Metadata = {
   description:
     "Tarifs Edukora en FCFA : plan Découverte gratuit, Premium Réussite et Premium Plus. Paiement Mobile Money (Orange, MTN, Moov), carte bancaire ou USSD. Sans engagement.",
   alternates: { canonical: "/tarifs" },
+  openGraph: {
+    title: "Tarifs et abonnements Edukora",
+    description: "Plan Découverte gratuit, Premium Réussite et Premium Plus. Paiement Mobile Money en FCFA.",
+    url: "https://edukora.net/tarifs",
+    siteName: "Edukora",
+    type: "website",
+  },
 };
 
 const faq = [

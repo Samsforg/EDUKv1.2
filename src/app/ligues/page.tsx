@@ -3,11 +3,20 @@ import { getCurrentUser } from "@/lib/session";
 import { getLigueLadder, getLigueStatus, LIGUE_ORDER, LIGUES } from "@/lib/rank";
 import PageHeader from "@/components/PageHeader";
 import ShareLeagueButton from "@/components/ShareLeagueButton";
+import type { Metadata } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Ligues Académiques - Edukora",
   description:
     "Classement des ligues académiques Edukora : Maître, Diamant, Or, Argent, Bronze. Grimpez dans le rang en complétant des quiz et des fiches de révision.",
+  alternates: { canonical: "/ligues" },
+  openGraph: {
+    title: "Ligues Académiques Edukora",
+    description: "Maître, Diamant, Or, Argent, Bronze. Grimpez dans le rang en complétant des quiz.",
+    url: "https://edukora.net/ligues",
+    siteName: "Edukora",
+    type: "website",
+  },
 };
 
 const STYLE: Record<string, { icon: string; circle: string; desc: string }> = {

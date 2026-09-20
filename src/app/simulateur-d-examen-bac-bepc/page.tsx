@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   description:
     "Entraînez-vous en conditions réelles au simulateur d'examen Edukora : épreuves chronométrées des 10 dernières années, correction notée sur 20 et analyse de niveau par IA.",
   alternates: { canonical: "/simulateur-d-examen-bac-bepc" },
+  openGraph: {
+    title: "Simulateur d'examen BAC et BEPC",
+    description: "Épreuves chronométrées, correction notée sur 20 et analyse de niveau par IA.",
+    url: "https://edukora.net/simulateur-d-examen-bac-bepc",
+    siteName: "Edukora",
+    type: "website",
+  },
 };
 
 export default function Page() {

@@ -7,7 +7,6 @@ import VercelAnalytics from "@/components/VercelAnalytics";
 import EdukoraAnalytics from "@/components/EdukoraAnalytics";
 import ConsentBanner from "@/components/ConsentBanner";
 import AdSenseLoader from "@/components/AdSenseLoader";
-import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/JsonLd";
 import { Hanken_Grotesk, Inter } from "next/font/google";
 
 const hankenGrotesk = Hanken_Grotesk({
@@ -107,8 +106,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="bg-background text-on-background">
         <CsrfInit />
-        <OrganizationJsonLd />
-        <WebSiteJsonLd />
         {children}
         <RegisterSW />
         <VercelAnalytics />

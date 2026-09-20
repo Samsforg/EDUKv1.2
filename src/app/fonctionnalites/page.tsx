@@ -9,6 +9,13 @@ export const metadata: Metadata = {
   description:
     "Découvrez les fonctionnalités Edukora : simulateur d'examen BAC/BEPC, fiches de révision, tuteur IA Kora, classements et ligues. Toutes séries, toutes classes.",
   alternates: { canonical: "/fonctionnalites" },
+  openGraph: {
+    title: "Fonctionnalités Edukora",
+    description: "Simulateur d'examen, fiches de révision, tuteur IA Kora, classements et ligues.",
+    url: "https://edukora.net/fonctionnalites",
+    siteName: "Edukora",
+    type: "website",
+  },
 };
 
 const features = [

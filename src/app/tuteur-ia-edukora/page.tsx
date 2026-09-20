@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   description:
     "Kora, le tuteur IA d'Edukora : questions-réponses avec quota selon le plan (5 questions/mois gratuit, 30/mois Réussite, 100/trimestre Trimestriel), explications pas à pas et remédiation ciblée pour progresser au BAC et au BEPC.",
   alternates: { canonical: "/tuteur-ia-edukora" },
+  openGraph: {
+    title: "Tuteur IA Kora — Edukora",
+    description: "Questions-réponses avec quota selon le plan, explications pas à pas et remédiation ciblée.",
+    url: "https://edukora.net/tuteur-ia-edukora",
+    siteName: "Edukora",
+    type: "website",
+  },
 };
 
 export default function Page() {

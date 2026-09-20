@@ -13,15 +13,16 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net";
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Organization",
-        "@id": "https://edukora.net/#organization",
+        "@id": `${baseUrl}/#organization`,
         name: "Edukora",
-        url: "https://edukora.net",
-        logo: "https://edukora.net/favicon.png",
+        url: baseUrl,
+        logo: `${baseUrl}/favicon.png`,
         description:
           "Plateforme éducative pour réussir le BAC et le BEPC en Côte d'Ivoire : fiches de révision, tuteur IA et simulateur d'examen.",
         sameAs: [
@@ -37,19 +38,19 @@ export default function Page() {
       },
       {
         "@type": "WebSite",
-        "@id": "https://edukora.net/#website",
-        url: "https://edukora.net",
+        "@id": `${baseUrl}/#website`,
+        url: baseUrl,
         name: "Edukora",
         inLanguage: "fr-CI",
-        publisher: { "@id": "https://edukora.net/#organization" },
+        publisher: { "@id": `${baseUrl}/#organization` },
       },
       {
         "@type": "Course",
-        "@id": "https://edukora.net/#course",
+        "@id": `${baseUrl}/#course`,
         name: "Préparation au BAC et au BEPC en Côte d'Ivoire",
         description:
           "Fiches de révision, tuteur IA Kora disponible 24h/24 et simulateur d'examen chronométré pour réussir le BAC et le BEPC.",
-        provider: { "@id": "https://edukora.net/#organization" },
+        provider: { "@id": `${baseUrl}/#organization` },
         inLanguage: "fr-CI",
         educationalLevel: "Collège et lycée",
         hasCourseInstance: {
@@ -67,7 +68,7 @@ export default function Page() {
       },
       {
         "@type": "FAQPage",
-        "@id": "https://edukora.net/#faq",
+        "@id": `${baseUrl}/#faq`,
         mainEntity: [
           {
             "@type": "Question",

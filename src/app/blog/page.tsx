@@ -13,8 +13,15 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/blog",
     types: {
-      "application/rss+xml": "https://edukora.net/feed.xml",
+      "application/rss+xml": `${process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net"}/feed.xml`,
     },
+  },
+  openGraph: {
+    title: "Blog Edukora",
+    description: "Conseils, méthodes et guides pour réussir le BAC et le BEPC en Côte d'Ivoire.",
+    url: "https://edukora.net/blog",
+    siteName: "Edukora",
+    type: "website",
   },
 };
 

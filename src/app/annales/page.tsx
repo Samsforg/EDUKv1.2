@@ -11,6 +11,13 @@ export const metadata: Metadata = {
   description:
     "Toutes les annales du BAC et BEPC de Côte d'Ivoire : sujets par série, matière et année avec correction détaillée et simulateur chronométré sur Edukora.",
   alternates: { canonical: "/annales" },
+  openGraph: {
+    title: "Annales BAC & BEPC Côte d'Ivoire",
+    description: "Sujets corrigés par série, matière et année avec simulateur chronométré.",
+    url: "https://edukora.net/annales",
+    siteName: "Edukora",
+    type: "website",
+  },
 };
 
 interface PaperRow {
