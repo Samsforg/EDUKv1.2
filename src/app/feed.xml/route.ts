@@ -1,6 +1,6 @@
 import { getAllPosts } from "@/lib/blog";
 
-const BASE_URL = "https://edukora.net";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net";
 
 function escapeXml(s: string): string {
   return s

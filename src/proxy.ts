@@ -8,6 +8,7 @@ import {
   isPricingAbEnabled,
   isValidPricingVariant,
 } from "@/lib/ab-test";
+import { getDb } from "@/lib/db";
 
 function generateNonce(): string {
   const array = new Uint8Array(16);
@@ -87,7 +88,7 @@ const CSP_BASE = [
 ].join("; ");
 
 function withCspHeaders(res: NextResponse, nonce: string): NextResponse {
-  const csp = `${CSP_BASE}; script-src 'self' 'unsafe-inline' 'nonce-${nonce}' https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms https://pagead2.googlesyndication.com https://adservice.google.com`;
+  const csp = `${CSP_BASE}; script-src 'self' 'nonce-${nonce}' https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms https://pagead2.googlesyndication.com https://adservice.google.com`;
   res.headers.set("Content-Security-Policy", csp);
   res.headers.set("X-Content-Security-Policy", csp);
   res.headers.set("X-Nonce", nonce);
@@ -164,6 +165,20 @@ const PUBLIC_ROUTES = [
 const TEACHER_ROUTES = ["/prof", "/api/prof"];
 const ADMIN_ROUTES = ["/admin", "/api/admin"];
 
+function isRouteProtected(pathname: string, prefixes: string[]): boolean {
+  return prefixes.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+
+function getUserRole(uid: number): string | null {
+  try {
+    const db = getDb();
+    const row = db.prepare("SELECT role FROM users WHERE id = ?").get(uid) as { role: string } | undefined;
+    return row?.role ?? null;
+  } catch {
+    return null;
+  }
+}
+
 const LEGACY_REDIRECTS: Array<[string, string]> = [
   ["/auth/register", "/inscription-1-2-edukora"],
   ["/auth/login", "/connexion-edukora"],
@@ -239,6 +254,27 @@ export function proxy(req: NextRequest) {
       }
       return NextResponse.json({ error: "Token CSRF invalide" }, { status: 403 });
     }
+  }
+
+  // Role-based access control for admin and teacher routes
+  const role = getUserRole(session.uid);
+  if (!role) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 401 });
+    }
+    return withSecurityHeaders(NextResponse.redirect(new URL("/connexion-edukora", req.url)), nonce);
+  }
+  if (isRouteProtected(pathname, ADMIN_ROUTES) && role !== "admin") {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Réservé aux administrateurs" }, { status: 403 });
+    }
+    return withSecurityHeaders(NextResponse.redirect(new URL("/accueil-edukora", req.url)), nonce);
+  }
+  if (isRouteProtected(pathname, TEACHER_ROUTES) && role !== "teacher" && role !== "admin") {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Réservé aux enseignants" }, { status: 403 });
+    }
+    return withSecurityHeaders(NextResponse.redirect(new URL("/accueil-edukora", req.url)), nonce);
   }
 
   return withSecurityHeaders(NextResponse.next(), nonce);

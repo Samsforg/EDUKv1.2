@@ -3,6 +3,7 @@ import { queryOne } from "@/lib/db";
 
 const FROM_EMAIL = process.env.MAIL_FROM_EMAIL || "support@edukora.net";
 const FROM_NAME = "EduKora";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net";
 
 export interface MailInput {
   to: string;
@@ -113,7 +114,7 @@ export function receiptHtml(d: ReceiptData): string {
         <td style="padding:10px 12px;text-align:right;font-family:monospace;font-size:12px">${d.reference}</td>
       </tr>` : ""}
     </table>
-    <p>Retrouvez vos fiches, quizzes et le tuteur IA Kora sur <a href="https://edukora.net" style="color:#0047ab;font-weight:bold">edukora.net</a>.</p>
+    <p>Retrouvez vos fiches, quizzes et le tuteur IA Kora sur <a href="${APP_URL}" style="color:#0047ab;font-weight:bold">edukora.net</a>.</p>
     <p style="color:#666;font-size:12px;margin-top:32px">&copy; EduKora — La plateforme d'apprentissage intelligente.</p>
   </div>`;
 }
@@ -137,7 +138,7 @@ export function welcomeHtml(firstName: string, referralCode: string): string {
     <h2 style="color:#0047ab;margin-bottom:8px">Bienvenue sur Edukora, ${firstName} ! 🎉</h2>
     <p>Votre compte est créé. Vous pouvez dès maintenant réviser le BAC & BEPC avec nos fiches, quiz et le tuteur IA Kora.</p>
     <p style="margin:16px 0;padding:12px;background:#f0f6ff;border-radius:8px">Votre code de parrainage : <strong style="letter-spacing:0.12em">${referralCode}</strong> — partagez-le, gagnez <strong>+150 XP</strong> par filleul.</p>
-    <p style="margin:24px 0"><a href="https://edukora.net/accueil-edukora" style="background:#0047ab;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold">Commencer à réviser</a></p>
+    <p style="margin:24px 0"><a href="${APP_URL}/accueil-edukora" style="background:#0047ab;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold">Commencer à réviser</a></p>
     <p style="color:#666;font-size:12px;margin-top:32px">&copy; Edukora — La plateforme d'apprentissage intelligente.</p>
   </div>`;
 }

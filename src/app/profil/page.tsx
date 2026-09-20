@@ -63,7 +63,7 @@ export default function ProfilePage() {
     if (!data?.user.referral_code) return;
     const code = data.user.referral_code;
     const msg = `Rejoins-moi sur Edukora pour réviser le BAC et le BEPC en Côte d'Ivoire ! Inscris-toi avec mon code de parrainage : ${code}`;
-    const link = "https://edukora.net/inscription-1-2-edukora";
+    const link = `${process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net"}/inscription-1-2-edukora`;
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       navigator.share({ title: "Parrainage Edukora", text: msg, url: link }).catch(() => {});
     } else {

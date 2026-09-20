@@ -5,7 +5,7 @@ import { getAllPosts } from "@/lib/blog";
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
-const BASE_URL = "https://edukora.net";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net";
 
 interface PaperRow {
   category: string;

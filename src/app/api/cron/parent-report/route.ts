@@ -4,6 +4,8 @@ import { query, queryOne, run } from "@/lib/db";
 import { sendMail } from "@/lib/mailer";
 import { requireCronSecret } from "@/lib/cron-auth";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net";
+
 // Rapport hebdo parent : envoyé chaque dimanche (cron) à tous les parents liés.
 // Contenu : score moyen 7j, streak, quiz faits, temps estimé, conseil pédagogique.
 
@@ -98,12 +100,12 @@ async function GETHandler(req: NextRequest) {
         </thead>
         <tbody>${rowsHtml}</tbody>
       </table>
-      <p><a href="https://edukora.net/espace-parent" style="background:#0047ab;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;display:inline-block">Voir le tableau de bord complet</a></p>
+      <p><a href="${APP_URL}/espace-parent" style="background:#0047ab;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;display:inline-block">Voir le tableau de bord complet</a></p>
       ${upsell ? `
       <div style="margin:24px 0;padding:20px;border:2px solid #0047ab;border-radius:12px;background:#f0f6ff">
         <p style="font-size:15px;font-weight:bold;color:#0047ab;margin:0 0 6px">Débloquez tout le programme 📚</p>
         <p style="font-size:13px;color:#333;margin:0 0 12px">Avec l'abonnement Premium, votre enfant accède à tous les cours détaillés, les exercices corrigés et le tuteur IA Kora pour réussir confortablement son BAC ou BEPC.</p>
-        <a href="https://edukora.net/plans-d-abonnement-edukora-1" style="background:#0047ab;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:bold;display:inline-block">Découvrir l'offre Premium</a>
+        <a href="${APP_URL}/plans-d-abonnement-edukora-1" style="background:#0047ab;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:bold;display:inline-block">Découvrir l'offre Premium</a>
       </div>` : ""}
       <p style="color:#666;font-size:12px;margin-top:32px">&copy; Edukora — Vous recevez ce rapport car un compte enfant est lié au vôtre.</p>
     </div>`;

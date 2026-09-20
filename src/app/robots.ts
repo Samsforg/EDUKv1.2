@@ -16,7 +16,7 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: "https://edukora.net/sitemap.xml",
-    host: "https://edukora.net",
+    sitemap: `${process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net"}/sitemap.xml`,
+    host: process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net",
   };
 }

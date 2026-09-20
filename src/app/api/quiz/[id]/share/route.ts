@@ -32,7 +32,7 @@ async function POSTHandler(
     await run("UPDATE quizzes SET share_token = ? WHERE id = ?", token, quizId);
   }
 
-  const url = `${req.headers.get("origin") ?? "https://edukora.net"}/quiz/share/${token}`;
+  const url = `${req.headers.get("origin") ?? (process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net")}/quiz/share/${token}`;
   return NextResponse.json({ ok: true, token, url });
 }
 

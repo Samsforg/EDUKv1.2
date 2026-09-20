@@ -49,7 +49,7 @@ export default function ParrainagePage() {
   const share = () => {
     if (!code) return;
     const text = `Rejoins-moi sur Edukora pour réviser le BAC et le BEPC en Côte d'Ivoire ! Inscris-toi avec mon code de parrainage et gagne +50 XP de bienvenue : ${code}`;
-    const link = "https://edukora.net/inscription-1-2-edukora";
+    const link = `${process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net"}/inscription-1-2-edukora`;
     trackEvent(EVENTS.referralLinkShared, { code, method: "share" in navigator ? "native" : "whatsapp" });
     if ("share" in navigator) {
       navigator
@@ -65,7 +65,7 @@ export default function ParrainagePage() {
   };
   const shareWhatsApp = () => {
     if (!code) return;
-    const text = `Rejoins-moi sur Edukora ! Code parrain ${code} → +50 XP offerts. Inscris-toi : https://edukora.net/inscription-1-2-edukora?ref=${encodeURIComponent(code)}`;
+    const text = `Rejoins-moi sur Edukora ! Code parrain ${code} → +50 XP offerts. Inscris-toi : ${process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net"}/inscription-1-2-edukora?ref=${encodeURIComponent(code)}`;
     trackEvent(EVENTS.referralLinkShared, { code, method: "whatsapp" });
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener");
   };

@@ -22,7 +22,7 @@ export async function GET(req: Request) {
     return res;
   } catch (err) {
     console.error("[auth/logout] GET:", err);
-    const res = NextResponse.redirect(new URL("/connexion-edukora", "https://edukora.net"), { status: 302 });
+    const res = NextResponse.redirect(new URL("/connexion-edukora", process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net"), { status: 302 });
     clearSessionCookie(res);
     return res;
   }

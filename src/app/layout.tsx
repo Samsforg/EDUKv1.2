@@ -26,8 +26,16 @@ const inter = Inter({
   fallback: ["system-ui", "sans-serif"],
 });
 
+const resolvedUrl = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net");
+  } catch {
+    return new URL("https://edukora.net");
+  }
+})();
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://edukora.net"),
+  metadataBase: resolvedUrl,
   title: {
     default: "Edukora - Réussir son BAC & BEPC",
     template: "%s | Edukora",
