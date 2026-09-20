@@ -60,7 +60,7 @@ async function GETHandler(req: Request) {
   return NextResponse.json({
     ref,
     status,
-    is_active: status === "active",
+    is_active: status === "active" || status === "trial" || status === "trialing",
     amount: sub.price_cents,
     currency: sub.currency,
     plan_name: sub.plan_name,
