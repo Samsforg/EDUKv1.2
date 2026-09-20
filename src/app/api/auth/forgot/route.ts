@@ -3,8 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb, queryOne, run } from "@/lib/db";
 import { generateToken } from "@/lib/auth";
 import { sendMail, resetPasswordHtml } from "@/lib/mailer";
+import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
 
 async function POSTHandler(req: NextRequest) {
+  const ip = getClientIp(req);
+  const rl = await rateLimit(`forgot:${ip}`, "login");
+  if (!rl.allowed) return rateLimitResponse(rl.resetAt);
+
   const db = getDb();
   const body = await req.json().catch(() => null);
   const email = body?.email?.trim().toLowerCase();
@@ -15,7 +20,7 @@ async function POSTHandler(req: NextRequest) {
   const user = await queryOne<{ id: number }>("SELECT id FROM users WHERE email = ?", email);
   if (!user) {
     // Ne pas révéler l'existence du compte
-    return NextResponse.json({ ok: true, reset_link: null });
+    return NextResponse.json({ ok: true });
   }
 
   const token = generateToken();
@@ -37,11 +42,8 @@ async function POSTHandler(req: NextRequest) {
     subject: "Réinitialisation de votre mot de passe EduKora",
     html: resetPasswordHtml(resetUrl),
   });
-  return NextResponse.json({
-    ok: true,
-    // En dev (ou si l'e-mail n'est pas configuré), on renvoie le lien directement.
-    reset_link: sent ? null : resetUrl,
-  });
+  // Ne jamais renvoyer reset_link en réponse (fuite de token)
+  return NextResponse.json({ ok: true });
 }
 
 export const POST = guardApi("POST /api/auth/forgot", POSTHandler);

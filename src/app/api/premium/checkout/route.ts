@@ -23,7 +23,8 @@ async function POSTHandler(req: Request) {
   if (!plan_id) return NextResponse.json({ error: "plan_id requis" }, { status: 400 });
 
   // Idempotence : même plan/promo/trial depuis même user = même réponse 24h
-  const idemKey = req.headers.get("x-idempotency-key")?.trim() || `checkout:${user.id}:${plan_id}:${(promo ?? "").toUpperCase()}:${trial ? "trial" : "notrial"}`;
+  const rawKey = req.headers.get("x-idempotency-key")?.trim();
+  const idemKey = rawKey ? `user:${user.id}:${rawKey}` : `checkout:${user.id}:${plan_id}:${(promo ?? "").toUpperCase()}:${trial ? "trial" : "notrial"}`;
   const cached = await queryOne<{ response: string }>("SELECT response FROM idempotency_keys WHERE key = ? AND user_id = ?", idemKey, user.id);
   if (cached) {
     try { return NextResponse.json(JSON.parse(cached.response)); } catch { /* corrupted cache, re-process */ }

@@ -2,8 +2,13 @@ import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb, queryOne, run } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
+import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
 
 async function POSTHandler(req: NextRequest) {
+  const ip = getClientIp(req);
+  const rl = await rateLimit(`reset:${ip}`, "login");
+  if (!rl.allowed) return rateLimitResponse(rl.resetAt);
+
   const db = getDb();
   const body = await req.json().catch(() => null);
   const { token, password } = body ?? {};

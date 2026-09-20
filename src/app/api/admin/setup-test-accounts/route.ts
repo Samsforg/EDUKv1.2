@@ -10,6 +10,9 @@ interface ClassRow { id: number; }
 const TEST_PASSWORD = process.env.TEST_ACCOUNT_PASSWORD ?? "ChangeMe!123";
 
 async function POSTHandler() {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Non disponible en production" }, { status: 403 });
+  }
   const forbidden = await requireAdmin();
   if (forbidden) return forbidden;
 

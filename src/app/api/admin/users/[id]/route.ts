@@ -4,6 +4,9 @@ import { getUserDetail, changeUserRole, setUserBlocked, deleteUser, updateUser }
 import { requireAdmin } from "@/lib/admin-guard";
 import { getCurrentUser } from "@/lib/session";
 
+const VALID_ROLES = ["student", "teacher", "admin", "parent"];
+const ALLOWED_UPDATE_FIELDS = ["first_name", "last_name", "email", "phone", "serie_id", "class_level"];
+
 async function GETHandler(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const forbidden = await requireAdmin();
   if (forbidden) return forbidden;
@@ -28,6 +31,9 @@ async function PATCHHandler(req: Request, { params }: { params: Promise<{ id: st
   const actor = await getCurrentUser();
 
   if (body.role !== undefined) {
+    if (!VALID_ROLES.includes(body.role)) {
+      return NextResponse.json({ error: `Rôle invalide. Valeurs autorisées : ${VALID_ROLES.join(", ")}` }, { status: 400 });
+    }
     const res = await changeUserRole(userId, body.role as string, actor!.id);
     if ("error" in res) return NextResponse.json(res, { status: 400 });
   }
@@ -36,14 +42,16 @@ async function PATCHHandler(req: Request, { params }: { params: Promise<{ id: st
     if ("error" in res) return NextResponse.json(res, { status: 400 });
   }
 
-  // Champs additionnels modifiables par l'admin
+  // Champs additionnels modifiables par l'admin — avec validation basique
   const updateFields: Record<string, unknown> = {};
-  if (body.first_name !== undefined) updateFields.first_name = body.first_name;
-  if (body.last_name !== undefined) updateFields.last_name = body.last_name;
-  if (body.email !== undefined) updateFields.email = body.email;
-  if (body.phone !== undefined) updateFields.phone = body.phone;
-  if (body.serie_id !== undefined) updateFields.serie_id = body.serie_id;
-  if (body.class_level !== undefined) updateFields.class_level = body.class_level;
+  for (const field of ALLOWED_UPDATE_FIELDS) {
+    if (body[field] !== undefined) {
+      const val = body[field];
+      if (typeof val !== "string" && typeof val !== "number" && val !== null) continue;
+      if (typeof val === "string" && val.length > 200) continue;
+      updateFields[field] = val;
+    }
+  }
   if (Object.keys(updateFields).length > 0) {
     const res = await updateUser(userId, updateFields, actor!.id);
     if ("error" in res) return NextResponse.json(res, { status: 400 });
