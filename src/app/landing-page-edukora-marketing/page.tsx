@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Edukora | Réussis ton BAC & BEPC en Côte d'Ivoire",
   description:
     "Fiches de révision, tuteur IA et simulateur d'examen pour réussir le BAC et le BEPC en Côte d'Ivoire. Gratuit, sans inscription.",
+  robots: { index: false, follow: false },
 };
 
 export default function Page() {

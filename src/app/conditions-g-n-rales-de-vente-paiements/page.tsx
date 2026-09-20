@@ -29,7 +29,7 @@ export default function Page() {
 <div className="flex flex-col items-center mb-10 text-center">
 <Image  alt="Edukora Logo" className="w-16 h-16 mb-4 opacity-90" src="/images/ecran-073.png" loading="lazy" width={64} height={64} />
 <h2 className="text-display-lg-mobile md:text-display-lg font-bold text-on-surface mb-2">Conditions Générales de Vente</h2>
-<p className="text-label-sm text-outline font-medium">Dernière mise à jour : 24 Octobre 2023</p>
+<p className="text-label-sm text-outline font-medium">Dernière mise à jour : 20 Septembre 2026</p>
 <div className="w-16 h-1 bg-secondary-container rounded-full mt-4"></div>
 </div>
 <div className="space-y-12 pb-24">

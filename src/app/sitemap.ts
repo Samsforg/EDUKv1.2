@@ -39,17 +39,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/simulateur-d-examen-bac-bepc`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/tuteur-ia-edukora`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/annales`, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${BASE_URL}/inscription-1-2-edukora`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${BASE_URL}/inscription-parent-edukora`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE_URL}/parrainage`, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE_URL}/connexion-edukora`, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${BASE_URL}/connexion-parent-edukora`, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${BASE_URL}/statut`, changeFrequency: "monthly", priority: 0.4 },
     { url: `${BASE_URL}/mentions-l-gales`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${BASE_URL}/conditions-g-n-rales-d-utilisation`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${BASE_URL}/conditions-g-n-rales-de-vente-paiements`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${BASE_URL}/politique-de-confidentialit`, changeFrequency: "yearly", priority: 0.2 },
-    { url: `${BASE_URL}/pr-f-rences-de-cookies-et-donn-es`, changeFrequency: "yearly", priority: 0.2 },
   ];
 
   // Blog posts (static source)

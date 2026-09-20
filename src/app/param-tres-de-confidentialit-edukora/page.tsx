@@ -121,24 +121,24 @@ export default function Page() {
 </main>
 
 <nav aria-label="Navigation principale" className="fixed bottom-0 left-0 w-full z-50 rounded-t-xl bg-surface-container-lowest dark:bg-inverse-surface border-t border-outline-variant dark:border-none shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-around items-center h-20 px-2 pb-safe">
-<a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95" href="#">
+<a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95" href="/">
 <span className="material-symbols-outlined" data-icon="home">home</span>
 <span className="font-label text-label-xs font-semibold">Accueil</span>
 </a>
-<a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95" href="#">
+<a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95" href="/cours">
 <span className="material-symbols-outlined" data-icon="library_books">library_books</span>
 <span className="font-label text-label-xs font-semibold">Cours</span>
 </a>
-<a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95" href="#">
+<a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95" href="/tuteur-ia">
 <span className="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
 <span className="font-label text-label-xs font-semibold">Kora IA</span>
 </a>
-<a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95" href="#">
+<a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-95" href="/quiz">
 <span className="material-symbols-outlined" data-icon="quiz">quiz</span>
 <span className="font-label text-label-xs font-semibold">Examens</span>
 </a>
 
-<a className="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 transition-all active:scale-95" href="#">
+<a className="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 transition-all active:scale-95" href="/profil">
 <span className="material-symbols-outlined" data-icon="person">person</span>
 <span className="font-label text-label-xs font-semibold">Profil</span>
 </a>
