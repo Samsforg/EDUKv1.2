@@ -220,25 +220,49 @@ function ConnexionForm() {
 
 export default function Page() {
   return (
-    <main role="main" className="min-h-dvh bg-surface text-on-surface flex flex-col items-center justify-center p-4 relative w-full max-w-md bg-surface-container-lowest rounded-xl shadow-sm border border-surface-variant p-6 sm:p-8 flex flex-col">
-      <Link
-        href="/"
-        aria-label="Retour à l'accueil"
-        className="absolute top-4 left-4 w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface hover:text-primary hover:bg-surface-container-low transition-colors active:scale-95 duration-100 z-10"
-      >
-        <span className="material-symbols-outlined">arrow_back</span>
-      </Link>
-      <header className="flex flex-col items-center text-center mb-8">
-          <div className="w-14 h-14 mb-4 bg-surface-container-lowest rounded-2xl flex items-center justify-center p-1">
-            <Image src="/images/logo-edukora.webp" alt="Edukora Logo" className="w-full h-full object-contain" loading="lazy" width={56} height={56} />
-          </div>
-          <h1 className="font-headline-md text-3xl font-bold text-primary mb-2 tracking-tight">Connexion</h1>
-          <p className="text-on-surface text-base">Ravis de vous revoir !</p>
-        </header>
+    <main role="main" className="min-h-dvh bg-surface text-on-surface flex items-center justify-center p-4 md:p-8">
+      <div className="w-full max-w-5xl bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-variant overflow-hidden flex flex-col md:flex-row">
 
-        <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center"><span className="material-symbols-outlined text-primary text-3xl animate-spin">progress_activity</span></div>}>
-          <ConnexionForm />
-        </Suspense>
-      </main>
+        {/* Left: form */}
+        <div className="relative w-full md:w-1/2 p-6 sm:p-8 flex flex-col">
+          <Link
+            href="/"
+            aria-label="Retour à l'accueil"
+            className="absolute top-4 left-4 w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface hover:text-primary hover:bg-surface-container-low transition-colors active:scale-95 duration-100 z-10"
+          >
+            <span className="material-symbols-outlined">arrow_back</span>
+          </Link>
+          <header className="flex flex-col items-center text-center mb-8 mt-6">
+            <div className="w-14 h-14 mb-4 bg-surface-container-lowest rounded-2xl flex items-center justify-center p-1">
+              <Image src="/images/logo-edukora.webp" alt="Edukora Logo" className="w-full h-full object-contain" loading="lazy" width={56} height={56} />
+            </div>
+            <h1 className="font-headline-md text-3xl font-bold text-primary mb-2 tracking-tight">Connexion</h1>
+            <p className="text-on-surface text-base">Ravis de vous revoir !</p>
+          </header>
+
+          <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center"><span className="material-symbols-outlined text-primary text-3xl animate-spin">progress_activity</span></div>}>
+            <ConnexionForm />
+          </Suspense>
+        </div>
+
+        {/* Right: illustration (desktop only) */}
+        <div className="hidden md:flex w-1/2 relative bg-primary-container items-center justify-center overflow-hidden">
+          <Image
+            src="/images/landing-6-hd.webp"
+            alt="Élèves ivoiriens prêts pour l'école"
+            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 768px) 0px, 50vw"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-primary-container/80 via-transparent to-primary-container/30" />
+          <div className="absolute bottom-0 left-0 right-0 p-8 text-on-primary-container">
+            <p className="font-headline text-xl font-bold mb-1">Reprenez là où vous en étiez</p>
+            <p className="text-sm opacity-90">Vos cours, quiz et corrections vous attendent.</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
   );
 }
