@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   description:
     "Choisissez votre abonnement Edukora Premium et payez en toute sécurité par Mobile Money (Orange, MTN, Moov) en FCFA. Accédez à toutes les fiches, le simulateur et le tuteur IA.",
   alternates: { canonical: "/plans-d-abonnement-edukora-1" },
+  robots: { index: false },
 };
 
 export const revalidate = 60;

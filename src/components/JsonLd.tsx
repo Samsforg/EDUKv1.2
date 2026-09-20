@@ -12,16 +12,19 @@ export default function JsonLd({ data }: JsonLdProps) {
 }
 
 export function OrganizationJsonLd() {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net";
   return (
     <JsonLd
       data={{
         "@context": "https://schema.org",
         "@type": "Organization",
         name: "Edukora",
-        url: "https://edukora.net",
-        logo: "https://edukora.net/images/og-cover.png",
+        url: baseUrl,
+        logo: `${baseUrl}/images/og-cover.png`,
         description: "Plateforme éducative pour réussir le BAC et le BEPC en Côte d'Ivoire. Fiches, tuteur IA et simulateur d'examen.",
-        sameAs: [],
+        sameAs: [
+          "https://www.facebook.com/profile.php?id=61578083930498",
+        ],
         contactPoint: {
           "@type": "ContactPoint",
           contactType: "customer service",
@@ -33,16 +36,17 @@ export function OrganizationJsonLd() {
 }
 
 export function WebSiteJsonLd() {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net";
   return (
     <JsonLd
       data={{
         "@context": "https://schema.org",
         "@type": "WebSite",
         name: "Edukora",
-        url: "https://edukora.net",
+        url: baseUrl,
         potentialAction: {
           "@type": "SearchAction",
-          target: "https://edukora.net/fiches?q={search_term_string}",
+          target: `${baseUrl}/fiches?q={search_term_string}`,
           "query-input": "required name=search_term_string",
         },
       }}
@@ -61,6 +65,7 @@ export function CourseJsonLd({
   subject: string;
   url: string;
 }) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net";
   return (
     <JsonLd
       data={{
@@ -71,7 +76,7 @@ export function CourseJsonLd({
         provider: {
           "@type": "Organization",
           name: "Edukora",
-          url: "https://edukora.net",
+          url: baseUrl,
         },
         about: {
           "@type": "Thing",
@@ -171,6 +176,7 @@ export function ArticleJsonLd({
   dateModified?: string;
   image?: string;
 }) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net";
   return (
     <JsonLd
       data={{
@@ -181,18 +187,18 @@ export function ArticleJsonLd({
         url,
         datePublished,
         dateModified: dateModified ?? datePublished,
-        image: image ?? "https://edukora.net/images/og-cover.png",
+        image: image ?? `${baseUrl}/images/og-cover.png`,
         author: {
           "@type": "Organization",
           name: "Edukora",
-          url: "https://edukora.net",
+          url: baseUrl,
         },
         publisher: {
           "@type": "Organization",
           name: "Edukora",
           logo: {
             "@type": "ImageObject",
-            url: "https://edukora.net/images/og-cover.png",
+            url: `${baseUrl}/images/og-cover.png`,
           },
         },
       }}
@@ -213,6 +219,7 @@ export function SoftwareApplicationJsonLd({
   applicationCategory: string;
   operatingSystem: string;
 }) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net";
   return (
     <JsonLd
       data={{
@@ -231,7 +238,7 @@ export function SoftwareApplicationJsonLd({
         author: {
           "@type": "Organization",
           name: "Edukora",
-          url: "https://edukora.net",
+          url: baseUrl,
         },
       }}
     />

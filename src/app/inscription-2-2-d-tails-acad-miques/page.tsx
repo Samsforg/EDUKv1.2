@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: "Edukora - Finalisation de l'inscription",
   description:
     "Complétez votre inscription Edukora en renseignant vos informations académiques : classe, série et filière.",
+  robots: { index: false },
 };
 
 export default function Page() {
