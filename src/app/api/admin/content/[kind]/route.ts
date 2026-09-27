@@ -15,9 +15,22 @@ import {
   saveLessonExercises,
   getQuizQuestions,
   getPaperQuestions,
+  getCurricula,
+  createCurriculum,
+  updateCurriculum,
+  deleteCurriculum,
+  getSubjectGrades,
+  upsertSubjectGrade,
+  deleteSubjectGrade,
+  getContentVersions,
+  createContentVersion,
+  getClassChapters,
+  upsertClassChapter,
+  deleteClassChapter,
+  reorderEntities,
 } from "@/lib/admin-content";
 
-const KINDS = ["subject", "chapter", "lesson", "exercise", "quiz", "paper", "questions", "challenge", "league_challenge"];
+const KINDS = ["subject", "chapter", "lesson", "exercise", "quiz", "paper", "questions", "challenge", "league_challenge", "curriculum", "subject_grade", "content_version", "class_chapter", "reorder"];
 
 async function GETHandler(req: NextRequest, { params }: { params: Promise<{ kind: string }> }) {
   const forbidden = await requireAdmin();
@@ -25,13 +38,37 @@ async function GETHandler(req: NextRequest, { params }: { params: Promise<{ kind
 
   const { kind } = await params;
   const id = Number(req.nextUrl.searchParams.get("id"));
-  if (!id) return NextResponse.json({ error: "id requis" }, { status: 400 });
+  const subjectId = Number(req.nextUrl.searchParams.get("subject_id"));
+  const gradeId = Number(req.nextUrl.searchParams.get("grade_id"));
+  const classId = Number(req.nextUrl.searchParams.get("class_id"));
+  const entityType = req.nextUrl.searchParams.get("entity_type");
+  const entityId = Number(req.nextUrl.searchParams.get("entity_id"));
 
   if (kind === "quiz") {
+    if (!id) return NextResponse.json({ error: "id requis" }, { status: 400 });
     return NextResponse.json({ questions: await getQuizQuestions(id) });
   }
   if (kind === "paper") {
+    if (!id) return NextResponse.json({ error: "id requis" }, { status: 400 });
     return NextResponse.json({ questions: await getPaperQuestions(id) });
+  }
+  if (kind === "curriculum") {
+    const curricula = await getCurricula({ grade_id: gradeId || undefined, subject_id: subjectId || undefined });
+    return NextResponse.json({ curricula });
+  }
+  if (kind === "subject_grade") {
+    const subjectGrades = await getSubjectGrades({ subject_id: subjectId || undefined, grade_id: gradeId || undefined });
+    return NextResponse.json({ subjectGrades });
+  }
+  if (kind === "content_version") {
+    if (!entityType || !entityId) return NextResponse.json({ error: "entity_type et entity_id requis" }, { status: 400 });
+    const versions = await getContentVersions(entityType, entityId);
+    return NextResponse.json({ versions });
+  }
+  if (kind === "class_chapter") {
+    if (!classId) return NextResponse.json({ error: "class_id requis" }, { status: 400 });
+    const chapters = await getClassChapters(classId);
+    return NextResponse.json({ chapters });
   }
   return NextResponse.json({ error: "Type de contenu invalide" }, { status: 400 });
 }
@@ -116,6 +153,37 @@ async function POSTHandler(req: NextRequest, { params }: { params: Promise<{ kin
         return NextResponse.json({ ok: true });
       }
       return NextResponse.json({ error: "quiz_id ou paper_id requis" }, { status: 400 });
+    }
+    case "curriculum": {
+      const res = await createCurriculum(body, actor!.id);
+      if ("error" in res) return NextResponse.json({ error: res.error }, { status: 400 });
+      return NextResponse.json({ ok: true, id: res.id }, { status: 201 });
+    }
+    case "subject_grade": {
+      const res = await upsertSubjectGrade(body, actor!.id);
+      if ("error" in res) return NextResponse.json({ error: res.error }, { status: 400 });
+      return NextResponse.json({ ok: true });
+    }
+    case "content_version": {
+      if (!body.entity_type || !body.entity_id || !body.payload) {
+        return NextResponse.json({ error: "entity_type, entity_id, payload requis" }, { status: 400 });
+      }
+      const res = await createContentVersion(body.entity_type, Number(body.entity_id), body.payload, actor!.id);
+      if ("error" in res) return NextResponse.json({ error: res.error }, { status: 400 });
+      return NextResponse.json({ ok: true, id: res.id }, { status: 201 });
+    }
+    case "class_chapter": {
+      const res = await upsertClassChapter(body, actor!.id);
+      if ("error" in res) return NextResponse.json({ error: res.error }, { status: 400 });
+      return NextResponse.json({ ok: true });
+    }
+    case "reorder": {
+      if (!body.entity_type || !Array.isArray(body.ordered_ids)) {
+        return NextResponse.json({ error: "entity_type (chapter|lesson) et ordered_ids requis" }, { status: 400 });
+      }
+      const res = await reorderEntities(body.entity_type, body.ordered_ids.map(Number), actor!.id);
+      if ("error" in res) return NextResponse.json({ error: res.error }, { status: 400 });
+      return NextResponse.json({ ok: true });
     }
   }
 }

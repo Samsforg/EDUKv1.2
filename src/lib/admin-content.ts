@@ -950,3 +950,256 @@ export async function deleteLeagueChallenge(id: number, actorId: number): Promis
   await logAudit(actorId, "content", `Défi de ligue « ${row.title} » supprimé`);
   return { ok: true };
 }
+
+// ============================================
+// CURRICULUM (programme officiel grade x subject)
+// ============================================
+
+export interface CurriculumRow {
+  id: number;
+  grade_id: number;
+  grade_name: string;
+  grade_code: string;
+  subject_id: number;
+  subject_name: string;
+  subject_code: string;
+  official_ref: string | null;
+  year: number | null;
+  status: string;
+  created_at: string;
+}
+
+export async function getCurricula(filters?: { grade_id?: number; subject_id?: number; status?: string }): Promise<CurriculumRow[]> {
+  const where: string[] = [];
+  const params: (string | number)[] = [];
+  if (filters?.grade_id) { where.push("c.grade_id = ?"); params.push(filters.grade_id); }
+  if (filters?.subject_id) { where.push("c.subject_id = ?"); params.push(filters.subject_id); }
+  if (filters?.status) { where.push("c.status = ?"); params.push(filters.status); }
+  const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+  return query<CurriculumRow>(
+    `SELECT c.id, c.grade_id, g.name AS grade_name, g.code AS grade_code,
+            c.subject_id, s.name AS subject_name, s.code AS subject_code,
+            c.official_ref, c.year, c.status, c.created_at
+     FROM curricula c
+     JOIN grades g ON g.id = c.grade_id
+     JOIN subjects s ON s.id = c.subject_id
+     ${whereSql}
+     ORDER BY g.order_index, s.id, c.year DESC`,
+    ...params,
+  );
+}
+
+export async function createCurriculum(
+  input: { grade_id: number; subject_id: number; official_ref?: string; year?: number; status?: string },
+  actorId: number,
+): Promise<{ ok: true; id: number } | { error: string }> {
+  if (!input.grade_id || !input.subject_id) return { error: "grade_id et subject_id requis" };
+  const exists = await queryOne<{ id: number }>("SELECT id FROM curricula WHERE grade_id = ? AND subject_id = ? AND year = ?",
+    input.grade_id, input.subject_id, input.year ?? new Date().getFullYear());
+  if (exists) return { error: "Ce curriculum existe déjà pour cette année" };
+  const year = input.year ?? new Date().getFullYear();
+  const status = input.status ?? "active";
+  const result = await run(
+    "INSERT INTO curricula (grade_id, subject_id, official_ref, year, status) VALUES (?, ?, ?, ?, ?)",
+    input.grade_id, input.subject_id, input.official_ref?.trim() ?? null, year, status,
+  );
+  await logAudit(actorId, "content", `Curriculum créé (grade=${input.grade_id}, subject=${input.subject_id}, year=${year})`);
+  return { ok: true, id: Number(result.lastInsertRowid) };
+}
+
+export async function updateCurriculum(
+  id: number,
+  input: { grade_id?: number; subject_id?: number; official_ref?: string; year?: number; status?: string },
+  actorId: number,
+): Promise<{ ok: true } | { error: string }> {
+  const row = await queryOne<{ id: number }>("SELECT id FROM curricula WHERE id = ?", id);
+  if (!row) return { error: "Curriculum introuvable" };
+  const updates: string[] = [];
+  const params: (string | number | null)[] = [];
+  if (input.grade_id !== undefined) { updates.push("grade_id = ?"); params.push(input.grade_id); }
+  if (input.subject_id !== undefined) { updates.push("subject_id = ?"); params.push(input.subject_id); }
+  if (input.official_ref !== undefined) { updates.push("official_ref = ?"); params.push(input.official_ref?.trim() ?? null); }
+  if (input.year !== undefined) { updates.push("year = ?"); params.push(input.year); }
+  if (input.status !== undefined) { updates.push("status = ?"); params.push(input.status); }
+  if (updates.length === 0) return { error: "Aucun champ à mettre à jour" };
+  params.push(id);
+  await run(`UPDATE curricula SET ${updates.join(", ")} WHERE id = ?`, ...params);
+  await logAudit(actorId, "content", `Curriculum #${id} modifié`);
+  return { ok: true };
+}
+
+export async function deleteCurriculum(id: number, actorId: number): Promise<{ ok: true } | { error: string }> {
+  const row = await queryOne<{ id: number }>("SELECT id FROM curricula WHERE id = ?", id);
+  if (!row) return { error: "Curriculum introuvable" };
+  await run("DELETE FROM curricula WHERE id = ?", id);
+  await logAudit(actorId, "content", `Curriculum #${id} supprimé`);
+  return { ok: true };
+}
+
+// ============================================
+// SUBJECT_GRADE (coefficients normalisés)
+// ============================================
+
+export interface SubjectGradeRow {
+  subject_id: number;
+  subject_name: string;
+  subject_code: string;
+  grade_id: number;
+  grade_name: string;
+  grade_code: string;
+  coefficient: number;
+}
+
+export async function getSubjectGrades(filters?: { subject_id?: number; grade_id?: number }): Promise<SubjectGradeRow[]> {
+  const where: string[] = [];
+  const params: (string | number)[] = [];
+  if (filters?.subject_id) { where.push("sg.subject_id = ?"); params.push(filters.subject_id); }
+  if (filters?.grade_id) { where.push("sg.grade_id = ?"); params.push(filters.grade_id); }
+  const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+  return query<SubjectGradeRow>(
+    `SELECT sg.subject_id, s.name AS subject_name, s.code AS subject_code,
+            sg.grade_id, g.name AS grade_name, g.code AS grade_code,
+            sg.coefficient
+     FROM subject_grades sg
+     JOIN subjects s ON s.id = sg.subject_id
+     JOIN grades g ON g.id = sg.grade_id
+     ${whereSql}
+     ORDER BY g.order_index, s.id`,
+    ...params,
+  );
+}
+
+export async function upsertSubjectGrade(
+  input: { subject_id: number; grade_id: number; coefficient: number },
+  actorId: number,
+): Promise<{ ok: true } | { error: string }> {
+  if (!input.subject_id || !input.grade_id || input.coefficient === undefined) return { error: "subject_id, grade_id, coefficient requis" };
+  const coeff = Math.max(0, Number(input.coefficient) || 0);
+  await run(
+    "INSERT INTO subject_grades (subject_id, grade_id, coefficient) VALUES (?, ?, ?) ON CONFLICT(subject_id, grade_id) DO UPDATE SET coefficient = excluded.coefficient",
+    input.subject_id, input.grade_id, coeff,
+  );
+  await logAudit(actorId, "content", `Coefficient mis à jour (subject=${input.subject_id}, grade=${input.grade_id}, coeff=${coeff})`);
+  return { ok: true };
+}
+
+export async function deleteSubjectGrade(subject_id: number, grade_id: number, actorId: number): Promise<{ ok: true } | { error: string }> {
+  await run("DELETE FROM subject_grades WHERE subject_id = ? AND grade_id = ?", subject_id, grade_id);
+  await logAudit(actorId, "content", `Coefficient supprimé (subject=${subject_id}, grade=${grade_id})`);
+  return { ok: true };
+}
+
+// ============================================
+// CONTENT_VERSIONS (versioning chapters/lessons)
+// ============================================
+
+export interface ContentVersionRow {
+  id: number;
+  entity_type: string;
+  entity_id: number;
+  payload_json: string;
+  created_by: number;
+  creator_name: string;
+  created_at: string;
+}
+
+export async function getContentVersions(entityType: string, entityId: number): Promise<ContentVersionRow[]> {
+  return query<ContentVersionRow>(
+    `SELECT cv.id, cv.entity_type, cv.entity_id, cv.payload_json, cv.created_by,
+            u.first_name || ' ' || u.last_name AS creator_name, cv.created_at
+     FROM content_versions cv
+     JOIN users u ON u.id = cv.created_by
+     WHERE cv.entity_type = ? AND cv.entity_id = ?
+     ORDER BY cv.created_at DESC`,
+    entityType, entityId,
+  );
+}
+
+export async function createContentVersion(
+  entityType: string,
+  entityId: number,
+  payload: Record<string, unknown>,
+  actorId: number,
+): Promise<{ ok: true; id: number } | { error: string }> {
+  if (!["chapter", "lesson", "quiz", "exam_paper"].includes(entityType)) return { error: "Type d'entité invalide" };
+  const result = await run(
+    "INSERT INTO content_versions (entity_type, entity_id, payload_json, created_by) VALUES (?, ?, ?, ?)",
+    entityType, entityId, JSON.stringify(payload), actorId,
+  );
+  await logAudit(actorId, "content", `Version créée (${entityType}#${entityId})`);
+  return { ok: true, id: Number(result.lastInsertRowid) };
+}
+
+// ============================================
+// CLASS_CHAPTERS (scheduling chapters for teacher classes)
+// ============================================
+
+export interface ClassChapterRow {
+  class_id: number;
+  class_name: string;
+  chapter_id: number;
+  chapter_title: string;
+  chapter_code: string;
+  subject_name: string;
+  grade_name: string;
+  scheduled_at: string | null;
+  status: string;
+}
+
+export async function getClassChapters(classId: number): Promise<ClassChapterRow[]> {
+  return query<ClassChapterRow>(
+    `SELECT cc.class_id, cl.name AS class_name,
+            cc.chapter_id, c.title AS chapter_title, c.code AS chapter_code,
+            s.name AS subject_name, g.name AS grade_name,
+            cc.scheduled_at, cc.status
+     FROM class_chapters cc
+     JOIN classes cl ON cl.id = cc.class_id
+     JOIN chapters c ON c.id = cc.chapter_id
+     JOIN subjects s ON s.id = c.subject_id
+     JOIN grades g ON g.id = c.grade_id
+     WHERE cc.class_id = ?
+     ORDER BY cc.scheduled_at, c.order_index`,
+    classId,
+  );
+}
+
+export async function upsertClassChapter(
+  input: { class_id: number; chapter_id: number; scheduled_at?: string; status?: string },
+  actorId: number,
+): Promise<{ ok: true } | { error: string }> {
+  if (!input.class_id || !input.chapter_id) return { error: "class_id et chapter_id requis" };
+  const status = input.status ?? "planned";
+  await run(
+    `INSERT INTO class_chapters (class_id, chapter_id, scheduled_at, status)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(class_id, chapter_id) DO UPDATE SET scheduled_at = excluded.scheduled_at, status = excluded.status`,
+    input.class_id, input.chapter_id, input.scheduled_at?.trim() ?? null, status,
+  );
+  await logAudit(actorId, "content", `Chapitre planifié pour classe (class=${input.class_id}, chapter=${input.chapter_id}, status=${status})`);
+  return { ok: true };
+}
+
+export async function deleteClassChapter(class_id: number, chapter_id: number, actorId: number): Promise<{ ok: true } | { error: string }> {
+  await run("DELETE FROM class_chapters WHERE class_id = ? AND chapter_id = ?", class_id, chapter_id);
+  await logAudit(actorId, "content", `Chapitre retiré de la classe (class=${class_id}, chapter=${chapter_id})`);
+  return { ok: true };
+}
+
+// ============================================
+// REORDER HELPERS
+// ============================================
+
+export async function reorderEntities(
+  entityType: "chapter" | "lesson",
+  orderedIds: number[],
+  actorId: number,
+): Promise<{ ok: true } | { error: string }> {
+  if (!orderedIds.length) return { error: "Liste vide" };
+  const table = entityType === "chapter" ? "chapters" : "lessons";
+  const column = entityType === "chapter" ? "order_index" : "position";
+  for (let i = 0; i < orderedIds.length; i++) {
+    await run(`UPDATE ${table} SET ${column} = ? WHERE id = ?`, i + 1, orderedIds[i]);
+  }
+  await logAudit(actorId, "content", `Réordonnancement ${entityType}s (${orderedIds.length} éléments)`);
+  return { ok: true };
+}

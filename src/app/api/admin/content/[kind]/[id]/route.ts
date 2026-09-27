@@ -17,9 +17,13 @@ import {
   deleteChallenge,
   updateLeagueChallenge,
   deleteLeagueChallenge,
+  updateCurriculum,
+  deleteCurriculum,
+  deleteSubjectGrade,
+  deleteClassChapter,
 } from "@/lib/admin-content";
 
-const KINDS = ["subject", "chapter", "lesson", "quiz", "paper", "challenge", "league_challenge"];
+const KINDS = ["subject", "chapter", "lesson", "quiz", "paper", "challenge", "league_challenge", "curriculum", "subject_grade", "class_chapter"];
 
 async function PATCHHandler(req: NextRequest, { params }: { params: Promise<{ kind: string; id: string }> }) {
   const forbidden = await requireAdmin();
@@ -59,6 +63,9 @@ async function PATCHHandler(req: NextRequest, { params }: { params: Promise<{ ki
     case "league_challenge":
       res = await updateLeagueChallenge(Number(id), body, actor!.id);
       break;
+    case "curriculum":
+      res = await updateCurriculum(Number(id), body, actor!.id);
+      break;
     default:
       return NextResponse.json({ error: "Type de contenu invalide" }, { status: 400 });
   }
@@ -69,7 +76,7 @@ async function PATCHHandler(req: NextRequest, { params }: { params: Promise<{ ki
 
 export const PATCH = guardApi("PATCH /api/admin/content/[kind]/[id]", PATCHHandler);
 
-async function DELETEHandler(_req: NextRequest, { params }: { params: Promise<{ kind: string; id: string }> }) {
+async function DELETEHandler(req: NextRequest, { params }: { params: Promise<{ kind: string; id: string }> }) {
   const forbidden = await requireAdmin();
   if (forbidden) return forbidden;
 
@@ -102,6 +109,23 @@ async function DELETEHandler(_req: NextRequest, { params }: { params: Promise<{ 
     case "league_challenge":
       res = await deleteLeagueChallenge(Number(id), actor!.id);
       break;
+    case "curriculum":
+      res = await deleteCurriculum(Number(id), actor!.id);
+      break;
+    case "subject_grade": {
+      const subjectId = Number(req.nextUrl.searchParams.get("subject_id"));
+      const gradeId = Number(req.nextUrl.searchParams.get("grade_id"));
+      if (!subjectId || !gradeId) return NextResponse.json({ error: "subject_id et grade_id requis" }, { status: 400 });
+      res = await deleteSubjectGrade(subjectId, gradeId, actor!.id);
+      break;
+    }
+    case "class_chapter": {
+      const classId = Number(req.nextUrl.searchParams.get("class_id"));
+      const chapterId = Number(req.nextUrl.searchParams.get("chapter_id"));
+      if (!classId || !chapterId) return NextResponse.json({ error: "class_id et chapter_id requis" }, { status: 400 });
+      res = await deleteClassChapter(classId, chapterId, actor!.id);
+      break;
+    }
     default:
       return NextResponse.json({ error: "Type de contenu invalide" }, { status: 400 });
   }
