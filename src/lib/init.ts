@@ -99,8 +99,14 @@ async function doInit() {
     await migrate("lesson_comments", "parent_id", "INTEGER");
     await migrate("lesson_comments", "is_resolved", "INTEGER");
     await migrate("lesson_comments", "created_at", "TEXT");
+    // Phase 2 — Curriculum tables
+    await migrateCurriculumTables();
   });
   await safeAsync("backfillUserGrades", backfillUserGrades);
+  await safeAsync("populateSubjectGrades", populateSubjectGrades);
+  await safeAsync("populateCurricula", populateCurricula);
+  await safeAsync("seedTechnicalGrades", seedTechnicalGrades);
+  await safeAsync("seedTechnicalChapters", seedTechnicalChapters);
   await safeAsync("normalizeDefaults", normalizeDefaults);
   await safeAsync("fixMojibake", fixMojibake);
   // Le compte admin est créé EN PREMIER : même si un seed échoue,
@@ -395,6 +401,254 @@ async function migrate(table: string, column: string, type = "INTEGER") {
     column,
   );
   if (!col || Number(col.c) === 0) await run(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+}
+
+async function migrateCurriculumTables() {
+  const pgSql = (sql: string) => (IS_PG ? toPgSchema(sql) : sql);
+
+  // curricula table: official program per grade x subject
+  await run(
+    pgSql(`CREATE TABLE IF NOT EXISTS curricula (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      grade_id INTEGER NOT NULL REFERENCES grades(id) ON DELETE CASCADE,
+      subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+      official_ref TEXT,
+      year INTEGER,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE (grade_id, subject_id, year)
+    )`),
+  );
+  if (IS_PG) {
+    await run(`CREATE INDEX IF NOT EXISTS idx_curricula_grade ON curricula(grade_id)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_curricula_subject ON curricula(subject_id)`);
+  }
+
+  // subject_grades: normalized coefficient per subject x grade (replaces coefficient_json)
+  await run(
+    pgSql(`CREATE TABLE IF NOT EXISTS subject_grades (
+      subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+      grade_id INTEGER NOT NULL REFERENCES grades(id) ON DELETE CASCADE,
+      coefficient REAL NOT NULL DEFAULT 1,
+      PRIMARY KEY (subject_id, grade_id)
+    )`),
+  );
+
+  // content_versions: versioning for chapters/lessons
+  await run(
+    pgSql(`CREATE TABLE IF NOT EXISTS content_versions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      entity_type TEXT NOT NULL CHECK (entity_type IN ('chapter','lesson','quiz','exam_paper')),
+      entity_id INTEGER NOT NULL,
+      payload_json TEXT NOT NULL,
+      created_by INTEGER NOT NULL REFERENCES users(id),
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`),
+  );
+  if (IS_PG) {
+    await run(`CREATE INDEX IF NOT EXISTS idx_content_versions_entity ON content_versions(entity_type, entity_id)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_content_versions_created ON content_versions(created_at)`);
+  }
+
+  // class_chapters: scheduling chapters for specific teacher classes
+  await run(
+    pgSql(`CREATE TABLE IF NOT EXISTS class_chapters (
+      class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+      chapter_id INTEGER NOT NULL REFERENCES chapters(id) ON DELETE CASCADE,
+      scheduled_at TEXT,
+      status TEXT NOT NULL DEFAULT 'planned' CHECK (status IN ('planned','active','completed')),
+      PRIMARY KEY (class_id, chapter_id)
+    )`),
+  );
+
+  // content_type column on lessons (lesson|exercise|video|summary|fiche)
+  await migrate("lessons", "content_type", "TEXT DEFAULT 'lesson'");
+
+  // content_slug for SEO on chapters
+  await migrate("chapters", "content_slug", "TEXT");
+}
+
+async function seedTechnicalGrades() {
+  const existing = await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM grades WHERE code IN ('2nde_g2','2nde_ab','1ere_g2','1ere_b','term_b','term_g2')");
+  if (existing && existing.c > 0) return;
+
+  // Technical track grades (lycée technique)
+  const techGrades: [string, string, string, number][] = [
+    ["2nde_g2", "2nde-G2", "lycee", 5],
+    ["2nde_ab", "2nde-AB", "lycee", 5],
+    ["1ere_g2", "1ère-G2", "lycee", 6],
+    ["1ere_b", "1ère-B", "lycee", 6],
+    ["term_b", "Tle-B", "lycee", 7],
+    ["term_g2", "Tle-G2", "lycee", 7],
+  ];
+  for (const [code, name, cycle, order] of techGrades) {
+    await run("INSERT INTO grades (code, name, cycle, order_index) VALUES (?, ?, ?, ?)", code, name, cycle, order);
+  }
+}
+
+async function seedTechnicalSubjects() {
+  // Additional technical subjects (comptabilité, économie, droit, informatique, etc.)
+  const techSubjects: [string, string, string, string, string][] = [
+    ["comptabilite", "Comptabilité", "calculate", "#424242", '{"2nde_g2":2,"2nde_ab":3,"1ere_g2":3,"1ere_b":4,"term_b":5,"term_g2":4}'],
+    ["economie", "Économie", "trending_up", "#1b5e20", '{"2nde_g2":2,"2nde_ab":2,"1ere_g2":3,"1ere_b":3,"term_b":4,"term_g2":3}'],
+    ["droit", "Droit", "gavel", "#6a1b9a", '{"2nde_g2":1,"2nde_ab":2,"1ere_g2":2,"1ere_b":3,"term_b":3,"term_g2":2}'],
+    ["informatique", "Informatique", "computer", "#0d47a1", '{"2nde_g2":2,"2nde_ab":2,"1ere_g2":3,"1ere_b":3,"term_b":4,"term_g2":3}'],
+    ["marketing", "Marketing", "shopping_cart", "#e65100", '{"2nde_ab":2,"1ere_b":2,"term_b":3}'],
+    ["gestion", "Gestion", "business_center", "#37474f", '{"2nde_g2":1,"1ere_g2":2,"1ere_b":2,"term_b":3,"term_g2":2}'],
+  ];
+  for (const [code, name, icon, color, coeff] of techSubjects) {
+    const exists = await queryOne<{ id: number }>("SELECT id FROM subjects WHERE code = ?", code);
+    if (!exists) {
+      await run("INSERT INTO subjects (code, name, icon, color, coefficient_json) VALUES (?, ?, ?, ?, ?)", code, name, icon, color, coeff);
+    }
+  }
+}
+
+async function seedTechnicalChapters() {
+  // Ensure technical grades exist
+  await seedTechnicalGrades();
+  await seedTechnicalSubjects();
+
+  // Get grade IDs
+  const grade2ndeG2 = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='2nde_g2'"))!.id;
+  const grade2ndeAB = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='2nde_ab'"))!.id;
+  const grade1ereG2 = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='1ere_g2'"))!.id;
+  const grade1ereB = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='1ere_b'"))!.id;
+  const gradeTermB = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='term_b'"))!.id;
+  const gradeTermG2 = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='term_g2'"))!.id;
+
+  // Get subject IDs
+  const comptaId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='comptabilite'"))!.id;
+  const ecoId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='economie'"))!.id;
+  const droitId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='droit'"))!.id;
+  const infoId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='informatique'"))!.id;
+  const marketingId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='marketing'"))!.id;
+  const gestionId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='gestion'"))!.id;
+  const mathsId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='maths'"))!.id;
+  const pcId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='pc'"))!.id;
+  const svtId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='svt'"))!.id;
+  const frId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='francais'"))!.id;
+  const hgId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='hg'"))!.id;
+  const enId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='anglais'"))!.id;
+
+  // Technical track chapters (focus on 2nde G2/AB, 1ère G2/B, Term B/G2)
+  const techChapters: [number, string, string, string, string, number][] = [
+    // Comptabilité - 2nde G2/AB
+    [comptaId, "2nde_g2", "compta_gen", "Comptabilité générale", "Principes, écritures, bilan, compte de résultat", 1],
+    [comptaId, "2nde_ab", "compta_gen", "Comptabilité générale", "Principes, écritures, bilan, compte de résultat", 1],
+    // Comptabilité - 1ère G2/B
+    [comptaId, "1ere_g2", "compta_ana", "Comptabilité analytique", "Coûts, centres, imputations, seuils", 1],
+    [comptaId, "1ere_b", "compta_ana", "Comptabilité analytique", "Coûts, centres, imputations, seuils", 1],
+    // Comptabilité - Term B/G2
+    [comptaId, "term_b", "compta_app", "Comptabilité approfondie", "Consolidation, groupes, normes IFRS", 1],
+    [comptaId, "term_g2", "compta_app", "Comptabilité approfondie", "Consolidation, groupes, normes IFRS", 1],
+
+    // Économie - 2nde G2/AB
+    [ecoId, "2nde_g2", "eco_fond", "Fondamentaux économie", "Besoins, ressources, marchés, État", 1],
+    [ecoId, "2nde_ab", "eco_fond", "Fondamentaux économie", "Besoins, ressources, marchés, État", 1],
+    // Économie - 1ère G2/B
+    [ecoId, "1ere_g2", "eco_macro", "Macroéconomie", "PIB, inflation, chômage, politiques", 1],
+    [ecoId, "1ere_b", "eco_macro", "Macroéconomie", "PIB, inflation, chômage, politiques", 1],
+    // Économie - Term B/G2
+    [ecoId, "term_b", "eco_intl", "Économie internationale", "Commerce, changes, mondialisation", 1],
+    [ecoId, "term_g2", "eco_intl", "Économie internationale", "Commerce, changes, mondialisation", 1],
+
+    // Droit - 2nde G2/AB
+    [droitId, "2nde_g2", "droit_intro", "Introduction au droit", "Sources, personnes, biens, obligations", 1],
+    [droitId, "2nde_ab", "droit_intro", "Introduction au droit", "Sources, personnes, biens, obligations", 1],
+    // Droit - 1ère G2/B
+    [droitId, "1ere_g2", "droit_soc", "Droit social", "Contrat travail, conventions, prud'hommes", 1],
+    [droitId, "1ere_b", "droit_soc", "Droit social", "Contrat travail, conventions, prud'hommes", 1],
+    // Droit - Term B/G2
+    [droitId, "term_b", "droit_soc_av", "Droit social avancé", "Licenciement, représentation, négociations", 1],
+    [droitId, "term_g2", "droit_soc_av", "Droit social avancé", "Licenciement, représentation, négociations", 1],
+
+    // Informatique - 2nde G2/AB
+    [infoId, "2nde_g2", "info_base", "Bases informatique", "Algo, Python, bases données, web", 1],
+    [infoId, "2nde_ab", "info_base", "Bases informatique", "Algo, Python, bases données, web", 1],
+    // Informatique - 1ère G2/B
+    [infoId, "1ere_g2", "info_dev", "Développement", "POO, frameworks, API, tests", 1],
+    [infoId, "1ere_b", "info_dev", "Développement", "POO, frameworks, API, tests", 1],
+    // Informatique - Term B/G2
+    [infoId, "term_b", "info_sys", "Systèmes & réseaux", "OS, admin, sécurité, cloud", 1],
+    [infoId, "term_g2", "info_sys", "Systèmes & réseaux", "OS, admin, sécurité, cloud", 1],
+
+    // Marketing - 2nde AB
+    [marketingId, "2nde_ab", "mkt_fond", "Fondamentaux marketing", "Mix, segmentation, comportement", 1],
+    // Marketing - 1ère B
+    [marketingId, "1ere_b", "mkt_ope", "Marketing opérationnel", "Produit, prix, distribution, com", 1],
+    // Marketing - Term B
+    [marketingId, "term_b", "mkt_strat", "Marketing stratégique", "Études, positionnement, digital", 1],
+
+    // Gestion - 2nde G2
+    [gestionId, "2nde_g2", "gest_intro", "Introduction gestion", "Entreprise, organisation, ressources", 1],
+    // Gestion - 1ère G2/B
+    [gestionId, "1ere_g2", "gest_rh", "Gestion RH", "Recrutement, formation, évaluation", 1],
+    [gestionId, "1ere_b", "gest_rh", "Gestion RH", "Recrutement, formation, évaluation", 1],
+    // Gestion - Term B/G2
+    [gestionId, "term_b", "gest_strat", "Gestion stratégique", "Stratégie, pilotage, contrôle", 1],
+    [gestionId, "term_g2", "gest_strat", "Gestion stratégique", "Stratégie, pilotage, contrôle", 1],
+
+    // Tronc commun : Maths, PC, SVT, Français, HG, Anglais pour filières tech
+    // (Réutiliser chapitres existants via curricula mapping)
+  ];
+
+  for (const [subjectId, gradeCode, code, title, desc, order] of techChapters) {
+    const gradeId = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code=?", gradeCode))!.id;
+    const exists = await queryOne<{id:number}>("SELECT id FROM chapters WHERE subject_id=? AND grade_id=? AND code=?", subjectId, gradeId, code);
+    if (!exists) {
+      await run(
+        "INSERT INTO chapters (subject_id, grade_id, code, title, description, order_index, officiel_ref) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        subjectId, gradeId, code, title, desc, order, `BO TECHNIQUE 2024 - ${subjectId}-${gradeCode}`
+      );
+    }
+  }
+}
+
+async function populateSubjectGrades() {
+  // Normalize coefficient_json -> subject_grades table
+  const subjects = await query<{ id: number; coefficient_json: string }>(
+    "SELECT id, coefficient_json FROM subjects WHERE coefficient_json IS NOT NULL"
+  );
+  for (const s of subjects) {
+    try {
+      const coeffs = JSON.parse(s.coefficient_json);
+      for (const [gradeCode, coeff] of Object.entries(coeffs)) {
+        const grade = await queryOne<{id:number}>("SELECT id FROM grades WHERE code=?", gradeCode);
+        if (grade) {
+          await run(
+            "INSERT INTO subject_grades (subject_id, grade_id, coefficient) VALUES (?, ?, ?) ON CONFLICT(subject_id, grade_id) DO UPDATE SET coefficient=excluded.coefficient",
+            s.id, grade.id, Number(coeff)
+          );
+        }
+      }
+    } catch {
+      // JSON invalide : on ignore
+    }
+  }
+}
+
+async function populateCurricula() {
+  // Create curricula entries for all grade x subject combinations that have chapters
+  const pairs = await query<{ grade_id: number; subject_id: number; year: number }>(
+    "SELECT DISTINCT c.grade_id, c.subject_id, MAX(CAST(COALESCE(c.officiel_ref, '') AS INTEGER)) as year FROM chapters c WHERE c.officiel_ref IS NOT NULL GROUP BY c.grade_id, c.subject_id"
+  );
+  for (const p of pairs) {
+    await run(
+      "INSERT INTO curricula (grade_id, subject_id, official_ref, year, status) VALUES (?, ?, ?, ?, 'active') ON CONFLICT(grade_id, subject_id, year) DO UPDATE SET official_ref=excluded.official_ref",
+      p.grade_id, p.subject_id, `BO 2024`, p.year || 2024
+    );
+  }
+  // Add technical curricula
+  const techPairs = await query<{ grade_id: number; subject_id: number }>(
+    "SELECT DISTINCT c.grade_id, c.subject_id FROM chapters c JOIN grades g ON g.id=c.grade_id WHERE g.cycle='lycee' AND g.code IN ('2nde_g2','2nde_ab','1ere_g2','1ere_b','term_b','term_g2')"
+  );
+  for (const p of techPairs) {
+    await run(
+      "INSERT INTO curricula (grade_id, subject_id, official_ref, year, status) VALUES (?, ?, 'BO TECHNIQUE 2024', 2024, 'active') ON CONFLICT(grade_id, subject_id, year) DO UPDATE SET official_ref=excluded.official_ref",
+      p.grade_id, p.subject_id
+    );
+  }
 }
 
 async function backfillUserGrades() {
