@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { queryOne, query } from "@/lib/db";
+import { query } from "@/lib/db";
 import { getAllPosts } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
@@ -12,12 +12,6 @@ interface PaperRow {
   series_code: string | null;
   subject_code: string;
   year: number;
-}
-
-interface LessonRow {
-  id: number;
-  title: string;
-  updated_at: string | null;
 }
 
 function slugify(s: string): string {
@@ -66,7 +60,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  // Dynamic entries from DB (papers + lessons)
+  // Dynamic entries from DB (approved annales papers only).
+  // Les fiches (/fiches/[id]) et cours (/cours/...) exigent une session :
+  // elles sont volontairement absentes du sitemap pour éviter les erreurs de crawl.
   let dbEntries: MetadataRoute.Sitemap = [];
   try {
     const papers = await query<PaperRow>(
@@ -84,17 +80,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-    const lessons = await query<LessonRow>(
-      `SELECT id, title, updated_at FROM lessons WHERE is_premium = 0 ORDER BY id`
-    );
-    const lessonEntries: MetadataRoute.Sitemap = lessons.map((l) => ({
-      url: `${BASE_URL}/fiches/${l.id}`,
-      lastModified: l.updated_at ? new Date(l.updated_at) : new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.6,
-    }));
-
-    dbEntries = [...paperEntries, ...lessonEntries];
+    dbEntries = [...paperEntries];
   } catch {
     // DB indisponible au build : on garde les routes statiques + blog
   }
