@@ -170,11 +170,12 @@ export async function buildTutorRAGContext(
   question: string,
   subjectIds: number[] = [],
   lessonId: number | null = null,
+  gradeId: number | null = null,
 ): Promise<string> {
   try {
     const sources = await searchChunks(
       question,
-      { subjectIds, lessonId },
+      { subjectIds, lessonId, gradeId },
       5,
     );
     return buildRAGContextBlock(sources);

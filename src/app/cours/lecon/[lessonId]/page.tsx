@@ -224,6 +224,20 @@ export default function LessonPage({ params }: LessonPageProps) {
           </Link>
         </section>
 
+        <section className="bg-surface border border-outline-variant rounded-xl p-6">
+          <h3 className="font-title-md font-semibold text-on-surface mb-4">Une question sur cette leçon ?</h3>
+          <p className="text-on-surface-variant mb-4">
+            Kora connaît le contexte de cette leçon et adapte ses explications à ton niveau.
+          </p>
+          <Link
+            href={`/tuteur-ia?lessonId=${lesson.id}`}
+            className="border border-primary text-primary px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2 active:scale-95 transition-transform"
+          >
+            <span className="material-symbols-outlined">smart_toy</span>
+            Poser une question à Kora
+          </Link>
+        </section>
+
         <section className="flex items-center justify-between bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
           <div>
             <p className="font-label-md font-bold text-on-surface">{isCompleted ? "Leçon terminée" : "En progression"}</p>

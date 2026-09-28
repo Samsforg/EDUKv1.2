@@ -58,10 +58,30 @@ export default function TutorPage() {
   const [decouvertePrice, setDecouvertePrice] = useState(0);
   const [upsell, setUpsell] = useState<{ open: boolean; message: string }>({ open: false, message: "" });
   const [sendError, setSendError] = useState<string | null>(null);
+  const [lessonCtx, setLessonCtx] = useState<{ id: number; title: string } | null>(null);
+  const [subjectCtx, setSubjectCtx] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     trackEvent(EVENTS.aiTutorOpened);
+    // Contexte pédagogique via ?lessonId= & ?subjectId= (ex. depuis une page leçon).
+    // La leçon n'est liée que si l'élève peut y accéder (même contrôle que la page cours).
+    try {
+      const q = new URLSearchParams(window.location.search);
+      const lid = Number(q.get("lessonId"));
+      const sid = Number(q.get("subjectId"));
+      if (Number.isFinite(sid) && sid > 0) setSubjectCtx(sid);
+      if (Number.isFinite(lid) && lid > 0) {
+        fetch(`/api/cours/lecons/${lid}`, { cache: "no-store" })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) => {
+            if (d?.lesson) setLessonCtx({ id: lid, title: d.lesson.title });
+          })
+          .catch(() => {});
+      }
+    } catch {
+      // navigateurs anciens : on ignore le contexte
+    }
     fetch("/api/tutor")
       .then((r) => r.json())
       .then((d) => {
@@ -108,7 +128,12 @@ export default function TutorPage() {
       const res = await fetch("/api/tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, chatId }),
+        body: JSON.stringify({
+          message,
+          chatId,
+          lessonId: lessonCtx?.id ?? null,
+          subjectId: subjectCtx,
+        }),
       });
       const data = await res.json();
       if (data.code === "quota_exceeded") {
@@ -259,7 +284,24 @@ export default function TutorPage() {
       </main>
 
       <footer className="fixed bottom-0 left-0 right-0 bg-surface border-t border-outline-variant px-4 py-3">
-        <div className="max-w-lg mx-auto flex items-end gap-2">
+        <div className="max-w-lg mx-auto flex flex-col gap-2">
+        {lessonCtx && (
+          <div className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2">
+            <span className="material-symbols-outlined text-primary text-lg">menu_book</span>
+            <span className="flex-1 min-w-0 truncate text-xs text-on-surface">
+              Contexte : <strong>{lessonCtx.title}</strong>
+            </span>
+            <button
+              type="button"
+              onClick={() => setLessonCtx(null)}
+              aria-label="Quitter le contexte de la leçon"
+              className="text-on-surface-variant hover:text-error active:scale-95 transition-transform"
+            >
+              <span className="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+        )}
+        <div className="flex items-end gap-2">
           <VoiceInput onResult={(t) => setInput((prev) => (prev ? prev + " " : "") + t)} />
           <textarea
             value={input}
@@ -281,6 +323,7 @@ export default function TutorPage() {
           >
             <span className="material-symbols-outlined">send</span>
           </button>
+        </div>
         </div>
       </footer>
 

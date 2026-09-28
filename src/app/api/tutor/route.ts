@@ -2,7 +2,7 @@ import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { run, query, queryOne } from "@/lib/db";
 import { getCurrentUser, addXp } from "@/lib/session";
-import { generateTutorReply, isTutorAIConfigured, type TutorHistoryItem } from "@/lib/tutor-ai";
+import { generateTutorReply, getLessonPedagogyContext, isTutorAIConfigured, type TutorHistoryItem } from "@/lib/tutor-ai";
 import { creditLigueChallenges } from "@/lib/ligue";
 import { getKoraQuota } from "@/lib/quotas";
 import { getPremiumPlans } from "@/lib/plans";
@@ -112,6 +112,13 @@ async function POSTHandler(req: NextRequest) {
     const serie = user.serie_id
       ? (await queryOne<{ name: string }>("SELECT name FROM series WHERE id = ?", user.serie_id))?.name ?? null
       : null;
+    // Classe exacte depuis grade_id (ex. « 2nde-G2 ») plutôt que le texte libre.
+    const userGrade = await queryOne<{ id: number; name: string }>(
+      "SELECT g.id, g.name FROM users u JOIN grades g ON g.id = u.grade_id WHERE u.id = ?",
+      user.id,
+    ).catch(() => null);
+    const lessonId = body.lessonId ? Number(body.lessonId) : null;
+    const pedagogy = lessonId && Number.isFinite(lessonId) ? await getLessonPedagogyContext(lessonId) : null;
     reply = await generateTutorReply({
       message,
       history,
@@ -120,7 +127,9 @@ async function POSTHandler(req: NextRequest) {
       classLevel: user.class_level,
       userId: user.id,
       subjectId: body.subjectId ? Number(body.subjectId) : null,
-      lessonId: body.lessonId ? Number(body.lessonId) : null,
+      lessonId,
+      gradeId: userGrade?.id ?? null,
+      pedagogy,
     });
   }
   if (!reply) reply = localReply(message);

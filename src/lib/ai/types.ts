@@ -37,6 +37,15 @@ export interface TutorHistoryItem {
   content: string;
 }
 
+export interface LessonPedagogyContext {
+  gradeName: string | null;
+  subjectName: string | null;
+  chapterTitle: string | null;
+  lessonTitle: string | null;
+  lessonSummary: string | null;
+  prerequisites: string | null;
+}
+
 export interface TutorReplyContext {
   message: string;
   history: TutorHistoryItem[];
@@ -46,4 +55,6 @@ export interface TutorReplyContext {
   userId?: number | null;
   subjectId?: number | null;
   lessonId?: number | null;
+  gradeId?: number | null;
+  pedagogy?: LessonPedagogyContext | null;
 }
