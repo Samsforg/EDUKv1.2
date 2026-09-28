@@ -6,7 +6,7 @@ import { createSession, setSessionCookie, notify, addXp } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { RegisterSchema, validate } from "@/lib/validation";
 import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { resolveUserGradeIds } from "@/lib/level";
+import { findGradeDirect, resolveUserGradeIds } from "@/lib/level";
 import { sendWelcomeEmail } from "@/lib/mailer";
 import crypto from "crypto";
 
@@ -109,11 +109,28 @@ async function POSTHandler(req: NextRequest) {
         const s = await queryOne<{ id: number }>("SELECT id FROM series WHERE code = ?", lyceeMap[g].serie);
         storedSerieId = s?.id ?? null;
       }
+    } else {
+      // Repli data-driven : tout code de classe présent en base (ex. classes
+      // techniques créées depuis l'administration) est accepté tel quel.
+      const direct = await findGradeDirect(grade);
+      if (direct) {
+        storedClassLevel = direct.name;
+        storedSerieId = null;
+      }
     }
   }
 
   const normalized = (storedClassLevel ?? "").toLowerCase();
   const isLycee = storedClassLevel !== null && ["terminale", "1ère", "2nde"].some((l) => normalized.includes(l));
+
+  if (storedSerieId) {
+    // Garde-fou : un libellé qui désigne directement une classe en base
+    // (ex. classe technique « 2nde-G2 ») n'a pas de série.
+    const directGrade = await findGradeDirect(storedClassLevel);
+    if (directGrade) {
+      storedSerieId = null;
+    }
+  }
 
   if (storedSerieId) {
     const serie = await queryOne<{ code: string; name: string }>(

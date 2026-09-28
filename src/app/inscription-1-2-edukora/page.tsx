@@ -12,6 +12,15 @@ interface Serie {
   name: string;
 }
 
+interface Grade {
+  id: number;
+  code: string;
+  name: string;
+  cycle: string;
+  order_index: number;
+  needs_serie: boolean;
+}
+
 function getABVariant(): string {
   if (typeof document === "undefined") return "a";
   const match = document.cookie.match(/(?:^|;\s*)edukora_ab_inscription=([ab])/);
@@ -30,6 +39,7 @@ function InscriptionPage() {
       : null;
   const [variant, setVariant] = useState<string>("a");
   const [series, setSeries] = useState<Serie[]>([]);
+  const [grades, setGrades] = useState<Grade[]>([]);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -47,9 +57,14 @@ function InscriptionPage() {
   const [loading, setLoading] = useState(false);
   const [showExtraFields, setShowExtraFields] = useState(false);
 
-  const CLASSES = ["6ème", "5ème", "4ème", "3ème", "2nde", "1ère", "Terminale"];
+  // Repli si /api/grades est indisponible : la liste principale vient de la base.
+  const FALLBACK_CLASSES = ["6ème", "5ème", "4ème", "3ème", "2nde", "1ère", "Terminale"];
   const LYCEE_LEVELS = ["2nde", "1ère", "Terminale"];
-  const showSerie = LYCEE_LEVELS.includes(classLevel.trim());
+  const selectedGrade = grades.find((g) => g.name === classLevel.trim()) ?? null;
+  const showSerie = selectedGrade
+    ? selectedGrade.needs_serie
+    : LYCEE_LEVELS.includes(classLevel.trim());
+  const classOptions = grades.length > 0 ? grades.map((g) => g.name) : FALLBACK_CLASSES;
   const COMMUNES = ["Abobo", "Adjamé", "Attécoubé", "Cocody", "Koumassi", "Marcory", "Plateau", "Port-Bouët", "Treichville", "Yopougon", "Bouaké", "Yamoussoukro", "Daloa", "Korhogo", "San-Pédro", "Man", "Gagnoa", "Divo", "Abengourou", "Anyama", "Bingerville", "Grand-Bassam"];
   const NAME_RE = /^[\p{L}\p{M}\s'""''\-\.]{1,50}$/u;
 
@@ -63,6 +78,10 @@ function InscriptionPage() {
     fetch("/api/series")
       .then((r) => r.json())
       .then((d) => setSeries(d.series ?? []))
+      .catch(() => {});
+    fetch("/api/grades")
+      .then((r) => r.json())
+      .then((d) => setGrades(Array.isArray(d.grades) ? d.grades : []))
       .catch(() => {});
   }, []);
 
@@ -344,7 +363,7 @@ function InscriptionPage() {
                     className={inputClass}
                   >
                     <option value="">Choisir ma classe…</option>
-                    {CLASSES.map((c) => (
+                    {classOptions.map((c) => (
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
@@ -615,10 +634,10 @@ function InscriptionPage() {
                   }}
                   className={inputClass}
                 >
-                  <option value="">Choisir ma classe…</option>
-                  {CLASSES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
+                    <option value="">Choisir ma classe…</option>
+                    {classOptions.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                 </select>
               </div>
 

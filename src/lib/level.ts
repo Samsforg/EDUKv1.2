@@ -49,6 +49,49 @@ const BASE_CLASS: Record<string, string> = {
   "terminal": "Terminale",
 };
 
+export interface GradeRef {
+  id: number;
+  name: string;
+  code: string;
+}
+
+function normalizeGradeCode(s: string): string {
+  return norm(s)
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+/**
+ * Match direct d'un libellé de classe contre la table `grades` (nom exact,
+ * puis code normalisé). Permet à toute classe présente en base — y compris
+ * les futures classes créées depuis l'administration — de se résoudre sans
+ * modification du code. Retourne null si aucun match (repli heuristique).
+ */
+export async function findGradeDirect(classLevel: string | null): Promise<GradeRef | null> {
+  const trimmed = classLevel?.trim();
+  if (!trimmed) return null;
+  const byName = await query<GradeRef>("SELECT id, name, code FROM grades WHERE name = ?", trimmed);
+  if (byName[0]) return byName[0];
+  const code = normalizeGradeCode(trimmed);
+  if (!code) return null;
+  const byCode = await query<GradeRef>("SELECT id, name, code FROM grades WHERE code = ?", code);
+  return byCode[0] ?? null;
+}
+
+/**
+ * Une classe nécessite le choix d'une série uniquement si elle appartient à
+ * la filière générale du lycée (cible du mapping séries C/D/A/B, plus 2nde).
+ * Les classes techniques (ex. 2nde-G2, Tle-B) n'ont pas de série.
+ */
+export function gradeNeedsSerie(code: string | null | undefined): boolean {
+  if (!code) return false;
+  if (code === "2nde") return true;
+  for (const tracks of Object.values(SERIE_GRADES)) {
+    if (tracks["1ère"] === code || tracks["Terminale"] === code) return true;
+  }
+  return false;
+}
+
 export function gradeCandidates(classLevel: string | null, serieCode: string | null): string[] | null {
   if (!classLevel) return null;
   const normalized = norm(classLevel).replace(/\s+([a-f])$/i, "");
@@ -71,6 +114,8 @@ export function gradeCandidates(classLevel: string | null, serieCode: string | n
 }
 
 export async function resolveUserGradeIds(serieId: number | null, classLevel: string | null): Promise<number[] | null> {
+  const direct = await findGradeDirect(classLevel);
+  if (direct) return [direct.id];
   const serieCode = serieId
     ? ((await query<{ code: string }>("SELECT code FROM series WHERE id = ?", serieId))[0]?.code ?? null)
     : null;
