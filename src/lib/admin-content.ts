@@ -128,6 +128,12 @@ export async function getSubject(id: number): Promise<{ id: number; code: string
   );
 }
 
+export async function getSubjects(): Promise<{ id: number; code: string; name: string; icon: string; color: string }[]> {
+  return query<{ id: number; code: string; name: string; icon: string; color: string }>(
+    "SELECT id, code, name, icon, color FROM subjects ORDER BY id",
+  );
+}
+
 export async function createSubject(
   input: { code: string; name: string; icon?: string; color?: string },
   actorId: number,

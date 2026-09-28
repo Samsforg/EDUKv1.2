@@ -21,7 +21,11 @@ type ActiveTab =
   | "tarifs"
   | "abonnes"
   | "ads"
-  | "growth";
+  | "growth"
+  | "curriculum"
+  | "coefficients"
+  | "planification"
+  | "versions";
 
 const TABS: { key: ActiveTab; href: string; icon: string; label: string; mobileLabel: string }[] = [
   { key: "overview", href: "/espace-admin", icon: "dashboard", label: "Overview", mobileLabel: "Overview" },
@@ -41,6 +45,10 @@ const TABS: { key: ActiveTab; href: string; icon: string; label: string; mobileL
   { key: "abonnes", href: "/espace-admin/abonnes", icon: "subscriptions", label: "Abonnés", mobileLabel: "Abonnés" },
   { key: "ads", href: "/espace-admin/pub", icon: "campaign", label: "Espace pub", mobileLabel: "Pub" },
   { key: "growth", href: "/espace-admin/growth", icon: "trending_up", label: "Growth AI", mobileLabel: "Growth" },
+  { key: "curriculum", href: "/espace-admin/curriculum", icon: "menu_book", label: "Programmes", mobileLabel: "Programmes" },
+  { key: "coefficients", href: "/espace-admin/coefficients", icon: "calculate", label: "Coefficients", mobileLabel: "Coeff." },
+  { key: "planification", href: "/espace-admin/planification", icon: "event", label: "Planification", mobileLabel: "Planning" },
+  { key: "versions", href: "/espace-admin/versions", icon: "history_edu", label: "Versions", mobileLabel: "Versions" },
 ];
 
 export async function AdminShell({ active, children }: { active: ActiveTab; children: ReactNode }) {
