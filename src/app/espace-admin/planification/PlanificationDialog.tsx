@@ -1,8 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { getCsrfToken } from "@/lib/csrf-client";
-
 interface PlanificationDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -68,7 +65,7 @@ export default function PlanificationDialog({
             <label className="block text-label-md font-medium text-on-surface">Chapitre *</label>
             <select
               value={formData.chapter_id}
-              onChange={(e) => formData.chapter_id = e.target.value}
+              onChange={(e) => setFormData((prev) => ({ ...prev, chapter_id: e.target.value }))}
               required
               className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
             >
@@ -83,7 +80,7 @@ export default function PlanificationDialog({
             <input
               type="date"
               value={formData.scheduled_at}
-              onChange={(e) => formData.scheduled_at = e.target.value}
+              onChange={(e) => setFormData((prev) => ({ ...prev, scheduled_at: e.target.value }))}
               className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
@@ -91,7 +88,7 @@ export default function PlanificationDialog({
             <label className="block text-label-md font-medium text-on-surface">Statut</label>
             <select
               value={formData.status}
-              onChange={(e) => formData.status = e.target.value}
+              onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value }))}
               className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="planned">Planifié</option>
@@ -102,7 +99,7 @@ export default function PlanificationDialog({
           <div className="flex justify-end gap-2 pt-4">
             <button
               type="button"
-              onClick={() => { formData.class_id = ""; formData.chapter_id = ""; formData.scheduled_at = ""; formData.status = "planned"; onClose(); }}
+              onClick={onClose}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium border border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors"
             >
               Annuler

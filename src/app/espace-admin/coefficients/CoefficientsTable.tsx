@@ -43,13 +43,14 @@ interface CoefficientsTableProps {
   subjects: { id: number; code: string; name: string; icon: string; color: string }[];
 }
 
-function CoefficientDialog({ isOpen, onClose, editing, loading, error, formData, onSubmit, onCancel, subjects, grades, resetForm }: {
+function CoefficientDialog({ isOpen, onClose, editing, loading, error, formData, setFormData, onSubmit, onCancel, subjects, grades, resetForm }: {
   isOpen: boolean;
   onClose: () => void;
   editing: { subject_id: number; grade_id: number } | null;
   loading: boolean;
   error: string | null;
   formData: { subject_id: string; grade_id: string; coefficient: string };
+  setFormData: React.Dispatch<React.SetStateAction<{ subject_id: string; grade_id: string; coefficient: string }>>;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   subjects: { id: number; code: string; name: string; icon: string; color: string }[];
@@ -76,7 +77,7 @@ function CoefficientDialog({ isOpen, onClose, editing, loading, error, formData,
             <label className="block text-label-md font-medium text-on-surface">Matière *</label>
             <select
               value={formData.subject_id}
-              onChange={(e) => formData.subject_id = e.target.value}
+              onChange={(e) => setFormData((prev) => ({ ...prev, subject_id: e.target.value }))}
               required
               className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
             >
@@ -90,7 +91,7 @@ function CoefficientDialog({ isOpen, onClose, editing, loading, error, formData,
             <label className="block text-label-md font-medium text-on-surface">Niveau (Grade) *</label>
             <select
               value={formData.grade_id}
-              onChange={(e) => formData.grade_id = e.target.value}
+              onChange={(e) => setFormData((prev) => ({ ...prev, grade_id: e.target.value }))}
               required
               className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
             >
@@ -107,7 +108,7 @@ function CoefficientDialog({ isOpen, onClose, editing, loading, error, formData,
               step="0.5"
               min="0"
               value={formData.coefficient}
-              onChange={(e) => formData.coefficient = e.target.value}
+              onChange={(e) => setFormData((prev) => ({ ...prev, coefficient: e.target.value }))}
               required
               className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
             />
@@ -273,6 +274,7 @@ export default function CoefficientsTable({ subjectGrades, grades, subjects }: {
         loading={loading}
         error={error}
         formData={formData}
+        setFormData={setFormData}
         onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }}
         onCancel={() => { setIsOpen(false); resetForm(); }}
         subjects={subjects}
