@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/session";
 import { getContentOverview, getPendingCourses } from "@/lib/admin";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { SubjectsManager } from "@/components/admin/content/SubjectsManager";
+import { ContentImport } from "@/components/admin/content/ContentImport";
 import Link from "next/link";
 
 export const metadata: Metadata = { title: "Edukora Admin - Contenu pédagogique" };
@@ -60,6 +61,8 @@ export default async function Page() {
           <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
         </Link>
       )}
+
+      <ContentImport />
 
       <SubjectsManager initialSubjects={subjects} />
     </AdminShell>
