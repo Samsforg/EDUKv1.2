@@ -140,6 +140,7 @@ const PUBLIC_ROUTES = [
   "/api/auth",
   "/api/health",
   "/api/series",
+  "/api/grades",
   "/api/newsletter",
   "/api/tutor/demo",
   "/api/premium/webhook",
