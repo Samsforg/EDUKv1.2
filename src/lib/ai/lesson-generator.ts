@@ -20,6 +20,12 @@ interface GeneratedLesson {
   is_premium: number;
 }
 
+export interface LessonDraft {
+  title: string;
+  summary: string;
+  content_md: string;
+}
+
 // Chaque appel IA est borné à 2000 caractères par le gateway : on génère
 // la leçon par sections indépendantes puis on les concatène en markdown.
 const SECTION_MAX = 1900;
@@ -85,6 +91,26 @@ function buildSectionSystemPrompt(course: ChapterSeed, kind: "course" | "exercis
     "- Pas d'introduction générale du chapitre en dehors de la section demandée.",
     `Tâche : ${instruct}`,
   ].join("\n");
+}
+
+/**
+ * Génère un brouillon de leçon pour un professeur SANS insérer en base.
+ * Le prof relit, adapte puis soumet via le flux normal (statut pending).
+ */
+export async function generateLessonDraft(
+  chapterId: number,
+  kind: "course" | "exercises" = "course",
+): Promise<{ ok: true; draft: LessonDraft } | { ok: false; reason: string }> {
+  const chapter = await loadChapterSeed(chapterId);
+  if (!chapter) return { ok: false, reason: "chapter_not_found" };
+  if (!isContentAIConfigured()) return { ok: false, reason: "ai_not_configured" };
+  const md = await generateSections(chapter, kind);
+  if (!md.trim()) return { ok: false, reason: "generation_failed" };
+  const suffix = kind === "course" ? " : cours détaillé (brouillon IA)" : " : exercices corrigés (brouillon IA)";
+  return {
+    ok: true,
+    draft: { title: `${chapter.title}${suffix}`, summary: summarize(md), content_md: md },
+  };
 }
 
 export async function chapterHasAIGeneratedLessons(chapterId: number): Promise<boolean> {

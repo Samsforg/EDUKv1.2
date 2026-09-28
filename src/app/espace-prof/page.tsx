@@ -338,6 +338,21 @@ export default function TeacherDashboardPage() {
         </section>
 
         <section className="mb-8">
+          <Link href="/espace-prof/wizard" className="block bg-surface-container-lowest border border-outline-variant rounded-xl p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-on-primary">auto_awesome</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-label-md font-semibold text-on-surface">Assistant de création</h3>
+                <p className="font-label-xs text-on-surface-variant">Chapitre + leçon guidés, avec brouillons IA</p>
+              </div>
+              <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+            </div>
+          </Link>
+        </section>
+
+        <section className="mb-8">
           <h2 className="font-title-md text-title-md text-on-surface mb-3">Mes chapitres ({chapters.length})</h2>
           {chapters.length === 0 ? (
             <p className="bg-surface border border-outline-variant rounded-xl p-4 text-center font-body-sm text-on-surface-variant">Aucun chapitre créé pour l&apos;instant. Crée un chapitre qui sera validé par l&apos;administration.</p>
