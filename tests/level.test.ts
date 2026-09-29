@@ -1,4 +1,16 @@
-import { gradeCandidates, gradeNeedsSerie } from "@/lib/level";
+import { gradeCandidates, gradeNeedsSerie, trackGroupLabel } from "@/lib/level";
+
+describe("trackGroupLabel", () => {
+  it("libellés connus", () => {
+    expect(trackGroupLabel("general")).toBe("Enseignement général");
+    expect(trackGroupLabel("technique")).toBe("Enseignement technique");
+  });
+  it("repli : valeur nulle et filières futures capitalisées", () => {
+    expect(trackGroupLabel(null)).toBe("Enseignement général");
+    expect(trackGroupLabel(undefined)).toBe("Enseignement général");
+    expect(trackGroupLabel("superieur")).toBe("Superieur");
+  });
+});
 
 describe("gradeNeedsSerie", () => {
   it("vrai pour la filière générale du lycée uniquement", () => {

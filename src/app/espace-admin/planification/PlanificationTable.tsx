@@ -57,10 +57,6 @@ function PlanificationTable() {
     status: "planned",
   });
 
-  useEffect(() => {
-    fetchClasses();
-  }, []);
-
   const fetchClasses = async () => {
     try {
       const res = await fetch("/api/admin/classes");
@@ -83,6 +79,10 @@ function PlanificationTable() {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    fetchClasses();
+  }, []);
 
   const handleClassChange = (value: string) => {
     const id = Number(value);

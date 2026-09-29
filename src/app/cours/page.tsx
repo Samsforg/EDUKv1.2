@@ -11,6 +11,7 @@ interface Grade {
   name: string;
   cycle: string;
   order_index: number;
+  track: string;
 }
 
 interface Subject {
@@ -25,8 +26,26 @@ interface Subject {
 interface CoursData {
   grades: Grade[];
   subjects: Subject[];
+  coefficients: Record<number, Record<string, number>>;
   userGrade: { id: number; code: string; name: string } | null;
   userSubscription: { plan: string; status: string; end_at: string } | null;
+}
+
+function trackGroupLabel(track: string | null | undefined): string {
+  const t = (track ?? "general").toLowerCase();
+  if (t === "general") return "Enseignement général";
+  if (t === "technique") return "Enseignement technique";
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+function legacyCoefficient(subject: Subject, gradeCode: string): number {
+  try {
+    const parsed = JSON.parse(subject.coefficient_json || "{}") as Record<string, unknown>;
+    const v = parsed[gradeCode];
+    return typeof v === "number" ? v : 0;
+  } catch {
+    return 0;
+  }
 }
 
 const CYCLE_COLORS: Record<string, string> = {
@@ -108,18 +127,40 @@ export default function CoursPage() {
     );
 
   const { grades, subjects, userGrade, userSubscription } = data;
+  const coefficients = data.coefficients ?? {};
+
+  const coefficientOf = (subject: Subject, gradeCode: string): number => {
+    const normalized = coefficients[subject.id]?.[gradeCode];
+    if (typeof normalized === "number") return normalized;
+    return legacyCoefficient(subject, gradeCode);
+  };
 
   const filteredSubjects = selectedGrade
-    ? subjects.filter((s) => {
-        const coeff = JSON.parse(s.coefficient_json || "{}");
-        return !!coeff[selectedGrade];
-      })
+    ? subjects.filter((s) => coefficientOf(s, selectedGrade) > 0)
     : subjects;
+
+  // Regroupement par filière : général d'abord, puis technique, puis toute
+  // future filière dans son ordre d'apparition — piloté par grades.track.
+  const gradeGroups = (() => {
+    const order: string[] = [];
+    const byTrack = new Map<string, Grade[]>();
+    for (const g of grades) {
+      const track = (g.track ?? "general").toLowerCase();
+      if (!byTrack.has(track)) {
+        byTrack.set(track, []);
+        order.push(track);
+      }
+      byTrack.get(track)!.push(g);
+    }
+    const rank = (t: string) => (t === "general" ? 0 : t === "technique" ? 1 : 2);
+    order.sort((a, b) => rank(a) - rank(b));
+    return order.map((track) => ({ track, label: trackGroupLabel(track), grades: byTrack.get(track)! }));
+  })();
 
   return (
     <div className="bg-background text-on-background font-['Hanken_Grotesk'] min-h-screen pb-24">
       <PageHeader
-        title="Cours & Programme MENAET"
+        title="Cours & Programmes officiels"
         right={
           userSubscription && (
             <span className="bg-validation-amber/20 text-validation-amber text-xs font-bold px-2 py-1 rounded-full">
@@ -140,23 +181,30 @@ export default function CoursPage() {
           </div>
         )}
 
-        <section className="mb-8">
-          <h2 className="font-title-md font-semibold text-on-surface mb-4">Mon niveau</h2>
-          <div className="flex flex-wrap gap-2">
-            {grades.map((g) => (
-              <button
-                key={g.code}
-                onClick={() => setSelectedGrade(g.code)}
-                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-                  selectedGrade === g.code
-                    ? "bg-primary text-on-primary shadow-md"
-                    : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container"
-                }`}
-              >
-                {g.name}
-              </button>
-            ))}
-          </div>
+        <section className="mb-8 space-y-5">
+          <h2 className="font-title-md font-semibold text-on-surface">Mon niveau</h2>
+          {gradeGroups.map((group) => (
+            <div key={group.track}>
+              {gradeGroups.length > 1 && (
+                <p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">{group.label}</p>
+              )}
+              <div className="flex flex-wrap gap-2">
+                {group.grades.map((g) => (
+                  <button
+                    key={g.code}
+                    onClick={() => setSelectedGrade(g.code)}
+                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                      selectedGrade === g.code
+                        ? "bg-primary text-on-primary shadow-md"
+                        : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container"
+                    }`}
+                  >
+                    {g.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
           {userGrade && !selectedGrade && (
             <p className="text-xs text-on-surface-variant mt-2">Niveau détecté : {userGrade.name}</p>
           )}
@@ -171,6 +219,13 @@ export default function CoursPage() {
               </span>
             )}
           </div>
+          {filteredSubjects.length === 0 ? (
+            <div className="bg-surface border border-outline-variant rounded-xl p-8 text-center">
+              <span className="material-symbols-outlined text-4xl text-outline">menu_book</span>
+              <p className="font-title-md font-semibold text-on-surface mt-3">Aucune matière disponible pour ce niveau pour le moment.</p>
+              <p className="text-sm text-on-surface-variant mt-1">De nouveaux contenus arrivent bientôt.</p>
+            </div>
+          ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredSubjects.map((s) => (
               <Link
@@ -184,12 +239,13 @@ export default function CoursPage() {
                 <h3 className="font-title-md font-semibold text-on-surface text-center">{s.name}</h3>
                 {selectedGrade && (
                   <span className="text-xs text-on-surface-variant bg-surface-container px-2 py-1 rounded-full">
-                    {JSON.parse(s.coefficient_json || "{}")[selectedGrade] || 0} coef
+                    {coefficientOf(s, selectedGrade)} coef
                   </span>
                 )}
               </Link>
             ))}
           </div>
+          )}
         </section>
 
         {/* Bannière pub pour les utilisateurs gratuits */}

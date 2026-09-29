@@ -106,6 +106,7 @@ async function doInit() {
   await safeAsync("populateSubjectGrades", populateSubjectGrades);
   await safeAsync("populateCurricula", populateCurricula);
   await safeAsync("seedTechnicalGrades", seedTechnicalGrades);
+  await safeAsync("seedGradeTracks", seedGradeTracks);
   await safeAsync("seedTechnicalChapters", seedTechnicalChapters);
   await safeAsync("normalizeDefaults", normalizeDefaults);
   await safeAsync("fixMojibake", fixMojibake);
@@ -466,6 +467,19 @@ async function migrateCurriculumTables() {
 
   // content_slug for SEO on chapters
   await migrate("chapters", "content_slug", "TEXT");
+
+  // track for grouping grades by parcours (general par défaut, technique, ...)
+  await migrate("grades", "track", "TEXT DEFAULT 'general'");
+}
+
+async function seedGradeTracks() {
+  // N'écrase jamais une valeur personnalisée (ex. définie depuis l'admin) :
+  // seules les valeurs par défaut sont migrées vers 'technique'.
+  await run(
+    `UPDATE grades SET track = 'technique'
+     WHERE code IN ('2nde_g2','2nde_ab','1ere_g2','1ere_b','term_b','term_g2')
+       AND (track IS NULL OR track = 'general')`,
+  );
 }
 
 async function seedTechnicalGrades() {

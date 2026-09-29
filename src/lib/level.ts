@@ -132,3 +132,15 @@ export async function resolveUserGradeIds(serieId: number | null, classLevel: st
 export function gradeInClause(ids: number[]): { clause: string; params: number[] } {
   return { clause: `grade_id IN (${ids.map(() => "?").join(",")})`, params: ids };
 }
+
+/**
+ * Libellé du groupe de parcours pour le catalogue. Les filières futures
+ * (ex. 'superieur') obtiennent automatiquement leur propre groupe libellé
+ * depuis la valeur en base — aucune modification de code requise.
+ */
+export function trackGroupLabel(track: string | null | undefined): string {
+  const t = (track ?? "general").toLowerCase();
+  if (t === "general") return "Enseignement général";
+  if (t === "technique") return "Enseignement technique";
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
