@@ -804,6 +804,21 @@ export function getDb() {
   return db;
 }
 
+/**
+ * `node:sqlite` renvoie des lignes avec un prototype nul. Le protocole RSC
+ * de Next.js refuse ces objets comme props vers un Client Component
+ * ("Only plain objects ... Classes or null prototypes are not supported").
+ * On recopie donc chaque ligne SQLite dans un objet simple, en conservant
+ * à l'identique les noms de colonnes, les types (number, bigint, string,
+ * boolean, null) et les valeurs. Les lignes déjà simples (PostgreSQL) sont
+ * renvoyées telles quelles, sans copie.
+ */
+function toPlainRow<T>(row: T): T {
+  if (row === null || typeof row !== "object") return row;
+  if (Object.getPrototypeOf(row) === Object.prototype) return row;
+  return { ...(row as Record<string, unknown>) } as T;
+}
+
 export type SqlParam = string | number | null | bigint | Uint8Array | number[];
 
 export function toPgPlaceholders(sql: string): string {
@@ -1197,7 +1212,7 @@ export async function query<T = unknown>(sql: string, ...params: SqlParam[]): Pr
     const r = await withPgRetry(() => pool.query(toPgDatetime(toPgRound(toPgPlaceholders(sql))), params as any));
     return r.rows as T[];
   }
-  return db.prepare(sql).all(...(params as any[])) as T[];
+  return (db.prepare(sql).all(...(params as any[])) as unknown[]).map((row) => toPlainRow(row)) as T[];
 }
 
 export async function queryOne<T = unknown>(sql: string, ...params: SqlParam[]): Promise<T | undefined> {
@@ -1207,7 +1222,8 @@ export async function queryOne<T = unknown>(sql: string, ...params: SqlParam[]):
     const r = await withPgRetry(() => pool.query(toPgDatetime(toPgRound(toPgPlaceholders(sql))), params as any));
     return r.rowCount ? (r.rows[0] as T) : undefined;
   }
-  return db.prepare(sql).get(...(params as any[])) as T | undefined;
+  const row = db.prepare(sql).get(...(params as any[])) as T | undefined;
+  return row === undefined || row === null ? row : toPlainRow(row);
 }
 
 export async function run(sql: string, ...params: SqlParam[]): Promise<{ lastInsertRowid: number | null; changes: number }> {

@@ -135,9 +135,11 @@ export default function CoursPage() {
     return legacyCoefficient(subject, gradeCode);
   };
 
+  // Sans niveau sélectionné, aucune matière n'est affichée : on ne rattache
+  // jamais l'intégralité du catalogue à un niveau arbitraire.
   const filteredSubjects = selectedGrade
     ? subjects.filter((s) => coefficientOf(s, selectedGrade) > 0)
-    : subjects;
+    : [];
 
   // Regroupement par filière : général d'abord, puis technique, puis toute
   // future filière dans son ordre d'apparition — piloté par grades.track.
@@ -219,7 +221,13 @@ export default function CoursPage() {
               </span>
             )}
           </div>
-          {filteredSubjects.length === 0 ? (
+          {!selectedGrade ? (
+            <div className="bg-surface border border-outline-variant rounded-xl p-8 text-center">
+              <span className="material-symbols-outlined text-4xl text-outline">school</span>
+              <p className="font-title-md font-semibold text-on-surface mt-3">Choisis ton niveau pour voir les matières.</p>
+              <p className="text-sm text-on-surface-variant mt-1">Sélectionne un niveau ci-dessus : les matières correspondantes s'afficheront ici.</p>
+            </div>
+          ) : filteredSubjects.length === 0 ? (
             <div className="bg-surface border border-outline-variant rounded-xl p-8 text-center">
               <span className="material-symbols-outlined text-4xl text-outline">menu_book</span>
               <p className="font-title-md font-semibold text-on-surface mt-3">Aucune matière disponible pour ce niveau pour le moment.</p>
@@ -230,7 +238,7 @@ export default function CoursPage() {
             {filteredSubjects.map((s) => (
               <Link
                 key={s.code}
-                href={`/cours/${s.code}/${selectedGrade || "term_s"}`}
+                href={`/cours/${s.code}/${selectedGrade}`}
                 className="bg-surface border border-outline-variant rounded-xl p-6 flex flex-col items-center gap-3 hover:border-primary transition-colors group"
               >
                 <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${s.color}20 text-[32px]`} style={{ color: s.color }}>

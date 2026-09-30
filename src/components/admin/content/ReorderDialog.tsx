@@ -25,10 +25,6 @@ export default function ReorderDialog({ open, onClose, entityType, subjectId, ch
   const [error, setError] = useState<string | null>(null);
   const [draftOrder, setDraftOrder] = useState<number[]>([]);
 
-  useEffect(() => {
-    if (open) fetchItems();
-  }, [open, entityType, subjectId, chapterId, gradeId]);
-
   const fetchItems = async () => {
     let url = "";
     if (entityType === "chapter" && subjectId) {
@@ -47,6 +43,10 @@ export default function ReorderDialog({ open, onClose, entityType, subjectId, ch
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    if (open) fetchItems();
+  }, [open, entityType, subjectId, chapterId, gradeId]);
 
   useEffect(() => {
     if (items.length) setDraftOrder(items.map((i) => i.id));

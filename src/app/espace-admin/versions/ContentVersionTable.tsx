@@ -12,8 +12,6 @@ interface ContentVersionRow {
   created_at: string;
 }
 
-interface ContentVersionTableProps {}
-
 export default function ContentVersionTable() {
   const [versions, setVersions] = useState<ContentVersionRow[]>([]);
   const [entityType, setEntityType] = useState<string>("");

@@ -223,23 +223,46 @@ async function ensureAdminDemo() {
   );
 }
 
+// Mots de passe des comptes de démonstration. `PasswordSchema`
+// (src/lib/validation.ts) impose au moins 8 caractères : les valeurs
+// historiques "test123"/"prof123" (7 caractères) étaient donc refusées à la
+// connexion. `legacy` sert uniquement à migrer les comptes déjà créés par
+// l'ancien seed, et uniquement si leur mot de passe est encore celui du seed.
+const DEMO_PASSWORDS: Record<string, { current: string; legacy: string }> = {
+  student: { current: "test1234", legacy: "test123" },
+  teacher: { current: "prof1234", legacy: "prof123" },
+};
+
+async function migrateLegacyDemoPassword(userId: number, currentHash: string, role: string): Promise<void> {
+  const entry = DEMO_PASSWORDS[role];
+  if (!entry) return;
+  if (!verifyPassword(entry.legacy, currentHash)) return;
+  await run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(entry.current), userId);
+  await run("DELETE FROM sessions WHERE user_id = ?", userId);
+}
+
 async function seedDemoUsers() {
   const demo: [string, string, string, string, string][] = [
-    ["yao@test.ci", "Yao", "Kouassi", "student", "test123"],
-    ["nadia@test.ci", "Nadia", "Diabaté", "student", "test123"],
-    ["ines@test.ci", "Inès", "Kouamé", "student", "test123"],
-    ["mariam@test.ci", "Mariam", "Cissé", "student", "test123"],
-    ["kofi8@test.ci", "Kofi", "Brou", "student", "test123"],
-    ["aya8@test.ci", "Aya", "N'Guessan", "student", "test123"],
-    ["luc@test.ci", "Luc", "Tanoh", "student", "test123"],
-    ["awa@test.ci", "Awa", "Traoré", "student", "test123"],
-    ["prof@test.ci", "Jean", "Koffi", "teacher", "prof123"],
+    ["yao@test.ci", "Yao", "Kouassi", "student", DEMO_PASSWORDS.student.current],
+    ["nadia@test.ci", "Nadia", "Diabaté", "student", DEMO_PASSWORDS.student.current],
+    ["ines@test.ci", "Inès", "Kouamé", "student", DEMO_PASSWORDS.student.current],
+    ["mariam@test.ci", "Mariam", "Cissé", "student", DEMO_PASSWORDS.student.current],
+    ["kofi8@test.ci", "Kofi", "Brou", "student", DEMO_PASSWORDS.student.current],
+    ["aya8@test.ci", "Aya", "N'Guessan", "student", DEMO_PASSWORDS.student.current],
+    ["luc@test.ci", "Luc", "Tanoh", "student", DEMO_PASSWORDS.student.current],
+    ["awa@test.ci", "Awa", "Traoré", "student", DEMO_PASSWORDS.student.current],
+    ["prof@test.ci", "Jean", "Koffi", "teacher", DEMO_PASSWORDS.teacher.current],
   ];
   for (const [email, first, last, role, password] of demo) {
-    const exists = await queryOne<{ id: number }>("SELECT id FROM users WHERE email = ?", email);
+    const exists = await queryOne<{ id: number; password_hash: string }>(
+      "SELECT id, password_hash FROM users WHERE email = ?",
+      email,
+    );
     if (exists) {
       // Ne JAMAIS réécrire le mot de passe d'un compte existant :
       // un utilisateur réel qui aurait pris cet email garderait le sien.
+      // Seul l'ancien mot de passe du seed est migré vers la valeur actuelle.
+      await migrateLegacyDemoPassword(exists.id, exists.password_hash, role);
       continue;
     }
     await run(
@@ -1032,8 +1055,12 @@ async function seedRankings() {
     }
   }
 
-  const extrasExist = await queryOne<{ id: number }>("SELECT id FROM users WHERE email = 'binta@test.ci'");
-  if (extrasExist) return;
+  // Pas de garde globale `extrasExist` ici : ce `return` court-circuitait tout
+  // le bloc extras ci-dessous et rendait donc `migrateLegacyDemoPassword`
+  // inatteignable dès qu'un compte extra existait déjà (bases E2E/GDPR).
+  // Le bloc reste idempotent : chaque email est testé individuellement, donc
+  // la migration n'est tentée que si le hash correspond encore au mot de passe
+  // de l'ancien seed. Aucun mot de passe n'est réécrit arbitrairement.
   const extra: [string, string, string, number, number, string][] = [
     ["Binta", "Traoré", "binta@test.ci", 1780, 10, "Plateau"],
     ["Serge", "Kouamé", "serge@test.ci", 1210, 6, "Yopougon"],
@@ -1049,14 +1076,17 @@ async function seedRankings() {
     ["moussa@test.ci", "EDK-ZZ3WRB"],
   ];
   for (const [first, last, email, xp, streak, commune] of extra) {
-    const exists = await queryOne<{ id: number }>("SELECT id FROM users WHERE email = ?", email);
-    if (exists) continue;
+    const exists = await queryOne<{ id: number; password_hash: string }>("SELECT id, password_hash FROM users WHERE email = ?", email);
+    if (exists) {
+      await migrateLegacyDemoPassword(exists.id, exists.password_hash, "student");
+      continue;
+    }
     const serie = await queryOne<{ id: number }>("SELECT id FROM series WHERE code = 'C' ORDER BY id LIMIT 1");
     const id = Number(
       (await run(
         "INSERT INTO users (role, email, password_hash, first_name, last_name, serie_id, class_level, xp, streak, commune, created_at) VALUES ('student', ?, ?, ?, ?, ?, 'Terminale', ?, ?, ?, datetime('now', '-30 days'))",
         email,
-        hashPassword("test123"),
+        hashPassword(DEMO_PASSWORDS.student.current),
         first,
         last,
         serie?.id ?? null,
