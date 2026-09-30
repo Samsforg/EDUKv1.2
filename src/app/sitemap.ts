@@ -45,7 +45,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/replays`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE_URL}/ligues`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE_URL}/classement`, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${BASE_URL}/plans-d-abonnement-edukora-1`, changeFrequency: "weekly", priority: 0.8 },
+    // /plans-d-abonnement-edukora-1 est volontairement en `noindex` (page de
+    // sélection du plan d'abonnement). Le soumettre au sitemap contredirait ce
+    // signal ; la page reste accessible et fonctionnelle, seule sa soumission
+    // est retirée ici.
     { url: `${BASE_URL}/mentions-l-gales`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${BASE_URL}/conditions-g-n-rales-d-utilisation`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${BASE_URL}/conditions-g-n-rales-de-vente-paiements`, changeFrequency: "yearly", priority: 0.2 },

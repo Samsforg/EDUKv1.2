@@ -79,7 +79,7 @@ const CSP_BASE = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https: https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://www.google.com https://www.googleadservices.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://region1.analytics.google.com https://stats.g.doubleclick.net https://www.clarity.ms https://*.clarity.ms https://pagead2.googlesyndication.com https://adservice.google.com https://adservice.google.de",
+  "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://region1.analytics.google.com https://stats.g.doubleclick.net https://www.clarity.ms https://*.clarity.ms https://pagead2.googlesyndication.com https://adservice.google.com https://adservice.google.de https://connect.facebook.net https://www.facebook.com https://analytics.tiktok.com",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
@@ -88,7 +88,7 @@ const CSP_BASE = [
 ].join("; ");
 
 function withCspHeaders(res: NextResponse, nonce: string): NextResponse {
-  const csp = `${CSP_BASE}; script-src 'self' 'nonce-${nonce}' https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms https://pagead2.googlesyndication.com https://adservice.google.com`;
+  const csp = `${CSP_BASE}; script-src 'self' 'nonce-${nonce}' https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms https://pagead2.googlesyndication.com https://adservice.google.com https://connect.facebook.net https://analytics.tiktok.com`;
   res.headers.set("Content-Security-Policy", csp);
   res.headers.set("X-Content-Security-Policy", csp);
   res.headers.set("X-Nonce", nonce);

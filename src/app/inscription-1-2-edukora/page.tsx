@@ -66,7 +66,7 @@ function InscriptionPage() {
     : LYCEE_LEVELS.includes(classLevel.trim());
   const classOptions = grades.length > 0 ? grades.map((g) => g.name) : FALLBACK_CLASSES;
   const COMMUNES = ["Abobo", "Adjamé", "Attécoubé", "Cocody", "Koumassi", "Marcory", "Plateau", "Port-Bouët", "Treichville", "Yopougon", "Bouaké", "Yamoussoukro", "Daloa", "Korhogo", "San-Pédro", "Man", "Gagnoa", "Divo", "Abengourou", "Anyama", "Bingerville", "Grand-Bassam"];
-  const NAME_RE = /^[\p{L}\p{M}\s'""''\-\.]{1,50}$/u;
+  const NAME_RE = /^[\p{L}\p{M}\s'""''\-.]{1,50}$/u;
 
   useEffect(() => {
     const v = getABVariant();

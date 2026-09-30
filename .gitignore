@@ -24,6 +24,23 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# artefacts de debug à la racine (captures de réponses d'API, logs du
+# compilateur, snippets de test) — ancrés à la racine pour ne jamais
+# masquer un fichier légitime rangé ailleurs.
+/au.json
+/p_philo.json
+/p_test.json
+/parcours_dash.json
+/pl_test.json
+/prod_p2.json
+/prod_pl2.json
+/q_philo.json
+/smoke_ids.json
+/test-input.txt
+/tsc-admin.txt
+/tsc-out.txt
+/tsc-out2.txt
+
 # local env files
 .env*.local
 .env

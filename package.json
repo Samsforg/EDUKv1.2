@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
+    "test": "jest --runInBand",
     "test:e2e": "playwright test",
     "deploy": "bash scripts/deploy-vercel.sh"
   },

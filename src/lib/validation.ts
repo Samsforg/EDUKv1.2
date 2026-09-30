@@ -12,7 +12,7 @@ export const LoginSchema = z.object({
   password: z.string().min(8).max(128),
 });
 
-const NAME_RE = /^[\p{L}\p{M}\s'""''\-\.]{1,50}$/u;
+const NAME_RE = /^[\p{L}\p{M}\s'""''\-.]{1,50}$/u;
 const IVORIAN_PHONE_RE = /^(?:\+?225)?(?:0[1-9]|[1-9])\d{8}$/;
 
 export const RegisterSchema = z.object({
