@@ -19,31 +19,32 @@ describe("validation.ts", () => {
   });
 
   describe("RegisterSchema", () => {
-    it("should accept valid register with email", () => {
+    it("should accept valid register with email and phone", () => {
       const v = validate(RegisterSchema, {
         first_name: "Aya",
         last_name: "Traore",
         email: "aya@test.ci",
-        password: "12345678",
+        phone: "0707070707",
+        password: "Aya12345",
       });
       expect(v.ok).toBe(true);
     });
 
-    it("should accept valid register with phone", () => {
+    it("should accept valid register with phone only (email is optional)", () => {
       const v = validate(RegisterSchema, {
         first_name: "Aya",
         last_name: "Traore",
         phone: "0707070707",
-        password: "12345678",
+        password: "Aya12345",
       });
       expect(v.ok).toBe(true);
     });
 
-    it("should reject when neither email nor phone", () => {
+    it("should reject when phone is missing (phone is mandatory)", () => {
       const v = validate(RegisterSchema, {
         first_name: "Aya",
         last_name: "Traore",
-        password: "12345678",
+        password: "Aya12345",
       });
       expect(v.ok).toBe(false);
     });
@@ -54,6 +55,16 @@ describe("validation.ts", () => {
         last_name: "Traore",
         email: "a@b.c",
         password: "12345",
+      });
+      expect(v.ok).toBe(false);
+    });
+
+    it("should reject password without a letter (PasswordSchema hardening)", () => {
+      const v = validate(RegisterSchema, {
+        first_name: "Aya",
+        last_name: "Traore",
+        phone: "0707070707",
+        password: "12345678",
       });
       expect(v.ok).toBe(false);
     });

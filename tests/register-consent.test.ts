@@ -17,6 +17,7 @@ describe("register — consentement RGPD", () => {
         first_name: "Test",
         last_name: "Consent",
         email: `c-${Date.now()}@test.ci`,
+        phone: "0700000001",
         password: "secret123",
       }),
     );
@@ -31,6 +32,7 @@ describe("register — consentement RGPD", () => {
         first_name: "Test",
         last_name: "Consent",
         email: `c2-${Date.now()}@test.ci`,
+        phone: "0700000002",
         password: "secret123",
         accept_privacy: false,
       }),
@@ -39,12 +41,15 @@ describe("register — consentement RGPD", () => {
   });
 
   it("accepte 201 si accept_privacy est true", async () => {
-    const email = `c3-${Date.now()}@test.ci`;
+    const stamp = Date.now();
+    const email = `c3-${stamp}@test.ci`;
+    const phone = `07${String(stamp).slice(-8)}`;
     const res = await (POST as any)(
       makeReq({
         first_name: "Test",
         last_name: "Consent",
         email,
+        phone,
         password: "secret123",
         accept_privacy: true,
         class_level: "Terminale",
