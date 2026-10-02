@@ -32,7 +32,7 @@
 |---|---|---|
 | S1 | Pages publiques accessibles (`,`/tarifs`, `/tuteur-ia`, `/plans-d-abonnement-edukora-1`, infl… 200) | ✅ |
 | S2 | Pages privées sans session → 307 `/connexion-edukora?from=…` | ✅ |
-| S3 | `GET /api/health` → 200 `{"ok":true,"users":40}` | ✅ |
+| S3 | `GET /api/health` → 200 `{"ok":true,"service":"edukora-api",…}` (le compteur `users` n'est plus exposé ; la requête DB reste la sonde de disponibilité consommée par `/statut`) | ✅ |
 | S4 | `GET /api/promo/check?code=RENTREE30` → `valid:true`, 30 % | ✅ |
 | S5 | `GET /api/tutor/quota` sans session → 401 | ✅ |
 | S6 | `POST /api/tutor/dissertation` : copie <200 car., vide, JSON cassé → 400 propres, aucune écriture | ✅ |

@@ -170,6 +170,13 @@ function isRouteProtected(pathname: string, prefixes: string[]): boolean {
   return prefixes.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
 
+// A7 : l'espace d'administration dispose de sa propre page de connexion.
+// Sans cela, un visiteur anonyme etait renvoye vers la connexion generique,
+// qui ne propose pas le flux administrateur.
+function isAdminPath(pathname: string): boolean {
+  return pathname === "/espace-admin" || pathname.startsWith("/espace-admin/");
+}
+
 function getUserRole(uid: number): string | null {
   try {
     const db = getDb();
@@ -230,7 +237,10 @@ export function proxy(req: NextRequest) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Non connecté" }, { status: 401 });
     }
-    const loginUrl = new URL("/connexion-edukora", req.url);
+    const loginUrl = new URL(
+      isAdminPath(pathname) ? "/connexion-administrateur-edukora" : "/connexion-edukora",
+      req.url,
+    );
     loginUrl.searchParams.set("from", pathname);
     return withSecurityHeaders(NextResponse.redirect(loginUrl), nonce);
   }
@@ -240,7 +250,11 @@ export function proxy(req: NextRequest) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Session invalide" }, { status: 401 });
     }
-    const loginUrl = new URL("/connexion-edukora", req.url);
+    const loginUrl = new URL(
+      isAdminPath(pathname) ? "/connexion-administrateur-edukora" : "/connexion-edukora",
+      req.url,
+    );
+    loginUrl.searchParams.set("from", pathname);
     return withSecurityHeaders(NextResponse.redirect(loginUrl), nonce);
   }
 

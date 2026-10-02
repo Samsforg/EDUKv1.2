@@ -30,21 +30,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/fonctionnalites`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/resultats`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/tarifs`, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${BASE_URL}/cours`, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${BASE_URL}/fiches`, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${BASE_URL}/quiz`, changeFrequency: "weekly", priority: 0.8 },
-    { url: `${BASE_URL}/forum`, changeFrequency: "weekly", priority: 0.8 },
-    { url: `${BASE_URL}/matieres`, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${BASE_URL}/simulateur`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/simulateur-d-examen-bac-bepc`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/tuteur-ia-edukora`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/annales`, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE_URL}/parrainage`, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE_URL}/correction-dissertation`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${BASE_URL}/espace-live`, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${BASE_URL}/replays`, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${BASE_URL}/ligues`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${BASE_URL}/classement`, changeFrequency: "weekly", priority: 0.7 },
+    // Routes exigeant une session, donc volontairement absentes du sitemap :
+    // /cours, /fiches, /quiz, /forum, /matieres, /simulateur,
+    // /correction-dissertation, /espace-live, /replays, /ligues, /classement.
+    // Chacune renvoyait 307 vers /connexion-edukora pour un visiteur anonyme,
+    // ce qui consommait le budget de crawl et produisait des URL non indexables.
     // /plans-d-abonnement-edukora-1 est volontairement en `noindex` (page de
     // sélection du plan d'abonnement). Le soumettre au sitemap contredirait ce
     // signal ; la page reste accessible et fonctionnelle, seule sa soumission

@@ -4,7 +4,7 @@ import { queryOne } from "@/lib/db";
 
 async function GETHandler() {
   try {
-    const count = await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM users");
+    await queryOne<{ ok: number }>("SELECT 1 AS ok");
     const warnings: string[] = [];
     if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
       warnings.push("SESSION_SECRET non défini : sessions désactivées par sécurité (fail-closed).");
@@ -16,7 +16,6 @@ async function GETHandler() {
       ok: true,
       service: "edukora-api",
       timestamp: new Date().toISOString(),
-      users: count?.c ?? 0,
       warnings,
     });
   } catch (err) {
