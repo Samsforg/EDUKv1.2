@@ -8,7 +8,7 @@ import {
   isPricingAbEnabled,
   isValidPricingVariant,
 } from "@/lib/ab-test";
-import { getDb } from "@/lib/db";
+import { queryOne } from "@/lib/db";
 
 function generateNonce(): string {
   const array = new Uint8Array(16);
@@ -188,10 +188,12 @@ function isAdminPath(pathname: string): boolean {
   return pathname === "/espace-admin" || pathname.startsWith("/espace-admin/");
 }
 
-function getUserRole(uid: number): string | null {
+// Le role doit etre lu via `queryOne` (PostgreSQL en production, SQLite en
+// local). Interroger `getDb()` directement rendait le role introuvable en
+// production et bloquait toute requete authentifiee, y compris la deconnexion.
+async function getUserRole(uid: number): Promise<string | null> {
   try {
-    const db = getDb();
-    const row = db.prepare("SELECT role FROM users WHERE id = ?").get(uid) as { role: string } | undefined;
+    const row = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = ?", uid);
     return row?.role ?? null;
   } catch {
     return null;
@@ -205,7 +207,7 @@ const LEGACY_REDIRECTS: Array<[string, string]> = [
   ["/auth", "/connexion-edukora"],
 ];
 
-export function proxy(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const nonce = generateNonce();
 
@@ -283,7 +285,7 @@ export function proxy(req: NextRequest) {
   }
 
   // Role-based access control for admin and teacher routes
-  const role = getUserRole(session.uid);
+  const role = await getUserRole(session.uid);
   if (!role) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 401 });

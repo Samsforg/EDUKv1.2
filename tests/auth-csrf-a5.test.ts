@@ -102,12 +102,12 @@ beforeEach(() => {
 
 describe("A5 / proxy : le logout n'est plus dans PUBLIC_ROUTES", () => {
   it("rejette /api/auth/logout sans session (avant : route publique)", async () => {
-    const res = proxy(proxyReq("/api/auth/logout", { method: "POST" }));
+    const res = await proxy(proxyReq("/api/auth/logout", { method: "POST" }));
     expect(res.status).toBe(401);
     expect(res.headers.get("x-middleware-next")).toBeNull();
   });
 
-  it("laisse passer les endpoints de pre-authentification sans session", () => {
+  it("laisse passer les endpoints de pre-authentification sans session", async () => {
     for (const path of [
       "/api/auth/login",
       "/api/auth/register",
@@ -115,7 +115,7 @@ describe("A5 / proxy : le logout n'est plus dans PUBLIC_ROUTES", () => {
       "/api/auth/reset",
       "/api/auth/me",
     ]) {
-      const res = proxy(proxyReq(path, { method: path === "/api/auth/me" ? "GET" : "POST" }));
+      const res = await proxy(proxyReq(path, { method: path === "/api/auth/me" ? "GET" : "POST" }));
       expect(res.headers.get("x-middleware-next")).toBe("1");
     }
   });
@@ -123,13 +123,13 @@ describe("A5 / proxy : le logout n'est plus dans PUBLIC_ROUTES", () => {
 
 describe("A5 / proxy : POST logout exige un CSRF valide", () => {
   it("Test 2 - refuse POST sans en-tete x-csrf-token", async () => {
-    const res = proxy(proxyReq("/api/auth/logout", { method: "POST", token: sessionToken(userId) }));
+    const res = await proxy(proxyReq("/api/auth/logout", { method: "POST", token: sessionToken(userId) }));
     expect(res.status).toBe(403);
     expect((await res.json()).error).toMatch(/CSRF/i);
   });
 
   it("Test 6 - refuse POST avec un token CSRF invalide", async () => {
-    const res = proxy(
+    const res = await proxy(
       proxyReq("/api/auth/logout", {
         method: "POST",
         token: sessionToken(userId),
@@ -140,7 +140,7 @@ describe("A5 / proxy : POST logout exige un CSRF valide", () => {
   });
 
   it("Test 6 - refuse POST avec le token CSRF d'un autre utilisateur", async () => {
-    const res = proxy(
+    const res = await proxy(
       proxyReq("/api/auth/logout", {
         method: "POST",
         token: sessionToken(userId),
@@ -150,8 +150,8 @@ describe("A5 / proxy : POST logout exige un CSRF valide", () => {
     expect(res.status).toBe(403);
   });
 
-  it("Test 3 - accepte POST avec session et CSRF valides", () => {
-    const res = proxy(
+  it("Test 3 - accepte POST avec session et CSRF valides", async () => {
+    const res = await proxy(
       proxyReq("/api/auth/logout", {
         method: "POST",
         token: sessionToken(userId),
@@ -165,7 +165,7 @@ describe("A5 / proxy : POST logout exige un CSRF valide", () => {
 
 describe("A5 / Test 7 : requete cross-site ne peut pas muter", () => {
   it("refuse une origine etrangere meme avec un CSRF par ailleurs valide", async () => {
-    const res = proxy(
+    const res = await proxy(
       proxyReq("/api/auth/logout", {
         method: "POST",
         token: sessionToken(userId),
@@ -176,8 +176,8 @@ describe("A5 / Test 7 : requete cross-site ne peut pas muter", () => {
     expect(res.status).toBe(403);
   });
 
-  it("accepte une origine same-site legitime", () => {
-    const res = proxy(
+  it("accepte une origine same-site legitime", async () => {
+    const res = await proxy(
       proxyReq("/api/auth/logout", {
         method: "POST",
         token: sessionToken(userId),
@@ -189,7 +189,7 @@ describe("A5 / Test 7 : requete cross-site ne peut pas muter", () => {
   });
 
   it("fail-closed : une origine presente sans hote est rejetee", async () => {
-    const res = proxy(
+    const res = await proxy(
       proxyReq("/api/auth/logout", {
         method: "POST",
         token: sessionToken(userId),
@@ -202,12 +202,12 @@ describe("A5 / Test 7 : requete cross-site ne peut pas muter", () => {
   });
 
   it("refuse une navigation cross-site classique (ni origine ni CSRF)", async () => {
-    const res = proxy(proxyReq("/api/auth/logout", { method: "POST", token: sessionToken(userId) }));
+    const res = await proxy(proxyReq("/api/auth/logout", { method: "POST", token: sessionToken(userId) }));
     expect(res.status).toBe(403);
   });
 
   it("le logout pre-authentification reste inutilisable hors session", async () => {
-    const res = proxy(proxyReq("/api/auth/logout", { method: "POST" }));
+    const res = await proxy(proxyReq("/api/auth/logout", { method: "POST" }));
     expect(res.status).toBe(401);
     expect(mockDestroySession).not.toHaveBeenCalled();
   });
