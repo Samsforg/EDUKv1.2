@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ConfirmDialog, { type ConfirmState } from "@/components/ConfirmDialog";
+import { performLogout } from "@/components/LogoutAction";
 
 interface ProfQuiz {
   id: number;
@@ -210,7 +211,7 @@ export default function TeacherDashboardPage() {
           </Link>
           <Link href="/" className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs hover:opacity-90">↗</Link>
           <button
-            onClick={() => { window.location.href = "/api/auth/logout"; }}
+            onClick={() => { performLogout("/connexion-edukora"); }}
             className="w-9 h-9 rounded-full bg-primary-container/30 text-on-primary flex items-center justify-center hover:opacity-90"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>

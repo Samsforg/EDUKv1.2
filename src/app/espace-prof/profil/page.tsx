@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import AvatarUpload from "@/components/AvatarUpload";
+import { LogoutLink } from "@/components/LogoutAction";
 
 const COMMUNES = ["Abobo", "Adjamé", "Attécoubé", "Cocody", "Koumassi", "Marcory", "Plateau", "Port-Bouët", "Treichville", "Yopougon", "Bouaké", "Yamoussoukro", "Daloa", "Korhogo", "San-Pédro", "Man", "Gagnoa", "Divo", "Abengourou", "Anyama", "Bingerville", "Grand-Bassam"];
 
@@ -259,13 +260,12 @@ export default function ProfilEnseignantPage() {
 
         <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 space-y-3">
           <h3 className="text-sm font-semibold text-on-surface">Gestion du compte</h3>
-          <a
-            href="/api/auth/logout"
+          <LogoutLink
             className="w-full py-3 rounded-xl border border-outline-variant text-on-surface font-semibold text-sm flex items-center justify-center gap-2 hover:bg-surface-container-low transition-colors"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
             Se déconnecter
-          </a>
+          </LogoutLink>
         </section>
       </main>
 

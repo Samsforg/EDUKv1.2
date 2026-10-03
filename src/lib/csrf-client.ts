@@ -16,7 +16,13 @@ if (typeof window !== "undefined") {
     if (
       url.startsWith("/api/") &&
       !url.startsWith("/api/csrf") &&
-      !url.startsWith("/api/auth") &&
+      // A5 : /api/auth/logout n'est plus exclu, c'est une mutation d'etat qui
+      // doit recevoir un token CSRF. Les endpoints de pre-authentification
+      // restent exclus car ils ne peuvent pas obtenir de token sans session.
+      !url.startsWith("/api/auth/login") &&
+      !url.startsWith("/api/auth/register") &&
+      !url.startsWith("/api/auth/forgot") &&
+      !url.startsWith("/api/auth/reset") &&
       !url.startsWith("/api/premium/webhook") &&
       !url.startsWith("/api/health") &&
       !url.startsWith("/api/warmup") &&

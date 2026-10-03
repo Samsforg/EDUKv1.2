@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import ThemeToggle from "@/components/ThemeToggle";
+import { performLogout } from "@/components/LogoutAction";
 
 interface HeaderClientProps {
   user: {
@@ -15,7 +16,7 @@ interface HeaderClientProps {
 
 export default function HeaderClient({ user, unread }: HeaderClientProps) {
   function handleLogout() {
-    window.location.href = "/api/auth/logout";
+    performLogout("/connexion-edukora");
   }
 
   return (

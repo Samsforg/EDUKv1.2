@@ -53,10 +53,14 @@ function verifyCsrf(req: NextRequest, session: { uid: number } | null): boolean 
   if (!session) return false;
   const origin = req.headers.get("origin");
   const host = req.headers.get("host");
-  if (origin && host) {
+  // A5 : l'ancien `if (origin && host)` laissait passer silencieusement toute
+  // requete declarant une origine mais pas d'hote (fail-open). Si une origine
+  // est presente, elle doit etre comparable a l'hote, sinon la requete est
+  // rejetee.
+  if (origin) {
+    if (!host) return false;
     try {
-      const originHost = new URL(origin).host;
-      if (originHost !== host) return false;
+      if (new URL(origin).host !== host) return false;
     } catch {
       return false;
     }
@@ -137,7 +141,14 @@ const PUBLIC_ROUTES = [
   "/conditions-g-n-rales-de-vente-paiements",
   "/politique-de-confidentialit",
   "/pr-f-rences-de-cookies-et-donn-es",
-  "/api/auth",
+  // A5 : seul le strict necessaire a l'authentification pre-session est public.
+  // /api/auth/logout est volontairement absent : la deconnexion est une mutation
+  // d'etat, elle passe donc par le controle de session puis verifyCsrf() plus bas.
+  "/api/auth/login",
+  "/api/auth/register",
+  "/api/auth/forgot",
+  "/api/auth/reset",
+  "/api/auth/me",
   "/api/health",
   "/api/series",
   "/api/grades",

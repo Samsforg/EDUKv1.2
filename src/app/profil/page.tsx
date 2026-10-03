@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
+import { performLogout } from "@/components/LogoutAction";
 import AvatarUpload from "@/components/AvatarUpload";
 import PageHeader from "@/components/PageHeader";
 import { PairingCodeCard } from "@/components/PairingCodeCard";
@@ -210,7 +211,7 @@ export default function ProfilePage() {
             <ThemeToggle />
             <button
               onClick={() => {
-                window.location.href = "/api/auth/logout";
+                performLogout("/connexion-edukora");
               }}
               aria-label="Se déconnecter"
               className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100"

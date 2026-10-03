@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { performLogout } from "@/components/LogoutAction";
 
 export function LogoutButton({ redirectTo = "/connexion-edukora" }: { redirectTo?: string }) {
   const [loading, setLoading] = useState(false);
@@ -8,7 +9,7 @@ export function LogoutButton({ redirectTo = "/connexion-edukora" }: { redirectTo
     <button
       onClick={() => {
         setLoading(true);
-        window.location.href = `/api/auth/logout?redirect=${encodeURIComponent(redirectTo)}`;
+        performLogout(redirectTo);
       }}
       disabled={loading}
       className="w-full bg-error-container text-on-error-container font-headline font-bold py-4 rounded-xl flex items-center justify-center gap-3 shadow-md hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-60"
