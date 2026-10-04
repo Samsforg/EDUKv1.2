@@ -112,9 +112,22 @@ async function GETHandler(req: NextRequest, { params }: { params: Promise<{ id: 
     pct: number;
     completed_at: string;
   }>(
+    // Notation examen : le projet ne stocke QUE `exam_attempts.score_over_20`.
+    // `exam_papers` n'a aucune colonne de total, et il ne pourrait pas en avoir
+    // une : le maximum dépend de la somme de `questions.points` du sujet, qui
+    // varie d'un sujet à l'autre (15, 20, 4… observés en base). Le total n'est
+    // calculé qu'au moment de la soumission (`/api/simulator/[id]/submit` :
+    // `scoreOver20 = round(score * 20 / max, 1)`) puis discarded.
+    //
+    // L'ancien `ep.total_points` n'a donc jamais pu exister : la requête levait
+    // `no such column` et la route renvoyait 500. On expose la note /20, ce qui
+    // correspond au modèle déjà utilisé partout ailleurs dans le projet
+    // (`/api/prof/paper` : AVG(score_over_20), `ShareResultButton` :
+    // scoreOver20 / 20, rapport : « Moyenne examens blancs (/20) »).
     `SELECT ea.paper_id, ep.title AS paper_title,
-            ea.score, ep.total_points AS max_score,
-            ROUND(ea.score * 100.0 / NULLIF(ep.total_points, 0)) AS pct,
+            ea.score_over_20 AS score,
+            20 AS max_score,
+            ROUND(ea.score_over_20 * 100.0 / 20) AS pct,
             ea.completed_at
      FROM exam_attempts ea
      JOIN exam_papers ep ON ep.id = ea.paper_id
@@ -125,6 +138,13 @@ async function GETHandler(req: NextRequest, { params }: { params: Promise<{ id: 
   );
 
   // Assignment submissions
+  // `assignment_submissions` n'a pas de colonne `status` : le statut est
+  // dérivé de la présence d'une note, ce qui correspond exactement à la
+  // convention déjà employée ailleurs dans le projet
+  // (`export.ts` : `SUM(CASE WHEN sub.score IS NOT NULL …) AS graded`,
+  // `api/prof/classes/[id]/assignments` : `COUNT(sub.score) AS graded`).
+  // La colonne de jointure est `student_id`, et non `user_id` : les deux
+  // références précédentes faisaient toutes deux lever `no such column`.
   const assignments = await query<{
     assignment_id: number;
     title: string;
@@ -135,11 +155,12 @@ async function GETHandler(req: NextRequest, { params }: { params: Promise<{ id: 
     status: string;
   }>(
     `SELECT asub.assignment_id, ca.title, s.name AS subject_name,
-            asub.score, ca.max_score, asub.submitted_at, asub.status
+            asub.score, ca.max_score, asub.submitted_at,
+            CASE WHEN asub.score IS NOT NULL THEN 'graded' ELSE 'submitted' END AS status
      FROM assignment_submissions asub
      JOIN class_assignments ca ON ca.id = asub.assignment_id
      LEFT JOIN subjects s ON s.id = ca.subject_id
-     WHERE asub.user_id = ?
+     WHERE asub.student_id = ?
      ORDER BY asub.submitted_at DESC
      LIMIT 10`,
     sid,

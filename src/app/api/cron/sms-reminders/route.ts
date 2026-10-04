@@ -4,6 +4,7 @@ import { query, queryOne } from "@/lib/db";
 import { sendSubscriptionReminder, sendSms } from "@/lib/sms";
 import { logger } from "@/lib/logger";
 import { requireCronSecret } from "@/lib/cron-auth";
+import { realUsersWhere, testUsersWhere } from "@/lib/test-users";
 
 async function GETHandler(req: NextRequest) {
   const forbidden = requireCronSecret(req);
@@ -24,13 +25,20 @@ async function GETHandler(req: NextRequest) {
   // jour (webhook jamais passé) recevait alors « votre abonnement expire
   // bientôt » tous les 24h, indéfiniment. La fenêtre J-3 doit être bornée
   // des deux côtés.
+  //
+  // Exclusion des comptes de test : les fixtures de `setup-test-accounts`
+  // possèdent de VRAIS numéros de téléphone (`0700000001`…). Sans ce filtre,
+  // un cron planifié envoyait de vrais SMS à des fixtures. Le filtre est dans
+  // la sélection SQL (et pas un `if` après coup) : le compte n'est jamais
+  // selectionné, donc le service SMS n'est jamais appelé.
   const expiring = await query<{ user_id: number }>(
-    `SELECT user_id FROM subscriptions
-     WHERE status = 'active'
-     AND end_at IS NOT NULL
-     AND end_at > datetime('now')
-     AND end_at <= datetime('now', '+3 days')
-     AND (last_reminder_at IS NULL OR last_reminder_at < datetime('now', '-1 day'))`
+    `SELECT s.user_id FROM subscriptions s
+     WHERE s.status = 'active'
+     AND s.end_at IS NOT NULL
+     AND s.end_at > datetime('now')
+     AND s.end_at <= datetime('now', '+3 days')
+     AND (s.last_reminder_at IS NULL OR s.last_reminder_at < datetime('now', '-1 day'))
+     AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`
   );
 
   for (const s of expiring) {
@@ -55,11 +63,15 @@ async function GETHandler(req: NextRequest) {
   // `users`. Cette requête n'est pas dans un try/catch, donc l'ancienne
   // colonne faisait échouer toute la route en 500 même après avoir corrigé
   // la requête 1.
+  //
+  // Même exclusion `is_test` que la requête 1 : sans elle, un fixture avec un
+  // streak >= 3 et un vrai numéro recevait un SMS de relance de série.
   const inactive = await query<{ id: number; phone: string | null; first_name: string; streak: number }>(
-    `SELECT id, phone, first_name, streak FROM users
-     WHERE role = 'student' AND phone IS NOT NULL AND streak >= 3
-     AND last_active < datetime('now', '-2 days')
-     AND (last_reactivation_at IS NULL OR last_reactivation_at < datetime('now', '-3 days'))
+    `SELECT u.id, u.phone, u.first_name, u.streak FROM users u
+     WHERE ${realUsersWhere("u")}
+     AND u.role = 'student' AND u.phone IS NOT NULL AND u.streak >= 3
+     AND u.last_active < datetime('now', '-2 days')
+     AND (u.last_reactivation_at IS NULL OR u.last_reactivation_at < datetime('now', '-3 days'))
      LIMIT 50`
   );
 
