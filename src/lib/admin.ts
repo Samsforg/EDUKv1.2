@@ -3,7 +3,7 @@ import { notify } from "./session";
 import { hashPassword } from "./auth";
 import { logAudit } from "./audit";
 import { getAdminChallenges, getAdminLeagueChallenges } from "./admin-content";
-import { realUsersWhere, testUsersWhere, isTestEmail } from "./test-users";
+import { realUsersWhere, testUsersWhere, isTestUser } from "./test-users";
 import { parseDbDate } from "./date-parse";
 import { PasswordSchema } from "./validation";
 
@@ -240,16 +240,17 @@ export interface AdminUserRow {
 
 export async function getAdminUsers(): Promise<AdminUserRow[]> {
   const today = new Date().toISOString().slice(0, 10);
-  const rows = await query<Omit<AdminUserRow, "online">>(
+  const rows = await query<Omit<AdminUserRow, "online" | "is_test"> & { is_test: number }>(
     `SELECT u.id, u.role, u.blocked, u.email, u.phone, u.first_name, u.last_name, u.class_level,
             u.serie_id, s.name AS serie_name, u.gender, u.commune, u.xp, u.streak, u.last_active, u.created_at,
+            u.is_test,
             (SELECT COUNT(*) FROM quiz_attempts a WHERE a.user_id = u.id) AS quiz_attempts,
             (SELECT COUNT(*) FROM exam_attempts a WHERE a.user_id = u.id) AS exam_attempts,
             (SELECT COUNT(*) FROM forum_posts p WHERE p.user_id = u.id) AS forum_posts
      FROM users u LEFT JOIN series s ON s.id = u.serie_id
      ORDER BY u.id`,
   );
-  return rows.map((u) => ({ ...u, online: !!u.last_active && u.last_active.slice(0, 10) === today, is_test: isTestEmail(u.email) }));
+  return rows.map((u) => ({ ...u, online: !!u.last_active && u.last_active.slice(0, 10) === today, is_test: isTestUser(u.email, u.is_test) }));
 }
 
 export interface UserListFilters {
@@ -300,9 +301,10 @@ export async function getAdminUsersPage(filters: UserListFilters = {}): Promise<
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const page = Math.min(Math.max(1, filters.page ?? 1), pages);
 
-  const rows = await query<Omit<AdminUserRow, "online">>(
+  const rows = await query<Omit<AdminUserRow, "online" | "is_test"> & { is_test: number }>(
     `SELECT u.id, u.role, u.blocked, u.email, u.phone, u.first_name, u.last_name, u.class_level,
             u.serie_id, s.name AS serie_name, u.gender, u.commune, u.xp, u.streak, u.last_active, u.created_at,
+            u.is_test,
             (SELECT COUNT(*) FROM quiz_attempts a WHERE a.user_id = u.id) AS quiz_attempts,
             (SELECT COUNT(*) FROM exam_attempts a WHERE a.user_id = u.id) AS exam_attempts,
             (SELECT COUNT(*) FROM forum_posts p WHERE p.user_id = u.id) AS forum_posts
@@ -313,7 +315,7 @@ export async function getAdminUsersPage(filters: UserListFilters = {}): Promise<
     pageSize,
     (page - 1) * pageSize,
   );
-  const users = rows.map((u) => ({ ...u, online: !!u.last_active && u.last_active.slice(0, 10) === today, is_test: isTestEmail(u.email) }));
+  const users = rows.map((u) => ({ ...u, online: !!u.last_active && u.last_active.slice(0, 10) === today, is_test: isTestUser(u.email, u.is_test) }));
 
   return { users, total, page, pages, pageSize };
 }

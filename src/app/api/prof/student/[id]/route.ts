@@ -35,9 +35,12 @@ async function GETHandler(req: NextRequest, { params }: { params: Promise<{ id: 
     streak: number;
     commune: string | null;
     created_at: string;
-    last_active_at: string | null;
+    // Colonne `last_active` (et non `last_active_at`) : nom réel dans le schéma
+    // `users`. Même erreur que le cron sms-reminders — la requête levait
+    // `no such column` et la fiche élève renvoyait un 500.
+    last_active: string | null;
   }>(
-    `SELECT id, first_name, last_name, email, class_level, xp, streak, commune, created_at, last_active_at
+    `SELECT id, first_name, last_name, email, class_level, xp, streak, commune, created_at, last_active
      FROM users WHERE id = ?`,
     sid,
   );

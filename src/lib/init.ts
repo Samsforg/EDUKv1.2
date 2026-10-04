@@ -8,6 +8,7 @@ import { seedCollegeContent, seedCollegeQuizzes } from "./college-content";
 import { resolveUserGradeIds } from "./level";
 import { ensureRentreePromo } from "./promo";
 import { cleanupRevokedSessions } from "./session";
+import { testEmailOnlyWhere } from "./test-users";
 
 let readyPromise: Promise<void> | null = null;
 
@@ -48,6 +49,16 @@ async function doInit() {
     await migrate("users", "gender", "TEXT");
     await migrate("users", "goal", "TEXT");
     await migrate("users", "seen_onboarding", "INTEGER");
+    // P0-1 : marqueur structurel des comptes de test. `is_test` est la source
+    // de vérité ; la liste d'emails réservés sert de filet de sécurité (voir
+    // src/lib/test-users.ts). DEFAULT 0 : un compte créé par l'inscription
+    // réelle est « humain » par défaut, on ne marque jamais par défaut.
+    await migrate("users", "is_test", "INTEGER NOT NULL DEFAULT 0");
+    // Rattrapage idempotent et réversible : on ne passe à 1 que les lignes
+    // dont l'email est objectivement un domaine réservé / la convention de
+    // test du projet. `support@edukora.net` (vrai compte admin) ne matche
+    // aucun motif et reste donc à 0. Réversible : `UPDATE users SET is_test=0`.
+    await run(`UPDATE users SET is_test = 1 WHERE is_test = 0 AND ${testEmailOnlyWhere("email")}`);
     await migrate("challenge_contributions", "side", "TEXT");
     await migrate("live_sessions", "created_by", "INTEGER");
     await migrate("live_sessions", "chat_paused", "INTEGER");

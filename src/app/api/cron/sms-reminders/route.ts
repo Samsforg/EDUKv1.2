@@ -13,11 +13,23 @@ async function GETHandler(req: NextRequest) {
   let failed = 0;
 
   // 1. SMS pour abonnements expirant dans les 3 jours
+  // Colonne `end_at` (et non `expires_at`) : c'est le nom réel dans le schéma
+  // `subscriptions`. `expires_at` existe sur d'autres tables (sessions,
+  // password_resets, pairing_codes) mais pas ici — la requête échouait
+  // en `no such column` et renvoyait un 500.
+  //
+  // La borne basse `end_at > datetime('now')` est indispensable : sans elle,
+  // `end_at <= now + 3 days` est aussi vrai pour un abonnement dont
+  // `end_at` est passé depuis des semaines. Un abonnement `active` non mis à
+  // jour (webhook jamais passé) recevait alors « votre abonnement expire
+  // bientôt » tous les 24h, indéfiniment. La fenêtre J-3 doit être bornée
+  // des deux côtés.
   const expiring = await query<{ user_id: number }>(
     `SELECT user_id FROM subscriptions
      WHERE status = 'active'
-     AND expires_at IS NOT NULL
-     AND expires_at <= datetime('now', '+3 days')
+     AND end_at IS NOT NULL
+     AND end_at > datetime('now')
+     AND end_at <= datetime('now', '+3 days')
      AND (last_reminder_at IS NULL OR last_reminder_at < datetime('now', '-1 day'))`
   );
 
@@ -39,10 +51,14 @@ async function GETHandler(req: NextRequest) {
   }
 
   // 2. SMS pour streak en danger (pas de connexion depuis 2 jours)
+  // Colonne `last_active` (et non `last_active_at`) : nom réel dans le schéma
+  // `users`. Cette requête n'est pas dans un try/catch, donc l'ancienne
+  // colonne faisait échouer toute la route en 500 même après avoir corrigé
+  // la requête 1.
   const inactive = await query<{ id: number; phone: string | null; first_name: string; streak: number }>(
     `SELECT id, phone, first_name, streak FROM users
      WHERE role = 'student' AND phone IS NOT NULL AND streak >= 3
-     AND last_active_at < datetime('now', '-2 days')
+     AND last_active < datetime('now', '-2 days')
      AND (last_reactivation_at IS NULL OR last_reactivation_at < datetime('now', '-3 days'))
      LIMIT 50`
   );

@@ -20,7 +20,7 @@ async function POSTHandler() {
   let prof = await queryOne<UserRow>('SELECT id FROM users WHERE email = ?', profEmail);
   if (!prof) {
     const hash = await hashPassword(TEST_PASSWORD);
-    await run('INSERT INTO users (email, phone, first_name, last_name, role, password_hash, blocked, created_at) VALUES (?, ?, ?, ?, ?, ?, 0, now())',
+    await run('INSERT INTO users (email, phone, first_name, last_name, role, password_hash, blocked, is_test, created_at) VALUES (?, ?, ?, ?, ?, ?, 0, 1, now())',
       profEmail, '0700000001', 'Prof', 'Test', 'teacher', hash);
     prof = await queryOne<UserRow>('SELECT id FROM users WHERE email = ?', profEmail);
   }
@@ -43,7 +43,7 @@ async function POSTHandler() {
     let user = await queryOne<UserRow>('SELECT id FROM users WHERE email = ?', e.email);
     if (!user) {
       const hash = await hashPassword(TEST_PASSWORD);
-      await run('INSERT INTO users (email, phone, phone_canonical, first_name, last_name, role, password_hash, blocked, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 0, now())',
+      await run('INSERT INTO users (email, phone, phone_canonical, first_name, last_name, role, password_hash, blocked, is_test, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1, now())',
         e.email, e.phone, e.phone.replace(/\D/g, '').slice(-10), e.prenom, e.nom, 'student', hash);
       user = await queryOne<UserRow>('SELECT id FROM users WHERE email = ?', e.email);
     }

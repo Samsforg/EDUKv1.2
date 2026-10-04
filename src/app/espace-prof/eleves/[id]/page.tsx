@@ -15,7 +15,7 @@ interface Student {
   streak: number;
   commune: string | null;
   created_at: string;
-  last_active_at: string | null;
+  last_active: string | null;
 }
 
 interface SubjectStats {
