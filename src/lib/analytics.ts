@@ -170,6 +170,19 @@ gtag('config', '${GA_ID}', { send_page_view: true });`;
   // --- Clarity ---
   if (CLARITY_ID && !(window as any).edukora_clarity_loaded) {
     (window as any).edukora_clarity_loaded = true;
+    // 3d.3 : le tag Clarity (/tag/<id>) lit `window.clarity.v` des sa premiere
+    // instruction, puisemplace window.clarity par son collecteur et vide la
+    // file `q`. Sans ce stub, window.clarity vaut undefined et le tag leve
+    // "Cannot read properties of undefined (reading 'v')" avant d'injecter
+    // scripts.clarity.ms : Clarity ne collecte rien du tout. Le stub doit donc
+    // exister AVANT l'ajout du tag, et ne pas ecraser un Clarity deja actif.
+    const w = window as any;
+    if (typeof w.clarity !== "function") {
+      w.clarity = (...args: unknown[]) => {
+        (w.clarity.q = w.clarity.q || []).push(args);
+      };
+      w.clarity.q = [];
+    }
     const script = document.createElement("script");
     script.async = true;
     script.src = `https://www.clarity.ms/tag/${CLARITY_ID}`;
