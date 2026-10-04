@@ -10,7 +10,7 @@
  */
 import { run, query, queryOne } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
-import { isTestEmail, isTestUser, realUsersWhere, testUsersWhere } from "@/lib/test-users";
+import { isTestEmail, isTestUser, realUsersWhere, testEmailOnlyWhere, testUsersWhere } from "@/lib/test-users";
 
 const STAMP = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
 /** Domaines que la heuristique doit continuer à traiter comme « test ». */
@@ -73,6 +73,21 @@ async function isCountedReal(userId: number): Promise<boolean> {
     userId,
   );
   return Number(r?.c ?? 0) > 0;
+}
+
+/** Valeur brute du marqueur structurel, pour un compte donné. */
+async function flagOf(userId: number): Promise<number> {
+  const r = await queryOne<{ is_test: number }>("SELECT is_test FROM users WHERE id = ?", userId);
+  return Number(r?.is_test ?? -1);
+}
+
+/**
+ * Backfill P0-1, requête identique à celle de `src/lib/init.ts` (ligne 61).
+ * On rejoue le mécanisme réel de production plutôt que de recopier une règle :
+ * si `testEmailOnlyWhere` evolve, ce test suit automatiquement.
+ */
+async function runIsTestBackfill(): Promise<void> {
+  await run(`UPDATE users SET is_test = 1 WHERE is_test = 0 AND ${testEmailOnlyWhere("email")}`);
 }
 
 afterAll(async () => {
@@ -145,12 +160,46 @@ describe("P0-1 — migration du marqueur", () => {
   });
 
   it("un compte créé avant la migration avec un email réservé porte is_test=1", async () => {
-    // Les fixtures historiques (ex. flow-test-*@example.com) ont été marquées
-    // par le backfill `UPDATE users SET is_test = 1 …`.
-    const r = await queryOne<{ c: number }>(
-      "SELECT COUNT(*) AS c FROM users WHERE is_test = 1 AND LOWER(COALESCE(email,'')) LIKE '%@example.com'",
+    // Ce test doit être autonome : il fabrique lui-même le scénario
+    // « compte antérieur à la migration » (is_test = 0 + email réservé), rejoue
+    // le backfill réel, et vérifie que CE compte précis passe à 1.
+    //
+    // Il comptait auparavant toutes les lignes `is_test = 1 AND email LIKE
+    // '%@example.com'` déjà présentes dans la base. Cette assertion dépendait
+    // donc de fixtures historiques : elle passait sur la base de dev locale et
+    // échouait en CI, où `data/*.db` est ignoré par git et la base démarre vide.
+    // Le compte était lu, jamais créé par le test.
+    const fixtureEmail = `flow-test.${STAMP}@example.com`;
+    const fixtureId = await makeUser(fixtureEmail, 0);
+    // Un compte réel doit rester à 0 : sinon le backfill ne discriminerait pas,
+    // il marquerait tout. `support@edukora.net` n'est pas utilisé ici parce
+    // qu'il n'existe pas sur une base vierge.
+    const realId = await makeUser(realEmail("mdr.reel"), 0);
+
+    // État « avant migration » attendu.
+    expect(await flagOf(fixtureId)).toBe(0);
+    expect(await flagOf(realId)).toBe(0);
+    expect(isTestEmail(fixtureEmail)).toBe(true);
+
+    // Le backfill est global par nature : on mémorise les lignes qu'il va
+    // toucher (celles des tests précédents, cas 3 et cas 5, sont aussi à
+    // is_test = 0 avec un email réservé) pour les restituer à l'identique.
+    const untouched = await query<{ id: number; is_test: number }>(
+      `SELECT id, is_test FROM users WHERE is_test = 0 AND ${testEmailOnlyWhere("email")} AND id <> ?`,
+      fixtureId,
     );
-    expect(Number(r?.c ?? 0)).toBeGreaterThan(0);
+    try {
+      await runIsTestBackfill();
+
+      // L'assertion porte sur la fixture du test, pas sur un état global.
+      expect(await flagOf(fixtureId)).toBe(1);
+      // Le compte réel n'a pas été marqué par erreur.
+      expect(await flagOf(realId)).toBe(0);
+    } finally {
+      for (const row of untouched) {
+        await run("UPDATE users SET is_test = ? WHERE id = ?", row.is_test, row.id);
+      }
+    }
   });
 
   it("aucun compte réel n'a été marqué par erreur", async () => {
