@@ -96,6 +96,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="fr" className={`${hankenGrotesk.variable} ${inter.variable} light`}>
       <head>
         <link rel="preload" as="font" type="font/woff2" href="/fonts/MaterialSymbols-subset.woff2" crossOrigin="anonymous" />
+        {/* 3d.1 : les scripts inline injectes cote client (bootstrap gtag) doivent
+            porter le nonce de la requete, sinon script-src les bloque. Le nonce
+            est deja expose via l'en-tete X-Nonce ; ce meta permet au client de le
+            lire au moment de l'injection. */}
+        {nonce ? <meta name="csp-nonce" content={nonce} /> : null}
         <script nonce={nonce} src="/theme-init.js" />
         {process.env.GSC_VERIFICATION ? (
           <meta

@@ -83,7 +83,13 @@ const CSP_BASE = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https: https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://www.google.com https://www.googleadservices.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://region1.analytics.google.com https://stats.g.doubleclick.net https://www.clarity.ms https://*.clarity.ms https://pagead2.googlesyndication.com https://adservice.google.com https://adservice.google.de https://connect.facebook.net https://www.facebook.com https://analytics.tiktok.com",
+  // 3d.1 : sans frame-src explicite, les cadres publicitaires tombaient sur
+  // default-src 'self' et googleads.g.doubleclick.net etait bloque. 'self' est
+  // conserve pour ne pas elargir le cadre au-dela de ce qui existait.
+  "frame-src 'self' https://googleads.g.doubleclick.net",
+  // 3d.1 : ep1.adtrafficquality.google (Google Ads Traffic Quality) etait
+  // absent de connect-src, ce qui bloquait les requetes du reseau publicitaire.
+  "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://region1.analytics.google.com https://stats.g.doubleclick.net https://ep1.adtrafficquality.google https://www.clarity.ms https://*.clarity.ms https://pagead2.googlesyndication.com https://adservice.google.com https://adservice.google.de https://connect.facebook.net https://www.facebook.com https://analytics.tiktok.com",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",

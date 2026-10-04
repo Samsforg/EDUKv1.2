@@ -132,6 +132,15 @@ export function ensureGaClientId(): string {
 // ------------------------------------------------------------------
 // Chargement des scripts (à appeler une fois, après consentement)
 // ------------------------------------------------------------------
+// 3d.1 : le nonce de la requete est genere par le proxy (en-tete X-Nonce) et
+// expose au client via <meta name="csp-nonce">. Sans lui, script-src bloque le
+// bootstrap inline gtag : window.gtag reste undefined et Google Analytics ne
+// recoit jamais sa configuration.
+function currentCspNonce(): string {
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="csp-nonce"]');
+  return meta?.content ?? "";
+}
+
 export function loadAnalyticsScripts(): void {
   if (typeof document === "undefined") return;
   if (!analyticsAccepted()) return;
@@ -149,6 +158,8 @@ export function loadAnalyticsScripts(): void {
     document.head.appendChild(script);
 
     const inline = document.createElement("script");
+    const nonce = currentCspNonce();
+    if (nonce) inline.nonce = nonce;
     inline.textContent = `window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
