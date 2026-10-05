@@ -81,13 +81,43 @@ async function flagOf(userId: number): Promise<number> {
   return Number(r?.is_test ?? -1);
 }
 
+/** Email du compte, relu depuis la base (et non réutilisé depuis la variable). */
+async function emailOf(userId: number): Promise<string | null> {
+  const r = await queryOne<{ email: string | null }>("SELECT email FROM users WHERE id = ?", userId);
+  return r?.email ?? null;
+}
+
 /**
  * Backfill P0-1, requête identique à celle de `src/lib/init.ts` (ligne 61).
  * On rejoue le mécanisme réel de production plutôt que de recopier une règle :
- * si `testEmailOnlyWhere` evolve, ce test suit automatiquement.
+ * si `testEmailOnlyWhere` evolue, ce test suit automatiquement.
  */
 async function runIsTestBackfill(): Promise<void> {
   await run(`UPDATE users SET is_test = 1 WHERE is_test = 0 AND ${testEmailOnlyWhere("email")}`);
+}
+
+/**
+ * Rejoue le backfill sans effet de bord. Le UPDATE est global par nature : les
+ * lignes qu'il va toucher (fixtures d'autres tests, données de développement)
+ * sont mémorisées puis restaurées à l'identique, y compris en cas d'échec —
+ * d'où le `finally`. Les comptes du test courant sont exclus de la sauvegarde :
+ * ils sont supprimés par le `afterAll`.
+ */
+async function withIsTestBackfill<T>(ownIds: number[], fn: () => Promise<T>): Promise<T> {
+  const marks = ownIds.map(() => "?").join(", ");
+  const untouched = await query<{ id: number; is_test: number }>(
+    `SELECT id, is_test FROM users WHERE is_test = 0 AND ${testEmailOnlyWhere("email")}` +
+      (ownIds.length ? ` AND id NOT IN (${marks})` : ""),
+    ...ownIds,
+  );
+  try {
+    await runIsTestBackfill();
+    return await fn();
+  } finally {
+    for (const row of untouched) {
+      await run("UPDATE users SET is_test = ? WHERE id = ?", row.is_test, row.id);
+    }
+  }
 }
 
 afterAll(async () => {
@@ -181,42 +211,57 @@ describe("P0-1 — migration du marqueur", () => {
     expect(await flagOf(realId)).toBe(0);
     expect(isTestEmail(fixtureEmail)).toBe(true);
 
-    // Le backfill est global par nature : on mémorise les lignes qu'il va
-    // toucher (celles des tests précédents, cas 3 et cas 5, sont aussi à
-    // is_test = 0 avec un email réservé) pour les restituer à l'identique.
-    const untouched = await query<{ id: number; is_test: number }>(
-      `SELECT id, is_test FROM users WHERE is_test = 0 AND ${testEmailOnlyWhere("email")} AND id <> ?`,
-      fixtureId,
-    );
-    try {
-      await runIsTestBackfill();
-
+    await withIsTestBackfill([fixtureId, realId], async () => {
       // L'assertion porte sur la fixture du test, pas sur un état global.
       expect(await flagOf(fixtureId)).toBe(1);
       // Le compte réel n'a pas été marqué par erreur.
       expect(await flagOf(realId)).toBe(0);
-    } finally {
-      for (const row of untouched) {
-        await run("UPDATE users SET is_test = ? WHERE id = ?", row.is_test, row.id);
-      }
-    }
+    });
   });
 
   it("aucun compte réel n'a été marqué par erreur", async () => {
-    // `support@edukora.net` est le vrai compte admin : il ne matche aucun
-    // motif réservé et doit rester is_test = 0.
-    const r = await queryOne<{ c: number }>(
-      "SELECT COUNT(*) AS c FROM users WHERE LOWER(COALESCE(email,'')) = 'support@edukora.net' AND is_test = 1",
-    );
-    expect(Number(r?.c ?? 0)).toBe(0);
+    // Ce test ne doit pas dépendre d'un compte préexistant. L'ancien code
+    // comptait les lignes `email = 'support@edukora.net' AND is_test = 1` :
+    // or aucun seed ne crée ce compte (`src/lib/seed.ts` ne fait aucun
+    // `INSERT INTO users`, et l'adresse n'apparaît ailleurs que comme adresse
+    // d'expéditeur par défaut). Sur une base vierge le compte était 0 par
+    // absence, donc `toBe(0)` passait sans rien prouver.
+    // Le test crée donc son propre compte réel et vérifie explicitement qu'il
+    // survit au backfill avec is_test = 0.
+    const realId = await makeUser(realEmail("mdr.non.marque"), 0);
+    expect(await flagOf(realId)).toBe(0);
+    expect(isTestEmail(await emailOf(realId))).toBe(false);
+
+    await withIsTestBackfill([realId], async () => {
+      expect(await flagOf(realId)).toBe(0);
+    });
   });
 
   it("le prédicat testUsersWhere sélectionne les fixtures marquées ET les emails réservés", async () => {
-    const flagged = await queryOne<{ c: number }>(
-      `SELECT COUNT(*) AS c FROM users u WHERE ${testUsersWhere()}`,
-    );
-    const total = await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM users");
-    expect(Number(flagged?.c ?? 0)).toBeGreaterThan(0);
-    expect(Number(flagged?.c ?? 0)).toBeLessThan(Number(total?.c ?? 0));
+    // L'ancien code comptait tous les utilisateurs de la base et affirmait
+    // `0 < flagged < total`. Cela dépendait : de fixtures créées par les tests
+    // précédents pour `flagged > 0` (ordre d'exécution) et de l'existence
+    // d'au moins un compte non-test dans toute la base pour `flagged < total` —
+    // vrai en local, non garanti sur une base vierge.
+    // Le scénario est désormais contrôlé : trois comptes créés ici, testés avec
+    // le prédicat réel importé par la production.
+    const flaggedId = await makeUser(realEmail("piege.marque"), 1);
+    const reservedId = await makeUser(`nouvelle.fixture.${STAMP}@example.com`, 0);
+    const realId = await makeUser(realEmail("mdr.hors.perimetre"), 0);
+
+    const selected = async (id: number): Promise<boolean> => {
+      const r = await queryOne<{ c: number }>(
+        `SELECT COUNT(*) AS c FROM users u WHERE u.id = ? AND ${testUsersWhere("u")}`,
+        id,
+      );
+      return Number(r?.c ?? 0) > 0;
+    };
+
+    // Fixture marquée structurellement, malgré un email réaliste.
+    expect(await selected(flaggedId)).toBe(true);
+    // Filet de sécurité : is_test = 0 mais domaine réservé.
+    expect(await selected(reservedId)).toBe(true);
+    // Un compte réel n'est jamais sélectionné.
+    expect(await selected(realId)).toBe(false);
   });
 });
