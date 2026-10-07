@@ -70,6 +70,8 @@ const NO_ID_TABLES = new Set([
   "webhook_events",
   "growth_metrics", // PK = date, pas de colonne id (UPSERT saveMetrics)
   "subject_grades",
+  "class_chapters", // PK = class_id+chapter_id, pas de colonne id (P1.8)
+  "spaced_reviews", // PK = user_id+quiz_id, pas de colonne id (P1.8)
 ]);
 
 const UNIT_MAP: Record<string, string> = {
@@ -1316,15 +1318,27 @@ export async function queryOne<T = unknown>(sql: string, ...params: SqlParam[]):
   return row === undefined || row === null ? row : toPlainRow(row);
 }
 
+/**
+ * P1.8 — invariant PostgreSQL : un INSERT passé à `run()` ne reçoit
+ * `RETURNING id` que si la table possède réellement une colonne `id`
+ * (sinon 42703 `column "id" does not exist`). Logique extraite de `run()`
+ * dans une fonction pure exportée pour être testable sans serveur PG.
+ */
+export function toPgReturningId(sql: string): string {
+  // Préfixe de schéma éventuel (`public.`) ignoré : c'est bien le nom de
+  // TABLE qui doit être confronté à NO_ID_TABLES.
+  const insertMatch = /^\s*insert\s+into\s+(?:[a-zA-Z_]+\.)?([a-zA-Z_]+)/i.exec(sql);
+  if (insertMatch && !NO_ID_TABLES.has(insertMatch[1])) {
+    return `${sql.replace(/;\s*$/, "")} RETURNING id`;
+  }
+  return sql;
+}
+
 export async function run(sql: string, ...params: SqlParam[]): Promise<{ lastInsertRowid: number | null; changes: number }> {
   if (!isInsideInit()) await ensureReady();
   if (IS_PG) {
     const pool = getPool();
-    let finalSql = sql;
-    const insertMatch = /^\s*insert\s+into\s+([a-zA-Z_]+)/i.exec(sql);
-    if (insertMatch && !NO_ID_TABLES.has(insertMatch[1])) {
-      finalSql = `${sql.replace(/;\s*$/, "")} RETURNING id`;
-    }
+    const finalSql = toPgReturningId(sql);
     const r = await withPgRetry(() => pool.query(toPgDatetime(toPgRound(toPgPlaceholders(finalSql))), params as any));
     const row = r.rows?.[0] || {};
     return {
