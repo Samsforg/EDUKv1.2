@@ -69,6 +69,7 @@ const NO_ID_TABLES = new Set([
   "idempotency_keys",
   "webhook_events",
   "growth_metrics", // PK = date, pas de colonne id (UPSERT saveMetrics)
+  "subject_grades",
 ]);
 
 const UNIT_MAP: Record<string, string> = {

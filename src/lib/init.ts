@@ -114,7 +114,6 @@ async function doInit() {
     await migrateCurriculumTables();
   });
   await safeAsync("backfillUserGrades", backfillUserGrades);
-  await safeAsync("populateSubjectGrades", populateSubjectGrades);
   await safeAsync("populateCurricula", populateCurricula);
   await safeAsync("seedTechnicalGrades", seedTechnicalGrades);
   await safeAsync("seedGradeTracks", seedGradeTracks);
@@ -163,6 +162,7 @@ async function doInit() {
     safeAsync("seedCollegeQuizzes", () => seedCollegeQuizzes(["philo"])),
     safeAsync("applyFreemiumLessons", applyFreemiumLessons),
   ]);
+  await safeAsync("populateSubjectGrades", populateSubjectGrades);
   } finally {
     setInsideInit(false);
   }
@@ -658,7 +658,7 @@ async function seedTechnicalChapters() {
   }
 }
 
-async function populateSubjectGrades() {
+export async function populateSubjectGrades() {
   // Normalize coefficient_json -> subject_grades table
   const subjects = await query<{ id: number; coefficient_json: string }>(
     "SELECT id, coefficient_json FROM subjects WHERE coefficient_json IS NOT NULL"
