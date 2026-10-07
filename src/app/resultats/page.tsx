@@ -18,7 +18,9 @@ export const metadata: Metadata = {
   },
 };
 
-// Chiffres réels de la plateforme (base PostgreSQL) : pas de pré-rendu figé au build.
+// Chiffres de la plateforme (base PostgreSQL) : pas de pré-rendu figé au build.
+// P0.9 — si la collecte échoue, getPlatformStats() renvoie fallback=true et
+// la section est explicitement signalée comme indicative.
 export const dynamic = "force-dynamic";
 
 function formatStat(n: number, plus = true): string {
@@ -74,6 +76,11 @@ export default async function Page() {
                 <span className="text-on-primary-container font-label-sm uppercase tracking-widest">{s.label}</span>
               </div>
             ))}
+            {stats.fallback && (
+              <p className="col-span-2 lg:col-span-4 text-center text-label-sm font-bold uppercase tracking-widest text-on-primary-container">
+                Statistiques indicatives
+              </p>
+            )}
           </div>
         </section>
 

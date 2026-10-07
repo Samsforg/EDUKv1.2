@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
+import { trackEvent, EVENTS } from "@/lib/analytics";
 
 interface Subject {
   id: number;
@@ -45,6 +46,13 @@ export default function SubjectsPage() {
             <Link
               key={s.id}
               href={`/matieres/${s.id}`}
+              onClick={() =>
+                // 3f : ouverture d'une matiere depuis « Mes matieres ».
+                trackEvent(EVENTS.subjectSelected, {
+                  subject: s.code,
+                  from: "mes_matieres",
+                })
+              }
               className="block bg-surface border border-outline-variant rounded-xl p-4 flex items-center gap-4 hover:bg-surface-container-low transition-colors active:scale-[0.98] duration-150"
             >
               <div className="w-14 h-14 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: s.color + "1A", color: s.color }}>

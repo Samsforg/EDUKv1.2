@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { getStore } from "@/lib/growth/data/store";
-import { query } from "@/lib/db";
+import { countFunnelForDay } from "@/lib/analytics-db";
 
 async function GETHandler() {
   const user = await getCurrentUser();
@@ -20,31 +20,23 @@ async function POSTHandler(req: Request) {
   }
 
   const body = await req.json().catch(() => ({}));
-  const date = (body.date as string) ?? new Date().toISOString().split("T")[0];
+  const rawDate = (body.date as string) ?? new Date().toISOString().split("T")[0];
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : new Date().toISOString().split("T")[0];
 
-  const funnel: Record<string, number> = {};
+  // P1.0 — le comptage vit dans countFunnelForDay (analytics-db) : SQL
+  // portable SQLite/PG + exclusion des comptes de test dès que l'identité
+  // est disponible (les événements anonymes restent comptés). L'ancien SQL
+  // inline (`COUNT(*)::text`, `created_at::date`) échouait silencieusement
+  // sur SQLite (catch) → funnel vide → des 0 présentés comme réels.
+  const funnel = await countFunnelForDay(date);
 
-  try {
-    const rows = await query<{ event: string; c: string }>(
-      `SELECT event, COUNT(*)::text AS c FROM analytics_events
-       WHERE created_at::date = $1::date
-       GROUP BY event`, date
-    );
-    for (const r of rows) funnel[r.event] = Number(r.c);
-
-    const activeRow = await query<{ c: string }>(
-      `SELECT COUNT(DISTINCT user_id)::text AS c FROM analytics_events
-       WHERE created_at::date = $1::date AND user_id IS NOT NULL`, date
-    );
-    funnel["_active_users"] = Number(activeRow[0]?.c ?? 0);
-
-    const pricingRow = await query<{ c: string }>(
-      `SELECT COUNT(DISTINCT user_id)::text AS c FROM analytics_events
-       WHERE event = 'begin_checkout' AND created_at::date = $1::date`, date
-    );
-    funnel["_unique_checkouts"] = Number(pricingRow[0]?.c ?? 0);
-  } catch {
-    // analytics_events may not exist
+  // P0.8 / écart E1 — l'événement réellement émis s'appelle `pageview`
+  // (src/components/EdukoraAnalytics.tsx), la taxonomie historique disait
+  // `page_view`. Sans cette reconciliation les compteurs visitors/pageViews
+  // restaient structurellement à 0. On normalise vers `page_view` pour ne
+  // pas changer les lecteurs ni ignorer d'éventuelles lignes historiques.
+  if (funnel["pageview"] !== undefined || funnel["page_view"] !== undefined) {
+    funnel["page_view"] = (funnel["pageview"] ?? 0) + (funnel["page_view"] ?? 0);
   }
 
   const metrics = {
@@ -74,8 +66,15 @@ async function POSTHandler(req: Request) {
     checkoutStarted: funnel["begin_checkout"] ?? 0,
     addPaymentInfo: funnel["add_payment_info"] ?? 0,
     purchase: funnel["purchase"] ?? 0,
+    activation: funnel["activated"] ?? 0,
     quotaExceeded: funnel["quota_exceeded"] ?? 0,
     uniqueCheckouts: funnel["_unique_checkouts"] ?? 0,
+    // P1.0 — rétention D7 : état NON DISPONIBLE explicite plutôt qu'un faux 0.
+    // Le calcul exige des activations dont un retour intervient >= 7 jours
+    // après ; la première activation remontable date de 2026-09-29 (premier
+    // jour éligible : 2026-10-06, cf. docs/analytics-data-contract.md).
+    retention: null,
+    retentionStatus: "non_disponible:_retention_d7_historique_insuffisant",
   };
 
   const s = await getStore();

@@ -455,6 +455,11 @@ async function migrateCurriculumTables() {
     )`),
   );
   if (IS_PG) {
+    // P1.6 F1 : garantit la cible de l'`ON CONFLICT(grade_id, subject_id,
+    // year)` de populateCurricula même si la table prod a été créée par un
+    // arbre antérieur sans l'UNIQUE inline (curricula = 0 en prod → aucun
+    // doublon possible → index toujours construisible, idempotent).
+    await run(`CREATE UNIQUE INDEX IF NOT EXISTS uq_curricula_gsy ON curricula(grade_id, subject_id, year)`);
     await run(`CREATE INDEX IF NOT EXISTS idx_curricula_grade ON curricula(grade_id)`);
     await run(`CREATE INDEX IF NOT EXISTS idx_curricula_subject ON curricula(subject_id)`);
   }
@@ -676,12 +681,46 @@ async function populateSubjectGrades() {
   }
 }
 
-async function populateCurricula() {
+/**
+ * P1.6 F1 — conversion sûre de `chapters.officiel_ref` (TEXT) en année.
+ *
+ * Valeurs réelles du code/production : `''` (défaut), `"BO MENAET 2023 - …"`,
+ * `"BO TECHNIQUE 2024 - …"` (non numériques), parfois `"123"`. SQLite
+ * CAST transformait silencieusement le non-numérique en 0 ; PostgreSQL
+ * refoule `CAST('' AS INTEGER)` (22P02) et interromptait populateCurricula
+ * à chaque cold start → `curricula = 0` en production.
+ *
+ * Règle : chiffres uniquement (après trim) → entier ; sinon null
+ * (absence de référence annuelle) — aucune valeur métier n'est inventée ni
+ * réinterprétée. Traitement 100 % JS : aucune conversion SQL, donc aucun
+ * risque 22P02 ni de dialecte.
+ */
+export function parseOfficielYear(ref: string | null | undefined): number | null {
+  if (ref == null) return null;
+  const s = ref.trim();
+  if (!/^\d{1,10}$/.test(s)) return null;
+  return Number(s);
+}
+
+/** Sélecteur de paires portable SQLite/PostgreSQL — sans CAST, sans dialecte. */
+export const POPULATE_PAIRS_SQL =
+  "SELECT c.grade_id, c.subject_id, c.officiel_ref AS ref FROM chapters c WHERE c.officiel_ref IS NOT NULL";
+
+export async function populateCurricula() {
   // Create curricula entries for all grade x subject combinations that have chapters
-  const pairs = await query<{ grade_id: number; subject_id: number; year: number }>(
-    "SELECT DISTINCT c.grade_id, c.subject_id, MAX(CAST(COALESCE(c.officiel_ref, '') AS INTEGER)) as year FROM chapters c WHERE c.officiel_ref IS NOT NULL GROUP BY c.grade_id, c.subject_id"
-  );
-  for (const p of pairs) {
+  const rows = await query<{ grade_id: number; subject_id: number; ref: string | null }>(POPULATE_PAIRS_SQL);
+  const maxYear = new Map<string, { grade_id: number; subject_id: number; year: number | null }>();
+  for (const r of rows) {
+    const key = `${r.grade_id}:${r.subject_id}`;
+    const parsed = parseOfficielYear(r.ref);
+    const cur = maxYear.get(key);
+    if (!cur) {
+      maxYear.set(key, { grade_id: r.grade_id, subject_id: r.subject_id, year: parsed });
+    } else if (parsed != null && (cur.year == null || parsed > cur.year)) {
+      cur.year = parsed;
+    }
+  }
+  for (const p of maxYear.values()) {
     await run(
       "INSERT INTO curricula (grade_id, subject_id, official_ref, year, status) VALUES (?, ?, ?, ?, 'active') ON CONFLICT(grade_id, subject_id, year) DO UPDATE SET official_ref=excluded.official_ref",
       p.grade_id, p.subject_id, `BO 2024`, p.year || 2024

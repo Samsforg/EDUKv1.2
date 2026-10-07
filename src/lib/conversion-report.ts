@@ -117,8 +117,17 @@ export async function getConversionStats(days = 7): Promise<ConversionStats> {
   };
 }
 
-export function formatFcfa(cents: number): string {
-  return new Intl.NumberFormat("fr-FR").format(cents / 100) + " FCFA";
+/**
+ * P1.6 F7 — affichage FCFA.
+ *
+ * `subscriptions.price_cents` / `subscription_plans.price_cents` stockent des
+ * **FCFA entiers** (legacy naming : currency='XOF', 4900 = 4 900 FCFA, pas de
+ * sous-unité). L'ancienne division par 100 affichait « 49 FCFA » au lieu de
+ * « 4 900 FCFA » dans les rapports WhatsApp/email. Aucune migration de
+ * données : seule la couche affichage est alignée sur la réalité.
+ */
+export function formatFcfa(fcfa: number): string {
+  return new Intl.NumberFormat("fr-FR").format(fcfa) + " FCFA";
 }
 
 export function buildWhatsappReport(s: ConversionStats): string {

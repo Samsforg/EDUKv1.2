@@ -931,6 +931,11 @@ export async function getReferralStats(): Promise<{
 }> {
   const today = new Date().toISOString().slice(0, 10);
   const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  // P1.2 — Data Trust : le parrainage administratif est un KPI → comptes de
+  // test exclus des deux côtés de la relation (parrain ET filleul), même
+  // prédicat que Business Metrics / Product Analytics (contrat §7).
+  const notTest = (alias: string) =>
+    `NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = ${alias} AND (${testUsersWhere("tu")}))`;
 
   const top = await query<ReferrerRow>(
     `SELECT r.id AS user_id, r.first_name || ' ' || r.last_name AS name, r.referral_code,
@@ -939,6 +944,7 @@ export async function getReferralStats(): Promise<{
             r.xp
      FROM users r JOIN users u ON u.referred_by = r.id
      WHERE r.referral_code IS NOT NULL
+       AND ${notTest("r.id")} AND ${notTest("u.id")}
      GROUP BY r.id
      ORDER BY count DESC LIMIT 10`,
     weekAgo,
@@ -949,6 +955,7 @@ export async function getReferralStats(): Promise<{
             r.first_name || ' ' || r.last_name AS referrer_name, r.referral_code,
             u.created_at, u.last_active
      FROM users u JOIN users r ON r.id = u.referred_by
+     WHERE ${notTest("u.id")} AND ${notTest("r.id")}
      ORDER BY u.id`,
   );
   const list = rows.map((u) => ({
@@ -961,7 +968,8 @@ export async function getReferralStats(): Promise<{
     totals: {
       referrers:
         (await queryOne<{ c: number }>(
-          "SELECT COUNT(DISTINCT referred_by) AS c FROM users WHERE referred_by IS NOT NULL",
+          `SELECT COUNT(DISTINCT u.referred_by) AS c FROM users u
+           WHERE u.referred_by IS NOT NULL AND ${notTest("u.id")} AND ${notTest("u.referred_by")}`,
         ))?.c ?? 0,
       referred: list.length,
       active_week: list.filter((u) => u.last_active && u.last_active.slice(0, 10) >= weekAgo).length,

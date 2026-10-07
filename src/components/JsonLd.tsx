@@ -148,7 +148,10 @@ export function ProductJsonLd({
         offers: {
           "@type": "Offer",
           priceCurrency: currency,
-          price: price === 0 ? "0" : (price / 100).toString(),
+          // P1.6 F7 : price_cents stocke des FCFA entiers (XOF, pas de
+          // sous-unité) — l'ancienne division /100 envoyait « 49 » à Google
+          // au lieu de « 4900 ».
+          price: price.toString(),
           availability: "https://schema.org/InStock",
           url,
         },

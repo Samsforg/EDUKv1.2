@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { query } from "@/lib/db";
+import { getBusinessRevenue } from "@/lib/business-metrics";
+import { getAnalyticsDashboard7d, type AnalyticsDashboard7d } from "@/lib/analytics-db";
 import { AdminShell } from "@/components/admin/AdminShell";
 
 export const dynamic = "force-dynamic";
@@ -13,10 +15,14 @@ export default async function AdminAnalyticsPage() {
   let total = 0;
   let byEvent: { event: string; c: number }[] = [];
   let recent: { id: number; event: string; url: string | null; created_at: string; user_id: number | null }[] = [];
-  const funnel: { signup: number; quiz: number; lesson: number; sub: number } = { signup: 0, quiz: 0, lesson: 0, sub: 0 };
+  const dash: AnalyticsDashboard7d = {
+    funnel: { signup: 0, quiz: 0, lesson: 0, sub: 0 },
+    conversion: { signups_auth: 0, signups_anon: 0, subs_auth: 0, subs_anon: 0, rate: null },
+  };
   let revenue: { total_cents: number; count: number; this_month_cents: number; this_month_count: number } = { total_cents: 0, count: 0, this_month_cents: 0, this_month_count: 0 };
-  let conversion: { signups_7d: number; subs_7d: number; rate: number } = { signups_7d: 0, subs_7d: 0, rate: 0 };
   try {
+    // Couches (P1.2) : flux brut volontairement non filtré — total/top/derniers
+    // reflètent la table telle quelle, libellée comme telle.
     const t = await query<{ c: number }>("SELECT COUNT(*) AS c FROM analytics_events");
     total = t[0]?.c ?? 0;
     byEvent = await query<{ event: string; c: number }>(
@@ -25,48 +31,29 @@ export default async function AdminAnalyticsPage() {
     recent = await query<{ id: number; event: string; url: string | null; created_at: string; user_id: number | null }>(
       "SELECT id, event, url, created_at, user_id FROM analytics_events ORDER BY id DESC LIMIT 50"
     );
-    const f = await query<{ event: string; c: number }>(
-      "SELECT event, COUNT(*) AS c FROM analytics_events WHERE event IN ('signup_completed','quiz_completed','lesson_completed','subscription_started') AND created_at >= datetime('now','-7 days') GROUP BY event"
-    );
-    f.forEach((r) => {
-      if (r.event === "signup_completed") funnel.signup = r.c;
-      if (r.event === "quiz_completed") funnel.quiz = r.c;
-      if (r.event === "lesson_completed") funnel.lesson = r.c;
-      if (r.event === "subscription_started") funnel.sub = r.c;
-    });
-    // Revenue from subscriptions table
-    const rev = await query<{ total_cents: number; count: number }>(
-      "SELECT COALESCE(SUM(price_cents), 0) AS total_cents, COUNT(*) AS count FROM subscriptions WHERE status = 'active'"
-    );
-    const revMonth = await query<{ total_cents: number; count: number }>(
-      "SELECT COALESCE(SUM(price_cents), 0) AS total_cents, COUNT(*) AS count FROM subscriptions WHERE status = 'active' AND created_at >= date('now','start of month')"
-    );
-    revenue = {
-      total_cents: rev[0]?.total_cents ?? 0,
-      count: rev[0]?.count ?? 0,
-      this_month_cents: revMonth[0]?.total_cents ?? 0,
-      this_month_count: revMonth[0]?.count ?? 0,
-    };
-    // Conversion rate
-    const signups7d = await query<{ c: number }>(
-      "SELECT COUNT(*) AS c FROM analytics_events WHERE event = 'signup_completed' AND created_at >= datetime('now','-7 days')"
-    );
-    const subs7d = await query<{ c: number }>(
-      "SELECT COUNT(*) AS c FROM analytics_events WHERE event = 'subscription_started' AND created_at >= datetime('now','-7 days')"
-    );
-    conversion = {
-      signups_7d: signups7d[0]?.c ?? 0,
-      subs_7d: subs7d[0]?.c ?? 0,
-      rate: signups7d[0]?.c ? Math.round(((subs7d[0]?.c ?? 0) / signups7d[0].c) * 100) : 0,
-    };
+    // Revenue business — Data Trust : helper partagé (business-metrics.ts),
+    // comptes test exclus. Définition distincte de getConversionStats()
+    // (fenêtre today/week/month sur started_at) : ici total + mois courant sur created_at.
+    revenue = await getBusinessRevenue();
+    // Entonnoir + conversion 7j — Data Trust (P1.2) : helper partagé
+    // `getAnalyticsDashboard7d` (analytics-db.ts), même couche que
+    // countFunnelForDay (contrat §7) : comptes test exclus dès que user_id
+    // existe, événements anonymes comptés séparément et jamais transformés
+    // (choix A+B). Conversion 7j ÉVÉNEMENTIELLE, pas tables métier —
+    // distincte de la conversion business globale (conversion-report.ts).
+    const d = await getAnalyticsDashboard7d();
+    dash.funnel = d.funnel;
+    dash.conversion = d.conversion;
   } catch {
     // table not yet created
   }
+  const conversion = dash.conversion;
+  const funnel = dash.funnel;
 
   return (
     <AdminShell active="overview">
       <h2 className="font-display text-[28px] font-bold text-on-surface mb-1">Analytics interne (gratuit)</h2>
-      <p className="text-on-surface-variant mb-6">PostHog-like self-hosted — 1st-party, capture pageview + events via /api/analytics/track → analytics_events.</p>
+      <p className="text-on-surface-variant mb-6">PostHog-like self-hosted — 1st-party, capture pageview + events via /api/analytics/track → analytics_events. Couches : Total/Top/Derniers = flux brut de la table · Entonnoir/Conversion = hors comptes test (anonymes comptés séparément) · Revenus = Business Metrics (hors comptes test).</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-surface-container-lowest border border-outline-variant p-5 rounded-xl">
           <p className="text-label-sm text-on-surface-variant">Total events</p>
@@ -84,22 +71,22 @@ export default async function AdminAnalyticsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-surface-container-lowest border border-outline-variant p-5 rounded-xl">
           <p className="text-label-sm text-on-surface-variant">Revenus totaux</p>
-          <p className="text-headline-md font-bold text-green-700">{(revenue.total_cents / 100).toLocaleString("fr-FR")} FCFA</p>
+          <p className="text-headline-md font-bold text-green-700">{revenue.total_cents.toLocaleString("fr-FR")} FCFA</p>
           <p className="text-label-xs text-on-surface-variant mt-1">{revenue.count} abonnement{revenue.count > 1 ? "s" : ""}</p>
         </div>
         <div className="bg-surface-container-lowest border border-outline-variant p-5 rounded-xl">
           <p className="text-label-sm text-on-surface-variant">Revenus ce mois</p>
-          <p className="text-headline-md font-bold text-green-700">{(revenue.this_month_cents / 100).toLocaleString("fr-FR")} FCFA</p>
+          <p className="text-headline-md font-bold text-green-700">{revenue.this_month_cents.toLocaleString("fr-FR")} FCFA</p>
           <p className="text-label-xs text-on-surface-variant mt-1">{revenue.this_month_count} nouveau{revenue.this_month_count > 1 ? "x" : ""}</p>
         </div>
         <div className="bg-surface-container-lowest border border-outline-variant p-5 rounded-xl">
-          <p className="text-label-sm text-on-surface-variant">Taux de conversion 7j</p>
-          <p className="text-headline-md font-bold text-primary">{conversion.rate}%</p>
-          <p className="text-label-xs text-on-surface-variant mt-1">{conversion.subs_7d} abonnés / {conversion.signups_7d} inscrits</p>
+          <p className="text-label-sm text-on-surface-variant">Taux de conversion 7j (hors comptes test)</p>
+          <p className="text-headline-md font-bold text-primary">{conversion.rate === null ? "—" : `${conversion.rate}%`}</p>
+          <p className="text-label-xs text-on-surface-variant mt-1">{conversion.subs_auth} abonnés / {conversion.signups_auth} inscrits auth.{conversion.signups_anon > 0 ? ` · ${conversion.signups_anon} non attribué${conversion.signups_anon > 1 ? "s" : ""}` : ""}</p>
         </div>
       </div>
       <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 mb-4">
-        <h3 className="font-semibold mb-3">Entonnoir 7j (funnel)</h3>
+        <h3 className="font-semibold mb-3">Entonnoir 7j (funnel) — hors comptes test</h3>
         <div className="grid grid-cols-4 gap-2 text-center text-sm">
           {[
             { label: "Inscriptions", v: funnel.signup },

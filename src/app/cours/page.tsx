@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import AdSenseBanner from "@/components/AdSenseBanner";
+import { trackEvent, EVENTS } from "@/lib/analytics";
 
 interface Grade {
   id: number;
@@ -194,7 +195,15 @@ export default function CoursPage() {
                 {group.grades.map((g) => (
                   <button
                     key={g.code}
-                    onClick={() => setSelectedGrade(g.code)}
+                    onClick={() => {
+                      setSelectedGrade(g.code);
+                      // 3f : selection de niveau (clic explicite uniquement,
+                      // jamais la detection automatique userGrade).
+                      trackEvent(EVENTS.gradeSelected, {
+                        grade: g.code,
+                        track: g.track ?? "general",
+                      });
+                    }}
                     className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
                       selectedGrade === g.code
                         ? "bg-primary text-on-primary shadow-md"
@@ -239,6 +248,13 @@ export default function CoursPage() {
               <Link
                 key={s.code}
                 href={`/cours/${s.code}/${selectedGrade}`}
+                onClick={() =>
+                  // 3f : entree dans le catalogue d'un niveau donne.
+                  trackEvent(EVENTS.subjectSelected, {
+                    subject: s.code,
+                    grade: selectedGrade,
+                  })
+                }
                 className="bg-surface border border-outline-variant rounded-xl p-6 flex flex-col items-center gap-3 hover:border-primary transition-colors group"
               >
                 <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${s.color}20 text-[32px]`} style={{ color: s.color }}>

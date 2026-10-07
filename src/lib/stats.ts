@@ -7,6 +7,8 @@ export interface PlatformStats {
   quizzesCorrected: number;
   lessonsRead: number;
   xpEarned: number;
+  /** P0.9 — true = valeurs démonstratives de repli, false = données réelles. */
+  fallback: boolean;
 }
 
 const FALLBACK_STATS: PlatformStats = {
@@ -14,6 +16,7 @@ const FALLBACK_STATS: PlatformStats = {
   quizzesCorrected: 1200,
   lessonsRead: 3500,
   xpEarned: 48000,
+  fallback: true,
 };
 
 async function collectStats(): Promise<PlatformStats> {
@@ -28,6 +31,7 @@ async function collectStats(): Promise<PlatformStats> {
     quizzesCorrected: quizzes?.c ?? 0,
     lessonsRead: lessons?.c ?? 0,
     xpEarned: Math.round(xp?.s ?? 0),
+    fallback: false,
   };
 }
 

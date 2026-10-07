@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
-import { query, queryOne } from "@/lib/db";
+import { queryOne } from "@/lib/db";
+import { testUsersWhere } from "@/lib/test-users";
+import { getCanonicalMRR } from "@/lib/business-metrics";
 import { AdminShell } from "@/components/admin/AdminShell";
 
 export const dynamic = "force-dynamic";
@@ -23,13 +25,9 @@ export default async function AdminRevenuePage() {
   let ltv: number | null = null;
 
   try {
-    // MRR approximatif : abonnés actifs mensuels * prix moyen mensuel
-    const mrrRow = await queryOne<{ c: number; avg_price: number | null }>(
-      `SELECT COUNT(*) AS c, AVG(COALESCE(s.price_cents, p.price_cents)) AS avg_price
-       FROM subscriptions s JOIN subscription_plans p ON p.id = s.plan_id
-       WHERE s.status IN ('active','trial') AND p.interval = 'month'`
-    );
-    mrr = Math.round((mrrRow?.c ?? 0) * (mrrRow?.avg_price ?? 0));
+    // MRR canonique : helper partagé (business-metrics.ts), aligné sur
+    // conversion-report.ts. Un même dataset → même MRR, quelle que soit la page.
+    mrr = await getCanonicalMRR();
 
     // Churn : annulés / (actifs + annulés) sur les 30 derniers jours
     const churnRow = await queryOne<{ cancelled: number; total: number }>(
@@ -37,7 +35,8 @@ export default async function AdminRevenuePage() {
          SUM(CASE WHEN s.status IN ('cancelled','unpaid') THEN 1 ELSE 0 END) AS cancelled,
          COUNT(*) AS total
        FROM subscriptions s
-       WHERE s.updated_at >= datetime('now', '-30 days')`
+       WHERE s.updated_at >= datetime('now', '-30 days')
+         AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`
     );
     churnRate = churnRow && churnRow.total > 0 ? Math.round((churnRow.cancelled / churnRow.total) * 10000) / 100 : null;
 
@@ -46,7 +45,8 @@ export default async function AdminRevenuePage() {
       `SELECT COALESCE(SUM(COALESCE(s.price_cents, p.price_cents)), 0) AS total,
               COUNT(DISTINCT s.user_id) AS payers
        FROM subscriptions s JOIN subscription_plans p ON p.id = s.plan_id
-       WHERE s.status IN ('active','trial','cancelled')`
+       WHERE s.status IN ('active','trial','cancelled')
+         AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`
     );
     arpu = arpuRow && arpuRow.payers > 0 ? Math.round(arpuRow.total / arpuRow.payers) : null;
     ltv = arpu != null && churnRate != null && churnRate > 0 ? Math.round((arpu / churnRate) * 100) : null;
@@ -58,7 +58,8 @@ export default async function AdminRevenuePage() {
          FROM subscriptions s JOIN subscription_plans p ON p.id = s.plan_id
          WHERE s.status IN ('active','trial')
            AND s.started_at >= datetime('now', '-${i} months', 'start of month')
-           AND s.started_at < datetime('now', '-${i} months', 'start of month', '+1 month')`
+           AND s.started_at < datetime('now', '-${i} months', 'start of month', '+1 month')
+           AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`
       );
       const d = new Date();
       d.setMonth(d.getMonth() - i);

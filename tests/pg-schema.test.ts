@@ -22,7 +22,10 @@ CREATE TABLE IF NOT EXISTS class_students (
 `;
     const pg = toPgSchema(sql);
     expect(pg).toContain("SERIAL PRIMARY KEY");
-    expect(pg).toContain("DEFAULT (now())");
+    // P1.3 : défaut TEXT (to_char) — `DEFAULT (now())` est refusé par PG
+    // sur colonne TEXT (erreur 42804), ce qui annulait initDb en prod.
+    expect(pg).toContain("DEFAULT (to_char(now(), 'YYYY-MM-DD HH24:MI:SS'))");
+    expect(pg).not.toContain("DEFAULT (now())");
     expect(pg).toContain("CREATE TABLE IF NOT EXISTS class_students");
     expect(pg).toContain("FOREIGN KEY");
     expect(pg).not.toContain("AUTOINCREMENT");

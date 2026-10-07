@@ -10,7 +10,33 @@ pgTypes.setTypeParser(20, (v) => Number(v));
 
 export const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
 export const isVercel = !!process.env.VERCEL;
-export const IS_PG = !!process.env.DATABASE_URL && !isBuildPhase;
+
+/**
+ * P1.6 F2 — FAIL FAST : sur Vercel, l'absence (ou la valeur vide) de
+ * DATABASE_URL ne doit JAMAIS basculer silencieusement en SQLite. Le
+ * fallback actuel ouvrait /tmp/edukora-data/edukora.db (écriture possible
+ * sur l'instance) : la production « fonctionnerait » alors sur une base
+ * éphémère jetable — données manquantes, faux KPI, migrations recréées à
+ * chaque cold start. Hors Vercel (dev local, tests, build local), SQLite
+ * reste volontaire et autorisé.
+ *
+ * Scénarios (tests/p16-f2-db-mode.test.ts) :
+ *   Vercel + URL absente/vide → throw (fail-fast, pas de SQLite)
+ *   Vercel + URL PostgreSQL  → "postgres"
+ *   dev/test sans URL        → "sqlite"
+ */
+export function resolveDbMode(env: Record<string, string | undefined>): "postgres" | "sqlite" {
+  const hasUrl = typeof env.DATABASE_URL === "string" && env.DATABASE_URL.trim() !== "";
+  if (env.VERCEL && !hasUrl) {
+    throw new Error(
+      "DB_CONFIG: DATABASE_URL absente ou vide sur Vercel — fallback SQLite refusé (P1.6 F2 fail-fast)",
+    );
+  }
+  return hasUrl ? "postgres" : "sqlite";
+}
+
+export const DB_MODE = resolveDbMode(process.env);
+export const IS_PG = DB_MODE === "postgres" && !isBuildPhase;
 
 let insideInit = false;
 export function isInsideInit(): boolean {
@@ -42,6 +68,7 @@ const NO_ID_TABLES = new Set([
   "teacher_grades",
   "idempotency_keys",
   "webhook_events",
+  "growth_metrics", // PK = date, pas de colonne id (UPSERT saveMetrics)
 ]);
 
 const UNIT_MAP: Record<string, string> = {
@@ -65,7 +92,11 @@ const MAKE_INTERVAL_UNIT: Record<string, string> = {
 };
 
 const DATETIME_NOW_RE = /datetime\(\s*'now'[^)]*\)/g;
-const DATE_ONLY_RE = /date\(\s*'now'\s*\)/g;
+// Args optionnels : date('now'), date('now','start of month'),
+// date('now','-5 months','start of month') — littéraux entre quotes simples.
+const DATE_NOW_RE = /date\(\s*'now'((?:\s*,\s*'[^']*')*)\s*\)/g;
+const PG_TEXT_FMT = "'YYYY-MM-DD HH24:MI:SS'";
+const PG_DATE_FMT = "'YYYY-MM-DD'";
 
 async function withPgRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   for (let i = 0; i < attempts; i++) {
@@ -82,41 +113,96 @@ async function withPgRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   throw new Error("unreachable");
 }
 
+/**
+ * Traduction SQLite → PostgreSQL des bornes `datetime('now'…)` / `date('now'…)`.
+ *
+ * Deux contextes sont distingués (preuves P1.3 sur PostgreSQL 18.6) :
+ * - **comparaison** (`col <op> datetime(…)`) : membre droit `timestamptz`
+ *   (`now() ± interval`) + cast du membre gauche (`::timestamptz`) — PG refuse
+ *   `text >= timestamp with time zone` (colonnes TEXT stockent l'horodatage) ;
+ * - **valeur** (VALUES / SET / DEFAULT / argument de fonction) : `to_char(…)`
+ *   produit le format même de SQLite (`YYYY-MM-DD HH:MM:SS`), assignable à une
+ *   colonne TEXT sans conversion — PG refuse `DEFAULT (now())` / `SET x = now()`
+ *   sur une colonne TEXT (erreur 42804, expression de type timestamptz).
+ *
+ * `date('now' …)` est toujours traduit en texte : ses usages sont des bornes
+ * de date comparées lexicographiquement (préfixe de date) à des colonnes TEXT,
+ * quel que soit le format stocké (espace UTC ou ISO-T issu des paramètres JS).
+ */
 export function toPgDatetime(value: string): string {
   if (!value.includes("datetime('now") && !value.includes("date('now")) {
     return value;
   }
-  let out = value;
-  // Patterns concaténés : datetime('now', '-' || $N || ' hours') -> now() - make_interval(...)
-  // (le split par virgule ci-dessous avalerait le placeholder $N du SQL).
-  out = out.replace(
-    /datetime\(\s*'now'\s*,\s*'[+-]'\s*\|\|\s*(\$\d+|\?)\s*\|\|\s*' ?(\w+)'\s*\)/g,
-    (_m, ph: string, unit: string) => {
+
+  // L'appel est-il le membre droit d'un opérateur (<, <=, >, >=) ? Le
+  // caractère précédant doit être un identifiant, ')' ou espace — jamais
+  // '-' ni '=' (opérateurs jsonb '->' / '->>' exclus ainsi que SET x = …).
+  const isComparePosition = (src: string, idx: number): boolean =>
+    /(?:[a-zA-Z0-9_)])\s*(?:>=|<=|>|<)$/.test(src.slice(0, idx).replace(/\s+$/, ""));
+
+  // Arguments littéraux après 'now' : [", '±N unit'…][, 'start of month'].
+  const argsOf = (m: string): string[] =>
+    m
+      .slice(m.indexOf("'now'") + 5, -1)
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+  const buildExpr = (args: string[]): string => {
+    let expr = "now()";
+    let monthStart = false;
+    for (const arg of args) {
+      if (arg === "'start of month'") {
+        monthStart = true;
+        continue;
+      }
+      const match = arg.match(/^'([+-]\d+)\s*(\w+)'$/);
+      if (!match) continue;
+      const sign = match[1].startsWith("-") ? "-" : "+";
+      const amount = Math.abs(parseInt(match[1], 10));
+      const unit = UNIT_MAP[match[2]] || match[2];
+      expr += ` ${sign} interval '${amount} ${unit}'`;
+    }
+    // 'start of month' s'applique après les décalages (équivalent à la
+    // séquence SQLite datetime('now','±N unites','start of month') :
+    // le tronquage en début de mois commute avec le décalage en mois).
+    if (monthStart) expr = `date_trunc('month', ${expr})`;
+    return expr;
+  };
+
+  const toText = (expr: string, fmt: string): string => `to_char(${expr}, ${fmt})`;
+
+  let src = value;
+
+  // datetime('now', '-' || $N || ' hours') -> now() ± make_interval(hours => $N)
+  // (split par virgule impossible : avalerait le placeholder $N). Le signe
+  // est conservé — il était perdu, inversant les retards positifs en avances.
+  src = src.replace(
+    /datetime\(\s*'now'\s*,\s*'([+-])'\s*\|\|\s*(\$\d+|\?)\s*\|\|\s*' ?(\w+)'\s*\)/g,
+    (m, sign: string, ph: string, unit: string, offset: number) => {
       const plural = MAKE_INTERVAL_UNIT[unit] || unit;
-      return `(now() - make_interval(${plural} => ${ph}))`;
+      const expr = `now() ${sign} make_interval(${plural} => ${ph})`;
+      return isComparePosition(src, offset) ? expr : toText(expr, PG_TEXT_FMT);
     },
   );
-  out = out.replace(DATETIME_NOW_RE, (m) => {
-    const args = m
-      .slice("datetime('now'".length, -1)
-      .split(",")
-      .map((s) => s.trim());
-    let result = "now()";
-    for (const arg of args) {
-      if (!arg) continue;
-      const match = arg.match(/^'([+-]\d+)\s*(\w+)'$/);
-      if (match) {
-        const sign = match[1].startsWith("-") ? "-" : "+";
-        const amount = Math.abs(parseInt(match[1], 10));
-        const unit = UNIT_MAP[match[2]] || match[2];
-        result += `${sign} interval '${amount} ${unit}'`;
-      }
-    }
-    return result;
+
+  // datetime('now'[, '±N unit'…][, 'start of month'])
+  src = src.replace(DATETIME_NOW_RE, (m, offset: number) => {
+    const expr = buildExpr(argsOf(m));
+    return isComparePosition(src, offset) ? expr : toText(expr, PG_TEXT_FMT);
   });
-  out = out.replace(DATE_ONLY_RE, "to_char(now(), 'YYYY-MM-DD')");
-  out = out.replace(/\b([a-z_][a-z0-9_]*)\s*(>=|<=|>|<)\s*now\(\)/gi, "$1::timestamptz $2 now()");
-  return out;
+
+  // date('now'…) -> toujours texte (bornes de date, comparaison préfixée).
+  src = src.replace(DATE_NOW_RE, (m, _g: string) => toText(buildExpr(argsOf(m)), PG_DATE_FMT));
+
+  // Membre gauche des comparaisons vers now()/date_trunc(...) : cast en
+  // timestamptz (couvre aussi les formes fonctionnelles type COALESCE(…)…).
+  src = src.replace(
+    /\b([a-z_][a-z0-9_]*(?:\s*\([^()]*\))?)\s*(>=|<=|>|<)\s*(now\(\)|date_trunc\()/gi,
+    "$1::timestamptz $2 $3",
+  );
+
+  return src;
 }
 
 let pool: Pool | null = null;
@@ -900,7 +986,10 @@ export function toPgSchema(schema: string): string {
   let out = schema
     .replace(/\bINTEGER PRIMARY KEY AUTOINCREMENT\b/g, "SERIAL PRIMARY KEY")
     .replace(/\bAUTOINCREMENT\b/g, "SERIAL")
-    .replace(/DEFAULT \(datetime\('now'\)\)/g, "DEFAULT (now())")
+    // Les défauts datetime('now'…) passent par toPgDatetime (position « valeur »)
+    // -> to_char(…) TEXT : `DEFAULT (now())` sur une colonne TEXT est refusé
+    // par PostgreSQL (erreur 42804), ce qui annulait toute la création de
+    // schéma en production (constaté en P1.3 : base vide, transaction annulée).
     .replace(/datetime\('now'[^)]*\)/g, (m) => toPgDatetime(m));
 
   const fkAlters: string[] = [];

@@ -43,6 +43,13 @@ export const EVENTS = {
   referralLinkShared: "referral_link_shared",
   pricingVariantViewed: "pricing_variant_viewed",
   abTestVariant: "ab_test_variant",
+  // Phase 3f — parcours visiteur -> eleve (acquisition / engagement / retention)
+  landingViewed: "landing_viewed",
+  ctaClicked: "cta_clicked",
+  referralClicked: "referral_clicked",
+  subjectSelected: "subject_selected",
+  gradeSelected: "grade_selected",
+  returnVisit: "return_visit",
 } as const;
 
 export type EdukoraEventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -197,6 +204,48 @@ gtag('config', '${GA_ID}', { send_page_view: true });`;
 // ------------------------------------------------------------------
 const sentThisView = new Set<string>();
 
+// ------------------------------------------------------------------
+// Phase 3f — protection PII (regles 6 et 7 de la phase)
+// ------------------------------------------------------------------
+// Le stockage first-party (/api/analytics/track) conserve le contexte
+// complet : c'est la base de donnees interne du produit, avec un
+// consentement et une finalite propres.
+//
+// En revanche, tout ce qui part vers un TIERS (GA4, Clarity, Meta,
+// TikTok, Google Ads) doit etre filtre a la source : ces acteurs
+// sont hors du perimetre de controle d'Edukora et aucune regle ne
+// doit reposer sur la seule discipline de chaque call site.
+// Cette liste est une defense en profondeur : elle couvre aussi les
+// ajouts futurs, y compris les messages du tuteur IA.
+const PII_PARAM_KEYS =
+  /^(name|full_?name|first_?name|last_?name|nom|prenom|prénom|email|e_?mail|mail|phone|telephone|tel|telephone|portable|password|passwd|pwd|ref|reference|transaction_?id|code|token|secret|api_?key|address|adresse|commune|message|content|contenu|prompt|query|question_?text|answer_?text|user_?id|student_?name|classmate)$/i;
+
+// Valeurs suspectes : adresse e-mail ou numero de telephone.
+const PII_PARAM_VALUES = /@|(\+?\d[\d\s().-]{7,}\d)/;
+
+// Un parametre texte est coupe au-dela de cette longueur (anti-fuite
+// de contenu long : reponses du tuteur, copier-coller d'un eleve).
+const MAX_PARAM_TEXT = 100;
+
+/**
+ * Copie des parametres autorisees vers les tiers.
+ * Le premier parametre n'est jamais modifie sur place.
+ */
+export function sanitizeForThirdParty(
+  params: TrackParams,
+): TrackParams {
+  const safe: TrackParams = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (PII_PARAM_KEYS.test(key)) continue;
+    if (typeof value === "string") {
+      if (value.length > MAX_PARAM_TEXT) continue;
+      if (PII_PARAM_VALUES.test(value)) continue;
+    }
+    safe[key] = value;
+  }
+  return safe;
+}
+
 function sendToInternal(name: EdukoraEventName, params: TrackParams) {
   try {
     fetch("/api/analytics/track", {
@@ -220,6 +269,8 @@ export function trackEvent(
   if (typeof window === "undefined") return;
   // Toujours envoyer vers l'analytics interne gratuit (DB), même sans consentement (1st-party, anonymisable)
   sendToInternal(name, params);
+  // 3f : version filtree pour les tiers (GA4 / Clarity / Meta / TikTok / Google Ads)
+  const safe = sanitizeForThirdParty(params);
   // Marketing pro (Meta/TikTok/Google Ads) — respecte son propre consentement marketing
   try {
     const map: Record<string, string> = {
@@ -232,7 +283,7 @@ export function trackEvent(
       simulateur_completed: "CompleteExam",
     };
     const mEvent = map[name];
-    if (mEvent) trackMarketing(mEvent, params as Record<string, unknown>);
+    if (mEvent) trackMarketing(mEvent, safe as Record<string, unknown>);
   } catch {}
   if (!analyticsAccepted()) return;
 
@@ -245,11 +296,14 @@ export function trackEvent(
     const plan = userPlan();
     if (plan) params.plan = plan;
   }
+  // 3f : refiltrage apres ajout de `plan` — les tiers ne recoivent
+  // jamais la version non filtree.
+  const out = sanitizeForThirdParty(params);
 
   // GA4
   if (GA_ID && typeof (window as any).gtag === "function") {
     (window as any).gtag("event", name, {
-      ...params,
+      ...out,
       event_source: "edukora",
     });
   }
@@ -257,7 +311,7 @@ export function trackEvent(
   // Clarity : custom events (limités à 20 events custom par jour par session)
   if (CLARITY_ID && typeof (window as any).clarity === "function") {
     const clarityParams: Record<string, string | number> = {};
-    for (const [k, v] of Object.entries(params)) {
+    for (const [k, v] of Object.entries(out)) {
       if (typeof v === "string" || typeof v === "number") clarityParams[k] = v;
     }
     (window as any).clarity("event", name, clarityParams);

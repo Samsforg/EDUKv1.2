@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { EVENTS, trackEvent } from "@/lib/analytics";
+import { signupAttributionProps } from "@/lib/attribution";
 
 interface Serie {
   id: number;
@@ -52,7 +53,14 @@ function InscriptionPage() {
   const [role, setRole] = useState<"student" | "teacher">("student");
   const [showPassword, setShowPassword] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
-  const [referralCode, setReferralCode] = useState("");
+  // P0.9 — capture du code de parrainage depuis ?ref= (lien partagé par
+  // /parrainage). Initialisé au montage depuis l'URL : le code survit aux
+  // saisies et aux refreshs tant que le paramètre reste dans l'URL. Le
+  // serveur re-valide le code (api/auth/register) — ici on ne fait que le
+  // transmettre, jamais lui faire confiance.
+  const [referralCode, setReferralCode] = useState(() =>
+    (params.get("ref") ?? "").trim().toUpperCase().slice(0, 20),
+  );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showExtraFields, setShowExtraFields] = useState(false);
@@ -72,6 +80,12 @@ function InscriptionPage() {
     const v = getABVariant();
     setVariant(v);
     trackEvent(EVENTS.abTestVariant, { test: "inscription", variant: v });
+    // 3f : arrivee via un lien de parrainage. On ne remonte que la
+    // presence d'un code, jamais sa valeur (le code est un
+    // identifiant unique lie a un compte).
+    if (params.get("ref")) {
+      trackEvent(EVENTS.referralClicked, { has_code: true, landing: "inscription" });
+    }
   }, []);
 
   useEffect(() => {
@@ -175,6 +189,13 @@ function InscriptionPage() {
           medium: params.get("utm_medium") ?? null,
           source: params.get("utm_source") ?? null,
           variant,
+          // P1.0 — first-touch (mémoire d'onglet portée par
+          // src/lib/attribution, capturée sur la landing) :
+          // spread APRÈS les params URL pour que le first-touch gagne,
+          // et pour ajouter les clés restantes du contrat (content/term,
+          // identifiants de clic). Le ?ref= reste hors de cette map
+          // (parcours referral séparé, contract §5).
+          ...signupAttributionProps(),
         });
         window.location.assign(
           destAfterSignup ?? (role === "teacher" ? "/espace-prof" : "/bienvenue"),

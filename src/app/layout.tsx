@@ -5,6 +5,7 @@ import CsrfInit from "@/components/CsrfInit";
 import RegisterSW from "@/components/RegisterSW";
 import VercelAnalytics from "@/components/VercelAnalytics";
 import EdukoraAnalytics from "@/components/EdukoraAnalytics";
+import AttributionCapture from "@/components/AttributionCapture";
 import ConsentBanner from "@/components/ConsentBanner";
 import AdSenseLoader from "@/components/AdSenseLoader";
 import { Hanken_Grotesk, Inter } from "next/font/google";
@@ -114,6 +115,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {children}
         <RegisterSW />
         <VercelAnalytics />
+        {/* P1.0 — capture first-touch (UTM + identifiants de clic publicitaires)
+            dès le montage, avant la navigation éventuelle vers l'inscription. */}
+        <AttributionCapture />
         <EdukoraAnalytics />
         <ConsentBanner />
         <AdSenseLoader />

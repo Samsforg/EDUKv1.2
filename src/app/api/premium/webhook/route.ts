@@ -2,6 +2,7 @@ import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { queryOne, run, query } from "@/lib/db";
+import { recordPurchase } from "@/lib/analytics-db";
 import { canonicalPhone } from "@/lib/geniuspay";
 import { sendSubscriptionReceipt } from "@/lib/mailer";
 import { sendGa4Purchase } from "@/lib/ga4-ssr";
@@ -64,6 +65,26 @@ async function sendReceiptIfActive(reference: string | null) {
     String(reference),
   );
   if (!sub || sub.status !== "active") return;
+
+  // P1.0 — purchase first-party : AUSSI enregistré dans analytics_events,
+  // idempotent sur transaction_id (rejeux webhook = 1 seul événement).
+  // Même garde que le reçu email et le miroir GA4 : sub active = paiement
+  // confirmé (payment.failed / initiated n'atteignent jamais ici).
+  // Await avant la réponse : sauf erreur DB (catch → logger.warn, le reçu
+  // email continue), le 200 du webhook implique la persistance.
+  try {
+    await recordPurchase({
+      userId: sub.user_id,
+      transactionId: sub.provider_subscription_id,
+      valueCents: sub.price_cents,
+      currency: sub.currency,
+      plan: sub.plan_name,
+      subscriptionId: sub.id,
+    });
+  } catch (e) {
+    logger.warn("webhook:purchase_event_failed", { error: e instanceof Error ? e.message : String(e) });
+  }
+
   const okMail = await sendSubscriptionReceipt(sub.user_id, {
     planName: sub.plan_name,
     amount: sub.price_cents,

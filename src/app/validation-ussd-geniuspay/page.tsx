@@ -32,7 +32,6 @@ function GeniusPayValidation() {
         setAmount(d.amount);
         setPlanName(d.plan_name);
         trackEvent(EVENTS.addPaymentInfo, {
-          ref,
           value: d.amount,
           currency: d.currency ?? "XOF",
           plan: d.plan_name,

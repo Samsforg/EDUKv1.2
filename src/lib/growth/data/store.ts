@@ -90,10 +90,23 @@ export async function getStore(): Promise<GrowthStore> {
       return (await queryOne<Metrics>(`${S_METRICS} ORDER BY date DESC LIMIT 1`)) ?? null;
     },
     async saveMetrics(m) {
+      // P1.0 : UPSERT portable — les placeholders ne doivent apparaître
+      // qu'une seule fois (better-sqlite3 compte chaque occurrence : la
+      // forme $2..$9 répétée dans ON CONFLICT sortait du nombre de params
+      // → "column index out of range"). `excluded.*` évite tout paramètre
+      // supplémentaire et est supporté par SQLite comme par PostgreSQL.
       await run(
         `INSERT INTO growth_metrics (date, signups, active_users, premium_conversions, referral_count, quiz_completions, kora_interactions, page_views, utm)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-         ON CONFLICT (date) DO UPDATE SET signups=$2, active_users=$3, premium_conversions=$4, referral_count=$5, quiz_completions=$6, kora_interactions=$7, page_views=$8, utm=$9`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT (date) DO UPDATE SET
+           signups = excluded.signups,
+           active_users = excluded.active_users,
+           premium_conversions = excluded.premium_conversions,
+           referral_count = excluded.referral_count,
+           quiz_completions = excluded.quiz_completions,
+           kora_interactions = excluded.kora_interactions,
+           page_views = excluded.page_views,
+           utm = excluded.utm`,
         m.date, m.signups, m.activeUsers, m.premiumConversions, m.referralCount,
         m.quizCompletions, m.koraInteractions, m.pageViews, JSON.stringify(m.utm ?? {})
       );
