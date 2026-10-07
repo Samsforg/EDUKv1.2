@@ -1020,6 +1020,39 @@ export function toPgSchema(schema: string): string {
   return fkAlters.length ? out + "\n" + fkAlters.join("\n") : out;
 }
 
+/**
+ * P1.9 — schema drift de production : `duels`, `class_assignments` et
+ * `assignment_submissions` ont été ajoutées au SCHEMA APRÈS la création de
+ * la base de production, et `initDb()` ne rejoue le SCHEMA complet que si
+ * `users` est absent (voir ci-dessous) → ces tables n'ont jamais été
+ * créées en prod (`42P01` sur /api/duels, jointures devoirs en échec).
+ *
+ * Les statements sont extraits du SCHEMA — source de vérité unique du DDL
+ * applicatif — puis convertis par `toPgSchema` (SERIAL, défauts TEXT via
+ * to_char, FK en ALTER TABLE ADD CONSTRAINT). Aucune duplication du DDL.
+ * Idempotence : `CREATE TABLE/INDEX IF NOT EXISTS` + gate `to_regclass`
+ * par table dans `initDb()` (2e exécution = aucune statement exécutée,
+ * donc aucun ALTER ADD CONSTRAINT rejoué).
+ */
+export const P19_TABLES = ["class_assignments", "assignment_submissions", "duels"] as const;
+
+export function p19Statements(pg: boolean): { table: string; sql: string[] }[] {
+  return P19_TABLES.map((table) => {
+    const start = SCHEMA.indexOf(`CREATE TABLE IF NOT EXISTS ${table} (`);
+    if (start < 0) throw new Error(`P1.9: CREATE TABLE ${table} introuvable dans SCHEMA`);
+    const end = SCHEMA.indexOf(");", start);
+    if (end < 0) throw new Error(`P1.9: fin de CREATE TABLE ${table} introuvable dans SCHEMA`);
+    const block = SCHEMA.slice(start, end + 2);
+    const idxRe = new RegExp(`CREATE INDEX IF NOT EXISTS [a-z0-9_]+ ON ${table}\\s*\\([^)]*\\);`, "g");
+    const raw = [block, ...(SCHEMA.match(idxRe) ?? [])].join("\n");
+    const sql = (pg ? toPgSchema(raw) : raw)
+      .split(";")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return { table, sql };
+  });
+}
+
 export async function initDb() {
   if (IS_PG) {
     const pool = getPool();
@@ -1274,6 +1307,21 @@ CREATE INDEX IF NOT EXISTS idx_dissertation_corrections_user ON dissertation_cor
         for (const stmt of pieces) {
           const trimmed = stmt.trim();
           if (trimmed) await pool.query(trimmed);
+        }
+      }
+      // P1.9 — tables ajoutées au SCHEMA après la création de prod
+      // (schema drift : initDb ne rejoue le SCHEMA complet que si `users`
+      // manque). Même patron que hasClasses/hasTeacherSubjects : gate
+      // to_regclass par table, ordre FK respecté (class_assignments avant
+      // assignment_submissions), aucune exécution si la table existe déjà.
+      for (const { table, sql } of p19Statements(true)) {
+        const exists = await withPgRetry(() =>
+          pool.query(`SELECT to_regclass('public.${table}') IS NOT NULL AS exists`),
+        );
+        if (!exists.rows[0].exists) {
+          for (const stmt of sql) {
+            await withPgRetry(() => pool.query(stmt));
+          }
         }
       }
       try { await withPgRetry(() => pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS has_used_trial INTEGER NOT NULL DEFAULT 0")); } catch {}
