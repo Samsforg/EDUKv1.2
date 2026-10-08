@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import GrowthDashboard from "./GrowthDashboard";
+import GrowthInsightsPanel from "./GrowthInsightsPanel";
 
 export default async function GrowthAdminPage() {
   const user = await getCurrentUser();
@@ -9,6 +10,7 @@ export default async function GrowthAdminPage() {
 
   return (
     <AdminShell active="growth">
+      <GrowthInsightsPanel />
       <GrowthDashboard />
     </AdminShell>
   );
