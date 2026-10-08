@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import type { GrowthInsightBundle } from "@/lib/growth/decision/types";
 
 /**
- * P2.1 — panneau Decision Layer (§17) : Growth Health, Top Signals,
- * Top Opportunities, Top Recommendations. Lecture seule : fetch de la
- * route admin existante, aucune action exposée (tout reste « PROPOSED »).
+ * P2.1 + P2.2 — panneau Decision Layer (§17) : Growth Health, Attribution,
+ * Channels, Referrals, Top Signals, Top Opportunities, Top Recommendations.
+ * Lecture seule : fetch de la route admin existante, aucune action exposée
+ * (tout reste « PROPOSED »). Les cartes P2.2 sont en plus des cartes P2.1 —
+ * le dashboard existant reste intact.
  */
 
 const CARD = "bg-surface-container-lowest border border-outline-variant rounded-xl p-4";
@@ -26,6 +28,14 @@ function fmtValue(v: number | null, benchmark: number | null): string {
   if (v === null) return "n/a";
   const pct = v <= 1 && benchmark !== null ? `${Math.round(v * 100)} %` : String(v);
   return benchmark !== null ? `${pct} (seuil ${benchmark <= 1 ? `${Math.round(benchmark * 100)} %` : benchmark})` : pct;
+}
+
+function fmtPct(v: number | null): string {
+  return v === null ? "n/a" : `${(v * 100).toFixed(1)} %`;
+}
+
+function fmtMoney(cents: number): string {
+  return `${(cents / 100).toLocaleString("fr-FR")} F`;
 }
 
 export default function GrowthInsightsPanel() {
@@ -87,6 +97,94 @@ export default function GrowthInsightsPanel() {
             </p>
           ))}
         </div>
+      </div>
+
+      {/* P2.2 — attribution : couverture, sources, inconnus (§11-§12) */}
+      <div className={CARD}>
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className={LABEL}>Attribution</h2>
+          <span className="text-xs text-on-surface-variant">inscrits de la période · test users exclus</span>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="border border-outline-variant rounded-lg px-3 py-2">
+            <p className="text-xs text-on-surface-variant">Couverture attribution</p>
+            <p className="text-sm font-semibold">
+              {fmtPct(data.attribution.coverage.coverageRate)}
+              <span className="ml-1 text-xs font-normal text-on-surface-variant">
+                ({data.attribution.coverage.attributed}/{data.attribution.coverage.attributed + data.attribution.coverage.unattributed})
+              </span>
+            </p>
+            <span className={ratingChip(data.attribution.coverage.status)}>{data.attribution.coverage.status}</span>
+          </div>
+          <div className="border border-outline-variant rounded-lg px-3 py-2">
+            <p className="text-xs text-on-surface-variant">Taux source inconnue</p>
+            <p className="text-sm font-semibold">{fmtPct(data.attribution.sources.unknown_rate)}</p>
+            <span className={ratingChip(data.attribution.sources.status)}>{data.attribution.sources.status}</span>
+          </div>
+          <div className="border border-outline-variant rounded-lg px-3 py-2">
+            <p className="text-xs text-on-surface-variant">Source dominante</p>
+            <p className="text-sm font-semibold">{data.attribution.top_source ?? "n/a"}</p>
+          </div>
+          <div className="border border-outline-variant rounded-lg px-3 py-2">
+            <p className="text-xs text-on-surface-variant">Répartition des sources</p>
+            <p className="text-xs">
+              utm {data.attribution.sources.by_type.utm} · clic {data.attribution.sources.by_type.paid_click} ·
+              parrainage {data.attribution.sources.by_type.referral} · inconnu {data.attribution.sources.by_type.unknown}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* P2.2 — performance par canal (§5) */}
+      <div className={CARD}>
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className={LABEL}>Channels</h2>
+          <span className="text-xs text-on-surface-variant">visiteurs par canal non attribuables (page_view sans props)</span>
+        </div>
+        {data.channels.length === 0 ? (
+          <p className="text-sm text-on-surface-variant">Aucun inscrit identifié sur la période.</p>
+        ) : (
+          <ul className="grid gap-2">
+            {data.channels.map((c) => (
+              <li key={c.channel} className="text-sm border border-outline-variant rounded-lg px-3 py-2 grid gap-1 sm:grid-cols-2">
+                <span className="font-semibold">{c.channel}</span>
+                <span className={ratingChip(c.status)}>{c.status}</span>
+                <span className="text-xs text-on-surface-variant">
+                  inscrits {c.signups} · activés {c.activated} · abonnés {c.subscriptions} · revenu {fmtMoney(c.revenue)}
+                </span>
+                <span className="text-xs text-on-surface-variant">
+                  activation {fmtPct(c.activationRate)} · conversion {fmtPct(c.conversionRate)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* P2.2 — performance par référent (§6) */}
+      <div className={CARD}>
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className={LABEL}>Referrals</h2>
+          <span className="text-xs text-on-surface-variant">codes de parrainage · aucun identifiant personnel</span>
+        </div>
+        {data.referrals.length === 0 ? (
+          <p className="text-sm text-on-surface-variant">Aucun filleul inscrit sur la période.</p>
+        ) : (
+          <ul className="grid gap-2">
+            {data.referrals.map((r) => (
+              <li key={r.referral} className="text-sm border border-outline-variant rounded-lg px-3 py-2 grid gap-1 sm:grid-cols-2">
+                <span className="font-semibold">{r.referral}</span>
+                <span className={ratingChip(r.status)}>{r.status}</span>
+                <span className="text-xs text-on-surface-variant">
+                  filleuls {r.signups} · activés {r.activated} · abonnés {r.subscriptions} · revenu {fmtMoney(r.revenue)}
+                </span>
+                <span className="text-xs text-on-surface-variant">
+                  activation {fmtPct(r.activationRate)} · conversion {fmtPct(r.conversionRate)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

@@ -116,10 +116,177 @@ export const HEALTH_STAGES = ["acquisition", "activation", "conversion", "retent
 export const SOURCE_ANALYTICS = "analytics_events (test users excluded)";
 export const SOURCE_BUSINESS = "subscriptions + business-metrics (test users excluded)";
 export const SOURCE_CONTRACT = "docs/analytics-data-contract.md (retention non fabricable en P2)";
+/** P2.2 — source de la couche attribution (props signup + parrainage). */
+export const SOURCE_ATTRIBUTION = "analytics_events.props (signup_completed) + users.referred_by (test users excluded)";
 
 /**
  * Retention : le contrat P2 fige `retention: null` tant que l'historique
  * est insuffisant (n = 1). Le moteur ne recalcule JAMAIS une rétention
- * alternative — il reporte le statut officiel (§12, aucune fabrication).
+ * alternative : il reporte le statut officiel (§12, aucune fabrication).
  */
 export const RETENTION_STATUS: InsightStatus = "INSUFFICIENT_DATA";
+
+/**
+ * P2.2 §3 — bornes d'attribution. Ce sont des LIMITES MATHÉMATIQUES de
+ * la métrique (couverture maximale = 100 %, inconnu minimal = 0 %),
+ * jamais des benchmarks marché : le moteur compare une valeur observée
+ * à sa borne théorique, il ne juge jamais « bon / mauvais » (§9).
+ */
+export const ATTRIBUTION_LIMITS = {
+  /** Couverture maximale théorique : tous les inscrits identifiés attribués. */
+  coverage_full: 1,
+  /** Inconnu minimal théorique : aucun inscrit identifié sans source. */
+  unknown_min: 0,
+} as const;
+
+/**
+ * P2.2 §8 — audit de recalibration des seuils (aucune valeur modifiée).
+ *
+ * Classification :
+ *   CONTRACTUAL       — imposé par une règle métier / le cahier des charges ;
+ *   WORKING           — cible de travail documentée, recalibrable avec data ;
+ *   DATA-CALIBRATED   — recalibrable en priorité dès historique suffisant ;
+ *   INSUFFICIENT_DATA — aucune modification justifiable aujourd'hui.
+ *
+ * `data_available` = état de l'historique réellement exploitable en
+ * session (contrat P2 : rétention n = 1 ; aucun historique ≥ 30 jours
+ * agrégé fourni). `confidence` = confiance dans la valeur actuelle du
+ * seuil, pas dans la métrique mesurée. Aucun benchmark Côte d'Ivoire ni
+ * EdTier externe n'a été introduit (§9 — aucun benchmark inventé).
+ */
+export interface ThresholdAuditEntry {
+  threshold: string;
+  value: string;
+  classification: "CONTRACTUAL" | "WORKING" | "DATA-CALIBRATED" | "INSUFFICIENT_DATA";
+  reason: string;
+  minimum_sample: number;
+  data_available: string;
+  confidence: "high" | "medium" | "low";
+  changed_in_p22: false;
+}
+
+export const THRESHOLD_AUDIT: readonly ThresholdAuditEntry[] = [
+  {
+    threshold: "THRESHOLDS.activation_rate.min",
+    value: "0.30",
+    classification: "WORKING",
+    reason: "Cible de travail EdTech déclarée en P2.1 ; aucun contrat métier ni benchmark fourni ne l'impose.",
+    minimum_sample: 30,
+    data_available: "historique agrégé < 30 jours",
+    confidence: "low",
+    changed_in_p22: false,
+  },
+  {
+    threshold: "THRESHOLDS.signup_rate.min",
+    value: "0.10",
+    classification: "WORKING",
+    reason: "Seuil bas de détection d'une acquisition faible ; déclaratif P2.1, pas de donnée externe.",
+    minimum_sample: 30,
+    data_available: "historique agrégé < 30 jours",
+    confidence: "low",
+    changed_in_p22: false,
+  },
+  {
+    threshold: "THRESHOLDS.signup_rate.high",
+    value: "0.30",
+    classification: "WORKING",
+    reason: "Seuil haut de détection ; borné par la même famille de taux que le seuil bas.",
+    minimum_sample: 30,
+    data_available: "historique agrégé < 30 jours",
+    confidence: "low",
+    changed_in_p22: false,
+  },
+  {
+    threshold: "THRESHOLDS.checkout_dropoff.max",
+    value: "0.50",
+    classification: "WORKING",
+    reason: "Demi des checkouts abandonnés — repère de travail, pas un taux constaté Edukora.",
+    minimum_sample: 10,
+    data_available: "volumes checkout faibles",
+    confidence: "low",
+    changed_in_p22: false,
+  },
+  {
+    threshold: "THRESHOLDS.return_visit_rate.min",
+    value: "0.20",
+    classification: "WORKING",
+    reason: "Proxy de rétention court utilisé faute de rétention D7 disponible.",
+    minimum_sample: 30,
+    data_available: "rétention officielle n = 1",
+    confidence: "low",
+    changed_in_p22: false,
+  },
+  {
+    threshold: "MIN_SAMPLE.traffic_rate / segment",
+    value: "30",
+    classification: "CONTRACTUAL",
+    reason: "Garde d'échantillon du cahier P2.1 §12 (exemple contractuel « 30 ») : sous ce plancher, aucune décision forte.",
+    minimum_sample: 30,
+    data_available: "applicable dès aujourd'hui",
+    confidence: "high",
+    changed_in_p22: false,
+  },
+  {
+    threshold: "MIN_SAMPLE.checkout_rate",
+    value: "10",
+    classification: "WORKING",
+    reason: "Planter adapté à un volume d'événement plus rare (begin_checkout), resté volontairement bas.",
+    minimum_sample: 10,
+    data_available: "volumes checkout faibles",
+    confidence: "medium",
+    changed_in_p22: false,
+  },
+  {
+    threshold: "MIN_SAMPLE.monetization / retention / revenue_subs",
+    value: "30",
+    classification: "WORKING",
+    reason: "Plancher de décision sur monétisation/rétention/revenu ; même famille statistique que traffic_rate.",
+    minimum_sample: 30,
+    data_available: "rétention n = 1 ; abonnés actifs comptables en direct",
+    confidence: "medium",
+    changed_in_p22: false,
+  },
+  {
+    threshold: "ATTRIBUTION_LIMITS.coverage_full",
+    value: "1.0",
+    classification: "CONTRACTUAL",
+    reason: "Borne mathématique de la couverture (100 % = tous attribués) — pas un benchmark externe.",
+    minimum_sample: 30,
+    data_available: "calculable dès l'instant où des inscrits existent",
+    confidence: "high",
+    changed_in_p22: false,
+  },
+  {
+    threshold: "ATTRIBUTION_LIMITS.unknown_min",
+    value: "0.0",
+    classification: "CONTRACTUAL",
+    reason: "Borne mathématique du taux d'inconnu (0 % = aucune source inconnue).",
+    minimum_sample: 30,
+    data_available: "calculable dès l'instant où des inscrits existent",
+    confidence: "high",
+    changed_in_p22: false,
+  },
+  {
+    threshold: "retention_d7 (rapport officiel)",
+    value: "null — INSUFFICIENT_DATA",
+    classification: "INSUFFICIENT_DATA",
+    reason: "Contrat P2 : historique n = 1 < plancher 30 ; aucun recalibrage possible ni nécessaire.",
+    minimum_sample: 30,
+    data_available: "n = 1",
+    confidence: "low",
+    changed_in_p22: false,
+  },
+];
+
+/**
+ * P2.2 §14 — plafond de qualité de données : la confiance d'une
+ * opportunité dépendant de l'attribution (canal, referral) est plafonnée
+ * par la couverture d'attribution observée. Un grand volume de données
+ * partielles ne peut pas produire une priorité maximale artificielle —
+ * c'est le MÊME priority_score P2.1, seule la composante confidence
+ * devient `min(confidence_sample, couverture × 100)`.
+ */
+export const DATA_QUALITY = {
+  /** La couverture sert de plafond de confiance (0..100). */
+  confidence_cap_from_coverage: true,
+} as const;

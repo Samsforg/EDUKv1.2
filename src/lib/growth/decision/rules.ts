@@ -134,7 +134,7 @@ export function computeMetrics(data: GrowthData): ComputedMetrics {
   };
 }
 
-interface SignalSeed {
+export interface SignalSeed {
   type: SignalType;
   metric: string;
   value: number | null;
@@ -143,7 +143,7 @@ interface SignalSeed {
   severity: GrowthSignal["severity"];
 }
 
-function makeSignal(seed: SignalSeed, period: string, createdAt: string): GrowthSignal {
+export function makeSignal(seed: SignalSeed, period: string, createdAt: string): GrowthSignal {
   return {
     id: `sig_${seed.metric}#${period}`,
     type: seed.type,
@@ -158,7 +158,7 @@ function makeSignal(seed: SignalSeed, period: string, createdAt: string): Growth
   };
 }
 
-interface OpportunitySeed {
+export interface OpportunitySeed {
   type: OpportunityType;
   segment: SegmentKey | null;
   evidence: string;
@@ -167,7 +167,7 @@ interface OpportunitySeed {
   urgency: number;
 }
 
-function makeOpportunity(seed: OpportunitySeed, period: string, createdAt: string): GrowthOpportunity {
+export function makeOpportunity(seed: OpportunitySeed, period: string, createdAt: string): GrowthOpportunity {
   const priority_score = computePriorityScore(seed.impact, seed.confidence, seed.urgency);
   return {
     id: `opp_${seed.type}#${period}`,
@@ -184,7 +184,7 @@ function makeOpportunity(seed: OpportunitySeed, period: string, createdAt: strin
   };
 }
 
-const fmtRate = (v: number | null): string => (v === null ? "n/a" : v.toFixed(3));
+export const fmtRate = (v: number | null): string => (v === null ? "n/a" : v.toFixed(3));
 
 /**
  * Évalue les règles sur les données agrégées. Fonction pure : `created_at`

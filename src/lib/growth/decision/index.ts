@@ -8,23 +8,31 @@ import type {
   GrowthSegment,
   GrowthSignal,
   HealthStage,
+  InsightStatus,
   OpportunityType,
 } from "./types";
 import { HEALTH_STAGES, MIN_SAMPLE, THRESHOLDS } from "./thresholds";
 import { gapSeverity } from "./scoring";
 import { computeMetrics, evaluateRules, type ComputedMetrics } from "./rules";
+import { evaluateAttributionRules } from "./attribution-rules";
+import { buildChannelPerformances } from "./channels";
+import { buildReferralPerformances } from "./referrals";
+import { computeCoverage } from "./attribution";
 import { buildSegments } from "./segments";
 import { buildRecommendation } from "./recommend";
 
 /**
- * P2.1 — orchestration du Decision Layer :
+ * P2.1 + P2.2 — orchestration du Decision Layer :
  *
- *   DATA → RULE ENGINE → SIGNALS → OPPORTUNITIES → RECOMMENDATIONS →
- *   ACTIONS PROPOSÉES (+ SEGMENTS + HEALTH)
+ *   DATA → ATTRIBUTION → CHANNEL/REFERRAL PERFORMANCE → RULE ENGINE
+ *        → SIGNALS → SEGMENTS → OPPORTUNITIES → RECOMMENDATIONS
+ *        → ACTIONS PROPOSÉES (+ HEALTH)
  *
  * Fonction pure sur `GrowthData` : idempotence par construction (même
  * input → même output ; `created_at` est celui de l'input injecté).
  * Aucune écriture, aucun appel externe, aucune action exécutée.
+ * La couche P2.2 ne modifie ni ne duplique les règles P2.1 (§13) :
+ * elle est évaluée à côté et fusionnée dans les listes du bundle.
  */
 
 interface MetricLink {
@@ -206,18 +214,60 @@ export function computeHealth(m: ComputedMetrics, data: GrowthData): GrowthHealt
   return out;
 }
 
+/** Sections d'attribution du bundle P2.2 (vides et explicites si absente). */
+function assembleIntelligenceSections(data: GrowthData): {
+  attribution: GrowthInsightBundle["attribution"];
+  channels: GrowthInsightBundle["channels"];
+  referrals: GrowthInsightBundle["referrals"];
+} {
+  const intel = data.intelligence;
+  if (!intel || !intel.available) {
+    const status: InsightStatus = "UNAVAILABLE";
+    return {
+      attribution: {
+        coverage: computeCoverage(0, 0),
+        sources: {
+          by_type: { utm: 0, paid_click: 0, referral: 0, unknown: 0 },
+          unknown_rate: null,
+          status: "INSUFFICIENT_DATA",
+        },
+        top_source: null,
+        status,
+      },
+      channels: [],
+      referrals: [],
+    };
+  }
+  return {
+    attribution: {
+      coverage: intel.attribution.coverage,
+      sources: intel.attribution.sources,
+      top_source: intel.attribution.top_source,
+      status: intel.attribution.coverage.status,
+    },
+    channels: buildChannelPerformances(intel.channels),
+    referrals: buildReferralPerformances(intel.referrals),
+  };
+}
+
 export function runDecisionLayer(data: GrowthData): GrowthInsightBundle {
   const { metrics, signals, opportunities } = evaluateRules(data);
+  // P2.2 — règles d'attribution évaluées à côté de P2.1, jamais à la place.
+  const intelRules = evaluateAttributionRules(data);
 
-  const recommendations = opportunities.map((opp) => buildRecommendation(opp, data));
-  const insights = assembleInsights(data, metrics, signals, opportunities, recommendations);
+  const allSignals = [...signals, ...intelRules.signals];
+  const allOpportunities = [...opportunities, ...intelRules.opportunities];
+
+  const recommendations = allOpportunities.map((opp) => buildRecommendation(opp, data));
+  const insights = assembleInsights(data, metrics, allSignals, allOpportunities, recommendations);
   const segments: GrowthSegment[] = buildSegments(data);
   const health = computeHealth(metrics, data);
+  const intelligence = assembleIntelligenceSections(data);
 
   const byPriority = <T extends { priority_score: number; id: string }>(a: T, b: T): number =>
     b.priority_score - a.priority_score || a.id.localeCompare(b.id);
 
-  const sortedSignals = [...signals].sort(
+  const sortedSignals = [...allSignals].sort(
     (a, b) => (SEVERITY_RANK[a.status] ?? 9) - (SEVERITY_RANK[b.status] ?? 9),
   );
 
@@ -227,9 +277,12 @@ export function runDecisionLayer(data: GrowthData): GrowthInsightBundle {
     health,
     segments,
     signals: sortedSignals,
-    opportunities: [...opportunities].sort(byPriority),
+    opportunities: [...allOpportunities].sort(byPriority),
     recommendations: [...recommendations].sort(byPriority),
     insights,
+    attribution: intelligence.attribution,
+    channels: intelligence.channels,
+    referrals: intelligence.referrals,
     meta: {
       engine: "deterministic",
       external_calls: false,

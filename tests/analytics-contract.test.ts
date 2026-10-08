@@ -177,7 +177,15 @@ describe("P0.8 — attribution : ce qui existe, ce qui manque", () => {
     // d'acquisition, lecture seule — aucune écriture sessionStorage, aucun
     // corps de requête) : la règle reste « aucune écriture hors
     // attribution.ts ».
-    expect([...offenders].sort()).toEqual(["src/lib/attribution.ts", "src/lib/utm-report.ts"]);
+    // P2.2 : `growth/decision/attribution.ts` lit les mêmes props côté
+    // serveur pour les canaux/couverture (pur, sans écriture, sans réseau)
+    // et `growth/decision/data.ts` les agrège en SQL (2 requêtes read-only).
+    expect([...offenders].sort()).toEqual([
+      "src/lib/attribution.ts",
+      "src/lib/growth/decision/attribution.ts",
+      "src/lib/growth/decision/data.ts",
+      "src/lib/utm-report.ts",
+    ]);
     // Aucune PII dans ce module : ni email, ni téléphone, ni identité.
     const attributionSrc = read("src", "lib", "attribution.ts");
     expect(attributionSrc).not.toMatch(/email|phone|first_name|last_name|birth/i);

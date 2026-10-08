@@ -72,6 +72,31 @@ const PLAYBOOK: Record<OpportunityType, PlaybookEntry> = {
     actionType: "RUN_CAMPAIGN",
     actionNote: "Proposition : campagne d'amplification à lancer manuellement. Aucune campagne automatique en P2.1.",
   },
+  // ── P2.2 — extension du playbook (§15) ─────────────────────────────
+  CHANNEL_ACTIVATION_GAP: {
+    what: "Retracer le parcours d'activation des inscrits du canal dominant pour comprendre où ils décrochent.",
+    when: "this_week",
+    expectedImpact: (opp) =>
+      `Rapprocher l'activation du canal du seuil working ${opp.evidence.match(/seuil ([0-9.]+)/)?.[1] ?? "0.3"} sans modifier l'acquisition.`,
+    actionType: "IMPROVE_ONBOARDING",
+    actionNote: "Proposition : analyse puis ajustement de l'onboarding pour ce canal. Exécution humaine uniquement.",
+  },
+  REFERRAL_ACTIVATION_GAP: {
+    what: "Accompagner les filleuls nouvellement parrainés jusqu'à leur première action utile (guide, objectif, premier cours).",
+    when: "this_week",
+    expectedImpact: (opp) =>
+      `Rapprocher l'activation des filleuls du seuil working ${opp.evidence.match(/seuil ([0-9.]+)/)?.[1] ?? "0.3"}.`,
+    actionType: "IMPROVE_REFERRAL_LOOP",
+    actionNote: "Proposition : améliorer l'accompagnement post-parrainage. Aucun envoi automatique.",
+  },
+  ATTRIBUTION_GAP: {
+    what: "Compléter la collecte d'attribution (paramètres d'acquisition) sur les parcours d'inscription sans signal.",
+    when: "next_cycle",
+    expectedImpact: (opp) =>
+      `Relever la couverture d'attribution vers la borne 1.0 (${opp.evidence}) pour fiabiliser les décisions par canal.`,
+    actionType: "IMPROVE_ATTRIBUTION",
+    actionNote: "Proposition : étendre la capture d'attribution aux parcours manquants. Aucune donnée personnelle ajoutée.",
+  },
 };
 
 export function buildRecommendation(
@@ -91,6 +116,8 @@ export function buildRecommendation(
     priority: opp.priority,
     priority_score: opp.priority_score,
     opportunity_type: opp.type,
+    evidence: opp.evidence,
+    urgency: opp.urgency,
     action: {
       type: entry.actionType,
       mode: "PROPOSED",

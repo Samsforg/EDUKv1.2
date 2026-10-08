@@ -28,7 +28,19 @@ export type SignalType =
   | "checkout_dropoff_high"
   | "purchase_rate_low"
   | "return_visit_low"
-  | "retention_unavailable";
+  | "retention_unavailable"
+  // P2.2 — acquisition par canal
+  | "channel_signup_strength"
+  | "channel_activation_strength"
+  | "channel_monetization_strength"
+  | "channel_insufficient_data"
+  // P2.2 — boucle de parrainage
+  | "referral_signup_strength"
+  | "referral_activation_strength"
+  | "referral_monetization_strength"
+  // P2.2 — attribution
+  | "attribution_coverage"
+  | "unknown_source_rate";
 
 /** §5 — segments déterministes, tous fondés sur des données réelles. */
 export type SegmentKey =
@@ -47,7 +59,11 @@ export type OpportunityType =
   | "MONETIZATION_OPPORTUNITY"
   | "RETENTION_OPPORTUNITY"
   | "ACQUISITION_WEAKNESS"
-  | "ACQUISITION_STRENGTH";
+  | "ACQUISITION_STRENGTH"
+  // P2.2 — canal, parrainage, attribution
+  | "CHANNEL_ACTIVATION_GAP"
+  | "REFERRAL_ACTIVATION_GAP"
+  | "ATTRIBUTION_GAP";
 
 /** §8 — actions proposées : propositions uniquement, jamais exécutées. */
 export type GrowthActionType =
@@ -58,7 +74,10 @@ export type GrowthActionType =
   | "REACTIVATE_USER"
   | "PROMOTE_SUBSCRIPTION"
   | "CREATE_CONTENT"
-  | "RUN_CAMPAIGN";
+  | "RUN_CAMPAIGN"
+  // P2.2 — propositions d'amélioration du data produit
+  | "IMPROVE_ATTRIBUTION"
+  | "IMPROVE_REFERRAL_LOOP";
 
 /** §4 — un signal est un fait observé, jamais une action. */
 export interface GrowthSignal {
@@ -133,6 +152,10 @@ export interface GrowthRecommendation {
   priority: PriorityLabel;
   priority_score: number;
   opportunity_type: OpportunityType;
+  /** P2.2 §15 — preuve chiffrée reprise de l'opportunité. */
+  evidence: string;
+  /** P2.2 §15 — urgence 0..100 reprise de l'opportunité. */
+  urgency: number;
   /** L'action reste une proposition : aucun envoi, aucune publication. */
   action: GrowthAction;
   status: InsightStatus;
@@ -194,7 +217,113 @@ export interface GrowthData {
   };
   /** Rétention D7 officielle — non fabriquée (contrat P2). */
   retention: { available: boolean; value: number | null; status: InsightStatus };
+  /**
+   * P2.2 — couche d'attribution (optionnelle pour préserver le contrat
+   * d'entrée P2.1) : lignes par canal, par référent, couverture.
+   * Absente → aucune règle P2.2 évaluée, sections du bundle vides.
+   */
+  intelligence?: GrowthIntelligenceData;
   created_at: string;
+}
+
+/** P2.2 — agrégat brut par canal (sortie SQL, avant normalisation). */
+export interface ChannelRow {
+  channel: string;
+  signups: number;
+  activated: number;
+  subscriptions: number;
+  /** Revenu actif agrégé en centimes (source : subscriptions.status='active'). */
+  revenue_cents: number;
+}
+
+/** P2.2 — agrégat brut par référent (sortie SQL, avant normalisation). */
+export interface ReferralRow {
+  /** Code parrainage (identifiant public — jamais de nom, ni de PII). */
+  referral: string;
+  signups: number;
+  activated: number;
+  subscriptions: number;
+  revenue_cents: number;
+}
+
+/** P2.2 — source d'acquisition classée (§4 : priorité utm → clic → referral). */
+export type AttributionSourceType = "utm" | "paid_click" | "referral" | "unknown";
+
+/**
+ * P2.2 — couche d'attribution agrégée (§11, §12).
+ * `coverageRate` = inscrits attribués / inscrits identifiés (null si 0).
+ */
+export interface AttributionCoverage {
+  attributed: number;
+  unattributed: number;
+  coverageRate: number | null;
+  status: InsightStatus;
+  /** Métrique retenue : couverture d'attribution des INSCRITS (§9). */
+  basis: "signups_identified";
+}
+
+/** P2.2 — répartition des inscrits par classe de source (§12). */
+export interface SourceBreakdown {
+  by_type: Record<AttributionSourceType, number>;
+  unknown_rate: number | null;
+  status: InsightStatus;
+}
+
+/** P2.2 — agrégats d'attribution calculés par `data.ts`. */
+export interface GrowthAttributionSummary {
+  coverage: AttributionCoverage;
+  sources: SourceBreakdown;
+  /** Canal dominant par volume d'inscrits (classement factuel, pas un « best of »). */
+  top_source: string | null;
+  source: string;
+}
+
+/**
+ * P2.2 §5 — performance par canal. `visitors` est null tant que les
+ * page_view ne portent pas d'attribution (aucun faux 0 — §2).
+ */
+export interface GrowthChannelPerformance {
+  channel: string;
+  visitors: number | null;
+  signups: number;
+  activated: number;
+  subscriptions: number;
+  /** Revenu actif en centimes. */
+  revenue: number;
+  signupRate: number | null;
+  activationRate: number | null;
+  conversionRate: number | null;
+  status: InsightStatus;
+  sample_size: number;
+  min_sample: number;
+}
+
+/**
+ * P2.2 §6 — performance par référent. `visitors` non attribuable par
+ * référent (page_view sans lien de parrainage) → null documenté.
+ */
+export interface GrowthReferralPerformance {
+  /** Code de parrainage uniquement (jamais nom/email du parrain). */
+  referral: string;
+  visitors: number | null;
+  signups: number;
+  activated: number;
+  subscriptions: number;
+  revenue: number;
+  activationRate: number | null;
+  conversionRate: number | null;
+  status: InsightStatus;
+  sample_size: number;
+  min_sample: number;
+}
+
+/** P2.2 — input de la couche attribution (agréé par data.ts). */
+export interface GrowthIntelligenceData {
+  channels: ChannelRow[];
+  referrals: ReferralRow[];
+  attribution: GrowthAttributionSummary;
+  /** false si les requêtes d'attribution ont échoué (pas de faux 0). */
+  available: boolean;
 }
 
 /** Sortie complète du Decision Layer (§17 dashboard + §13 contract). */
@@ -207,6 +336,17 @@ export interface GrowthInsightBundle {
   opportunities: GrowthOpportunity[];
   recommendations: GrowthRecommendation[];
   insights: GrowthInsight[];
+  /** P2.2 — attribution (§11-§12) : couverture et sources. */
+  attribution: {
+    coverage: AttributionCoverage;
+    sources: SourceBreakdown;
+    top_source: string | null;
+    status: InsightStatus;
+  };
+  /** P2.2 — performance par canal (§5), triée par signups décroissant. */
+  channels: GrowthChannelPerformance[];
+  /** P2.2 — performance par référent (§6), triée par signups décroissant. */
+  referrals: GrowthReferralPerformance[];
   meta: {
     engine: "deterministic";
     external_calls: false;

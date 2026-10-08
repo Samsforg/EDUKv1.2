@@ -5,7 +5,7 @@ import { computeGrowthData } from "@/lib/growth/decision/data";
 import { runDecisionLayer } from "@/lib/growth/decision";
 
 /**
- * P2.1 — GET /api/admin/growth/insights
+ * P2.1 + P2.2 — GET /api/admin/growth/insights
  *
  * Route unique du Decision Layer Growth AI :
  *  - admin-protectée (requireAdmin) + guardApi (logging sans secret) ;
@@ -13,7 +13,9 @@ import { runDecisionLayer } from "@/lib/growth/decision";
  *    externe, aucun envoi (email/SMS/messagerie), aucune campagne,
  *    aucun modèle génératif ;
  *  - test users exclus dès la source (countFunnelForDay / predicates) ;
- *  - réponse = agrégats sans PII (comptages, taux, recommandations).
+ *  - réponse = bundle agrégé sans PII : health, segments, signals,
+ *    opportunities, recommendations, insights + sections P2.2
+ *    attribution / channels / referrals (aucun identifiant personnel).
  */
 async function GETHandler() {
   const forbidden = await requireAdmin();
