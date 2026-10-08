@@ -212,12 +212,16 @@ let pool: Pool | null = null;
 function getPool(): Pool {
   if (!IS_PG) throw new Error("pg mode disabled");
   if (!pool) {
+    const sslDisabled = process.env.DATABASE_SSL_DISABLED === "true";
+    const rawUrl = process.env.DATABASE_URL;
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      // P2.0 C — suppression en mémoire de sslmode= (warning déprécié
+      // pg-connection-string) : l'option ssl explicite ci-dessous définit le
+      // même comportement (rejectUnauthorized ≡ verify-full). URL jamais
+      // loggée, jamais écrite.
+      connectionString: sslDisabled || !rawUrl ? rawUrl : p20StripSslMode(rawUrl),
       max: 10,
-      ssl: process.env.DATABASE_SSL_DISABLED === "true"
-        ? undefined
-        : { rejectUnauthorized: true },
+      ssl: sslDisabled ? undefined : { rejectUnauthorized: true },
     });
     pool.on("error", (err) => {
       if (process.env.NODE_ENV !== "test") console.error("pg pool error:", err);
@@ -1036,14 +1040,26 @@ export function toPgSchema(schema: string): string {
  */
 export const P19_TABLES = ["class_assignments", "assignment_submissions", "duels"] as const;
 
-export function p19Statements(pg: boolean): { table: string; sql: string[] }[] {
-  return P19_TABLES.map((table) => {
+/**
+ * Extrait du SCHEMA, dans l'ordre d'apparition (topologie FK : les parents
+ * précèdent les enfants), le bloc CREATE + les index de chaque table — même
+ * extraction que P1.9, généralisée à N tables. Conversion `toPgSchema` si
+ * `pg`. Premier bloc en cas de définition répétée (IF NOT EXISTS no-op).
+ */
+export function p20SchemaTableStatements(
+  tables: readonly string[],
+  pg: boolean,
+): { table: string; sql: string[] }[] {
+  return tables.map((table) => {
     const start = SCHEMA.indexOf(`CREATE TABLE IF NOT EXISTS ${table} (`);
-    if (start < 0) throw new Error(`P1.9: CREATE TABLE ${table} introuvable dans SCHEMA`);
+    if (start < 0) throw new Error(`P2.0: CREATE TABLE ${table} introuvable dans SCHEMA`);
     const end = SCHEMA.indexOf(");", start);
-    if (end < 0) throw new Error(`P1.9: fin de CREATE TABLE ${table} introuvable dans SCHEMA`);
+    if (end < 0) throw new Error(`P2.0: fin de CREATE TABLE ${table} introuvable dans SCHEMA`);
     const block = SCHEMA.slice(start, end + 2);
-    const idxRe = new RegExp(`CREATE INDEX IF NOT EXISTS [a-z0-9_]+ ON ${table}\\s*\\([^)]*\\);`, "g");
+    const idxRe = new RegExp(
+      `CREATE (?:UNIQUE )?INDEX IF NOT EXISTS [a-z0-9_]+ ON ${table}\\s*\\([^)]*\\)(?:\\s*WHERE\\s*[^;]*?)?;`,
+      "g",
+    );
     const raw = [block, ...(SCHEMA.match(idxRe) ?? [])].join("\n");
     const sql = (pg ? toPgSchema(raw) : raw)
       .split(";")
@@ -1051,6 +1067,144 @@ export function p19Statements(pg: boolean): { table: string; sql: string[] }[] {
       .filter(Boolean);
     return { table, sql };
   });
+}
+
+export function p19Statements(pg: boolean): { table: string; sql: string[] }[] {
+  return p20SchemaTableStatements(P19_TABLES, pg);
+}
+
+/** Toutes les tables du SCHEMA, ordre d'apparition, sans doublon. */
+export function p20SchemaTables(): string[] {
+  return [...new Set([...SCHEMA.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)\s*\(/g)].map((m) => m[1]))];
+}
+
+/**
+ * P2.0 A — garde anti-drift : plan des statements à exécuter pour créer les
+ * tables du SCHEMA absentes de la base. Ne retourne QUE les tables manquantes
+ * (la détection `to_regclass` est faite par `initDb()`), dans l'ordre du
+ * SCHEMA → aucune exécution si rien n'est manquant (idempotence par gate),
+ * aucun DDL destructif possible (extraction = CREATE/INDEX seuls, jamais de
+ * DROP/ALTER de structure existante).
+ */
+export function p20PlanSchemaGuard(
+  allTables: readonly string[],
+  missing: readonly string[],
+): { table: string; sql: string[] }[] {
+  const missingSet = new Set(missing);
+  return p20SchemaTableStatements(allTables.filter((t) => missingSet.has(t)), true);
+}
+
+/**
+ * P2.0 C — retire `sslmode=` de l'URL en mémoire. `pg-connection-string`
+ * émet « SECURITY WARNING : SSL modes require/prefer/verify-ca dépréciés »
+ * (alias de verify-full, disparition en pg v9). `getPool()` fournit déjà
+ * `ssl: { rejectUnauthorized: true }` explicitement ≡ verify-full : le
+ * comportement est identique, le warning disparaît. L'URL n'est jamais
+ * loggée ni écrite — cette fonction ne travaille qu'en mémoire.
+ */
+export function p20StripSslMode(url: string): string {
+  if (!url || !/[?&]sslmode=/i.test(url)) return url;
+  const qi = url.indexOf("?");
+  if (qi < 0) return url;
+  const kept = url
+    .slice(qi + 1)
+    .split("&")
+    .filter((p) => !/^sslmode=/i.test(p));
+  return kept.length ? `${url.slice(0, qi)}?${kept.join("&")}` : url.slice(0, qi);
+}
+
+/**
+ * P2.0 B — découpe un script SQL en statements individuels, en respectant
+ * les littéraux entre guillemets simples (un `;` dans un littéral ne coupe
+ * pas). Utilisé pour exécuter le SCHEMA statement par statement : une erreur
+ * sur un statement (ex. index unique violé par une donnée historique) ne
+ * bloque plus la création des tables suivantes.
+ */
+export function p20SplitSqlStatements(sql: string): string[] {
+  const out: string[] = [];
+  let cur = "";
+  let inStr = false;
+  for (let i = 0; i < sql.length; i++) {
+    const ch = sql[i];
+    if (ch === "'") inStr = !inStr;
+    if (ch === ";" && !inStr) {
+      if (cur.trim()) out.push(cur.trim());
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
+
+export interface P20ExecResult {
+  executed: number;
+  skipped: { stmt: string; error: string }[];
+  repaired: number;
+}
+
+/**
+ * P2.0 B — exécution robuste du SCHEMA SQLite : statement par statement,
+ * une erreur n'empêche JAMAIS la création des tables suivantes (chaque
+ * échec est loggé, jamais silencieux).
+ *
+ * Réparation déterministe UNIQUEMENT pour l'index `uniq_active_sub` violé
+ * par des abonnements actifs historiques dupliqués : conformément à la
+ * sémantique métier du code (un seul abonnement actif par utilisateur —
+ * pattern de `switch/route.ts` qui passe l'ancien en `cancelled` avant le
+ * nouvel insert), on conserve l'actif le plus récent (MAX(id)) et on passe
+ * les doublons en `cancelled` (UPDATE réversible, AUCUNE suppression), avec
+ * log explicite. Puis retry du statement ; si l'échec persiste → log.
+ */
+export function p20ExecSchemaRobust(
+  d: DatabaseSync,
+  schema: string,
+): P20ExecResult {
+  const res: P20ExecResult = { executed: 0, skipped: [], repaired: 0 };
+  for (const stmt of p20SplitSqlStatements(schema)) {
+    try {
+      d.exec(stmt);
+      res.executed++;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const isUniqActiveSub =
+        stmt.includes("uniq_active_sub") &&
+        /UNIQUE constraint failed/i.test(msg) &&
+        msg.includes("subscriptions.user_id");
+      if (isUniqActiveSub) {
+        try {
+          const n = Number(
+            d
+              .prepare(
+                "UPDATE subscriptions SET status = 'cancelled', updated_at = datetime('now') " +
+                  "WHERE status = 'active' AND id NOT IN " +
+                  "(SELECT MAX(id) FROM subscriptions WHERE status = 'active' GROUP BY user_id)",
+              )
+              .run().changes,
+          );
+          res.repaired += n;
+          console.warn(
+            `[init] P2.0 : ${n} abonnement(s) actif(s) dupliqué(s) historique(s) → 'cancelled' ` +
+              "(le plus récent par utilisateur est conservé) pour rétablir uniq_active_sub.",
+          );
+          d.exec(stmt);
+          res.executed++;
+          continue;
+        } catch (err2) {
+          const msg2 = err2 instanceof Error ? err2.message : String(err2);
+          res.skipped.push({ stmt, error: msg2 });
+          console.warn(`[init] P2.0 : statement toujours en échec après réparation — ${msg2}`);
+          continue;
+        }
+      }
+      res.skipped.push({ stmt, error: msg });
+      console.warn(
+        `[init] P2.0 : statement SCHEMA ignoré (initialisation poursuivie) — ${msg} — ${stmt.slice(0, 120).replace(/\s+/g, " ")}`,
+      );
+    }
+  }
+  return res;
 }
 
 export async function initDb() {
@@ -1309,19 +1463,29 @@ CREATE INDEX IF NOT EXISTS idx_dissertation_corrections_user ON dissertation_cor
           if (trimmed) await pool.query(trimmed);
         }
       }
-      // P1.9 — tables ajoutées au SCHEMA après la création de prod
-      // (schema drift : initDb ne rejoue le SCHEMA complet que si `users`
-      // manque). Même patron que hasClasses/hasTeacherSubjects : gate
-      // to_regclass par table, ordre FK respecté (class_assignments avant
-      // assignment_submissions), aucune exécution si la table existe déjà.
-      for (const { table, sql } of p19Statements(true)) {
-        const exists = await withPgRetry(() =>
-          pool.query(`SELECT to_regclass('public.${table}') IS NOT NULL AS exists`),
-        );
-        if (!exists.rows[0].exists) {
-          for (const stmt of sql) {
-            await withPgRetry(() => pool.query(stmt));
-          }
+      // P2.0 A — garde anti-drift structurelle (généralise le correctif
+      // P1.9, qui ne couvrait que 3 tables en dur) : toute table du SCHEMA
+      // absente de la base est détectée en UNE seule requête (to_regclass)
+      // puis créée — idempotent par gate (0 manquante = 0 DDL), ordre du
+      // SCHEMA respecté (FK parent → enfant), phase CREATE puis FK/index.
+      // Les blocs conditionnels ci-dessus tournent avant → leurs tables et
+      // leurs seeds sont préservés (gate déjà vrai à ce stade).
+      const schemaTables = p20SchemaTables();
+      const missingRows = await withPgRetry(() =>
+        pool.query("SELECT n FROM unnest($1::text[]) AS n WHERE to_regclass('public.' || n) IS NULL", [
+          schemaTables,
+        ]),
+      );
+      const missing = missingRows.rows.map((r: { n: string }) => r.n);
+      if (missing.length > 0) {
+        const plan = p20PlanSchemaGuard(schemaTables, missing);
+        const isCreate = (s: string) => /^CREATE TABLE/i.test(s);
+        for (const { sql } of plan) {
+          for (const s of sql.filter(isCreate)) await withPgRetry(() => pool.query(s));
+        }
+        for (const { table, sql } of plan) {
+          for (const s of sql.filter((x) => !isCreate(x))) await withPgRetry(() => pool.query(s));
+          console.warn(`[init] P2.0 schema guard : table du SCHEMA manquante créée — ${table}`);
         }
       }
       try { await withPgRetry(() => pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS has_used_trial INTEGER NOT NULL DEFAULT 0")); } catch {}
@@ -1336,7 +1500,16 @@ CREATE INDEX IF NOT EXISTS idx_dissertation_corrections_user ON dissertation_cor
     }
     return;
   }
-  db.exec(SCHEMA);
+  // P2.0 B — exécution statement par statement : une donnée historique
+  // incohérente (ex. dup d'abonnements actifs violant uniq_active_sub) ne
+  // bloque plus la création des tables suivantes ; réparation explicite et
+  // non destructive pour uniq_active_sub (voir p20ExecSchemaRobust).
+  const schemaRes = p20ExecSchemaRobust(db, SCHEMA);
+  if (schemaRes.skipped.length > 0 || schemaRes.repaired > 0) {
+    console.warn(
+      `[init] SCHEMA SQLite : ${schemaRes.executed} exécuté(s), ${schemaRes.skipped.length} ignoré(s), ${schemaRes.repaired} réparé(s).`,
+    );
+  }
   try { db.exec("ALTER TABLE users ADD COLUMN has_used_trial INTEGER NOT NULL DEFAULT 0"); } catch {}
   try { db.exec("ALTER TABLE users ADD COLUMN phone_canonical TEXT"); } catch {}
   try { db.exec("ALTER TABLE users ADD COLUMN avatar_url TEXT"); } catch {}
