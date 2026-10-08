@@ -326,6 +326,101 @@ export interface GrowthIntelligenceData {
   available: boolean;
 }
 
+// ── P2.3 — Growth Action Engine (§3-§18) ──────────────────────────────
+
+/**
+ * P2.3 §6 — actionnabilité d'une proposition, dérivée des données déjà
+ * calculées (statut, confiance, score) :
+ *   HIGH    — échantillon fiable + score élevé ;
+ *   MEDIUM  — échantillon fiable + score intermédiaire ;
+ *   LOW     — échantillon fiable + score bas ;
+ *   BLOCKED — le constat n'est pas actionnable aujourd'hui (statut non
+ *             VALID ou confiance sous plancher) → aucune action fondée.
+ */
+export type Actionability = "HIGH" | "MEDIUM" | "LOW" | "BLOCKED";
+
+/** P2.3 §7 — bande de priorité d'action (bornes documentées dans action-plans). */
+export type ActionPriorityBand = "P0" | "P1" | "P2" | "P3";
+
+/** P2.3 §8 — horizon d'exécution proposé (pas d'ordonnancement automatique). */
+export type ActionHorizon = "NOW" | "THIS_WEEK" | "BACKLOG";
+
+/** P2.3 §12 — métriques de succès contractuelles (aucune autre n'est fabriquée). */
+export type ActionMetricKey =
+  | "signup_rate"
+  | "activation_rate"
+  | "checkout_dropoff"
+  | "purchase_rate"
+  | "return_visit_rate"
+  | "attribution_coverage"
+  | "subscription_count"
+  | "conversion_rate";
+
+/**
+ * P2.3 §13 — origine de la cible : soit un seuil documenté de
+ * thresholds.ts, soit aucun cible calibrée aujourd'hui (target null).
+ */
+export type TargetCalibration = "THRESHOLD_BASED" | "TARGET_NOT_CALIBRATED";
+
+/** P2.3 §12 — métrique de succès : baseline réelle, cible justifiée ou null. */
+export interface GrowthActionMetric {
+  metric: ActionMetricKey;
+  /** Valeur observée sur la période — null si le dénominateur est nul. */
+  baseline: number | null;
+  /** Cible documentée — null si TARGET_NOT_CALIBRATED (jamais inventée). */
+  target: number | null;
+  direction: "UP" | "DOWN" | "STABLE";
+  minimum_sample: number;
+  target_calibration: TargetCalibration;
+}
+
+/**
+ * P2.3 §5 — plan d'action : PROPOSITION uniquement. Aucun statut
+ * d'exécution n'existe (`mode`/`status` sont figés à "PROPOSED",
+ * `steps` sont les étapes proposées à un humain, jamais déléguées).
+ */
+export interface GrowthActionPlan {
+  id: string;
+  opportunity_id: string;
+  recommendation_id: string;
+  opportunity_type: OpportunityType;
+  action_type: GrowthActionType;
+  title: string;
+  objective: string;
+  target_segment: SegmentKey | null;
+  /** Canal concerné (extrait des données) — null si non applicable. */
+  channel: string | null;
+  priority_score: number;
+  action_priority: ActionPriorityBand;
+  actionability: Actionability;
+  /** Libellé d'urgence dérivé de l'urgence 0..100 de l'opportunité. */
+  urgency: string;
+  effort: "LOW" | "MEDIUM" | "HIGH";
+  /** Libellé d'impact attendu dérivé de l'impact 0..100 de l'opportunité. */
+  expected_impact: "LOW" | "MEDIUM" | "HIGH";
+  mode: "PROPOSED";
+  status: "PROPOSED";
+  horizon: ActionHorizon;
+  /** true si une baseline existe pour au moins une métrique de succès. */
+  experiment_ready: boolean;
+  steps: string[];
+  success_metrics: GrowthActionMetric[];
+  guardrails: string[];
+  evidence: string[];
+  created_at: string;
+}
+
+/**
+ * P2.3 §9 — file d'actions par horizon. Buckets disjoints : une action
+ * BLOCKED n'appartient qu'au bucket `blocked` (jamais aux horizons).
+ */
+export interface GrowthActionQueue {
+  now: GrowthActionPlan[];
+  this_week: GrowthActionPlan[];
+  backlog: GrowthActionPlan[];
+  blocked: GrowthActionPlan[];
+}
+
 /** Sortie complète du Decision Layer (§17 dashboard + §13 contract). */
 export interface GrowthInsightBundle {
   generated_at: string;
@@ -347,6 +442,8 @@ export interface GrowthInsightBundle {
   channels: GrowthChannelPerformance[];
   /** P2.2 — performance par référent (§6), triée par signups décroissant. */
   referrals: GrowthReferralPerformance[];
+  /** P2.3 — plans d'action proposés, classés par horizon (§9). */
+  actions: GrowthActionQueue;
   meta: {
     engine: "deterministic";
     external_calls: false;

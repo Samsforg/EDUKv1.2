@@ -20,17 +20,20 @@ import { buildReferralPerformances } from "./referrals";
 import { computeCoverage } from "./attribution";
 import { buildSegments } from "./segments";
 import { buildRecommendation } from "./recommend";
+import { buildActionPlans } from "./action-plans";
 
 /**
  * P2.1 + P2.2 — orchestration du Decision Layer :
  *
  *   DATA → ATTRIBUTION → CHANNEL/REFERRAL PERFORMANCE → RULE ENGINE
  *        → SIGNALS → SEGMENTS → OPPORTUNITIES → RECOMMENDATIONS
- *        → ACTIONS PROPOSÉES (+ HEALTH)
+ *        → PLANS D'ACTION PROPOSÉS (+ HEALTH)
  *
  * Fonction pure sur `GrowthData` : idempotence par construction (même
  * input → même output ; `created_at` est celui de l'input injecté).
- * Aucune écriture, aucun appel externe, aucune action exécutée.
+ * Aucune écriture, aucun appel externe, aucune action exécutée : les
+ * plans P2.3 sont des propositions classées par horizon, jamais
+ * ordonnancées ni déclenchées.
  * La couche P2.2 ne modifie ni ne duplique les règles P2.1 (§13) :
  * elle est évaluée à côté et fusionnée dans les listes du bundle.
  */
@@ -263,6 +266,8 @@ export function runDecisionLayer(data: GrowthData): GrowthInsightBundle {
   const segments: GrowthSegment[] = buildSegments(data);
   const health = computeHealth(metrics, data);
   const intelligence = assembleIntelligenceSections(data);
+  // P2.3 — plans d'action proposés : 1 par recommandation (aucune requête).
+  const actions = buildActionPlans({ data, recommendations, opportunities: allOpportunities, metrics });
 
   const byPriority = <T extends { priority_score: number; id: string }>(a: T, b: T): number =>
     b.priority_score - a.priority_score || a.id.localeCompare(b.id);
@@ -283,6 +288,7 @@ export function runDecisionLayer(data: GrowthData): GrowthInsightBundle {
     attribution: intelligence.attribution,
     channels: intelligence.channels,
     referrals: intelligence.referrals,
+    actions,
     meta: {
       engine: "deterministic",
       external_calls: false,

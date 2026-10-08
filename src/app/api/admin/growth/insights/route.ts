@@ -15,7 +15,9 @@ import { runDecisionLayer } from "@/lib/growth/decision";
  *  - test users exclus dès la source (countFunnelForDay / predicates) ;
  *  - réponse = bundle agrégé sans PII : health, segments, signals,
  *    opportunities, recommendations, insights + sections P2.2
- *    attribution / channels / referrals (aucun identifiant personnel).
+ *    attribution / channels / referrals (aucun identifiant personnel)
+ *    + file d'actions P2.3 (plans PROPOSED classés par horizon — la
+ *    route reste read-only, aucune action n'est déclenchée).
  */
 async function GETHandler() {
   const forbidden = await requireAdmin();

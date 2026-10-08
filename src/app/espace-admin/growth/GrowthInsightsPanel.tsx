@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { GrowthInsightBundle } from "@/lib/growth/decision/types";
+import type { GrowthActionPlan, GrowthInsightBundle } from "@/lib/growth/decision/types";
 
 /**
- * P2.1 + P2.2 — panneau Decision Layer (§17) : Growth Health, Attribution,
- * Channels, Referrals, Top Signals, Top Opportunities, Top Recommendations.
- * Lecture seule : fetch de la route admin existante, aucune action exposée
- * (tout reste « PROPOSED »). Les cartes P2.2 sont en plus des cartes P2.1 —
- * le dashboard existant reste intact.
+ * P2.1 + P2.2 + P2.3 — panneau Decision Layer (§17) : Growth Health,
+ * Attribution, Channels, Referrals, Actions proposées, Top Signals,
+ * Top Opportunities, Top Recommendations. Lecture seule : fetch de la
+ * route admin existante, aucune action exposée (tout reste « PROPOSED »).
+ * Les cartes P2.2 sont en plus des cartes P2.1 — le dashboard existant
+ * reste intact ; la file P2.3 ne propose que des plans, jamais d'envoi.
  */
 
 const CARD = "bg-surface-container-lowest border border-outline-variant rounded-xl p-4";
@@ -36,6 +37,61 @@ function fmtPct(v: number | null): string {
 
 function fmtMoney(cents: number): string {
   return `${(cents / 100).toLocaleString("fr-FR")} F`;
+}
+
+/** Carte d'un plan d'action proposé (P2.3 §17) — légère, sans dépendance. */
+function ActionCard({ plan }: { plan: GrowthActionPlan }) {
+  const metric = plan.success_metrics[0];
+  return (
+    <li className="text-sm border border-outline-variant rounded-lg px-3 py-2 grid gap-1">
+      <span className="flex items-center justify-between gap-2">
+        <span className="font-semibold">{plan.title}</span>
+        <span className={ratingChip(plan.action_priority)}>{plan.action_priority}</span>
+      </span>
+      <span className="block text-xs text-on-surface-variant">{plan.objective}</span>
+      <span className="block text-xs text-on-surface-variant">
+        {plan.action_type} · actionnabilité {plan.actionability} · effort {plan.effort} ·
+        impact {plan.expected_impact} · urgence {plan.urgency}
+      </span>
+      <span className="block text-xs text-on-surface-variant">
+        Pour : {plan.target_segment ?? "—"}
+        {plan.channel ? ` · canal ${plan.channel}` : ""} · score {plan.priority_score}
+      </span>
+      <span className="block text-xs text-on-surface-variant">
+        Mesure : {metric?.metric ?? "—"} = {metric?.baseline === null || metric === undefined
+          ? "n/a"
+          : metric.baseline.toFixed(3)}
+        {metric && metric.target !== null
+          ? ` → cible ${metric.target} (${metric.target_calibration})`
+          : metric
+            ? ` (${metric.target_calibration})`
+            : ""}
+        {metric ? ` · min sample ${metric.minimum_sample}` : ""}
+      </span>
+      <span className="block text-xs text-on-surface-variant">Preuve : {plan.evidence[0]}</span>
+      <span className="flex items-center gap-2">
+        <span className={ratingChip(plan.status)}>{plan.status}</span>
+        {plan.experiment_ready ? (
+          <span className="text-xs text-primary">expérimentation mesurable</span>
+        ) : (
+          <span className="text-xs text-on-surface-variant">baseline non calibrée</span>
+        )}
+      </span>
+    </li>
+  );
+}
+
+function ActionQueueCard({ title, plans }: { title: string; plans: GrowthActionPlan[] }) {
+  return (
+    <div className="border border-outline-variant rounded-lg px-3 py-2 grid gap-2">
+      <h3 className={LABEL}>{title}</h3>
+      {plans.length === 0 ? (
+        <p className="text-xs text-on-surface-variant">Aucune action dans cette file.</p>
+      ) : (
+        <ul className="grid gap-2">{plans.map((p) => <ActionCard key={p.id} plan={p} />)}</ul>
+      )}
+    </div>
+  );
 }
 
 export default function GrowthInsightsPanel() {
@@ -185,6 +241,22 @@ export default function GrowthInsightsPanel() {
             ))}
           </ul>
         )}
+      </div>
+
+      {/* P2.3 — actions proposées, classées par horizon (§9, §17) */}
+      <div className={CARD}>
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className={LABEL}>Actions recommandées</h2>
+          <span className="text-xs text-on-surface-variant">
+            propositions PROPOSED · aucune exécution · aucun envoi automatique
+          </span>
+        </div>
+        <div className="grid gap-3 lg:grid-cols-2">
+          <ActionQueueCard title="À faire maintenant" plans={data.actions.now} />
+          <ActionQueueCard title="Cette semaine" plans={data.actions.this_week} />
+          <ActionQueueCard title="À surveiller" plans={data.actions.backlog} />
+          <ActionQueueCard title="Bloquées par les données" plans={data.actions.blocked} />
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
