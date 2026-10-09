@@ -344,13 +344,13 @@ describe("P1.0 — attribution first-party (?utm_* + clics)", () => {
       campaign: "bac2026",
       content: "display",
     });
+    // P2.5.2 : signup_completed est émis côté serveur (P2.3). La page
+    // envoie l'attribution dans le body d'inscription (P2.1).
     const pageSrc = readFileSync(
       join(__dirname, "..", "src", "app", "inscription-1-2-edukora", "page.tsx"),
       "utf8",
     );
-    expect(pageSrc).toMatch(
-      /trackEvent\(EVENTS\.signupCompleted,[\s\S]{0,1200}\.\.\.signupAttributionProps\(\)/,
-    );
+    expect(pageSrc).toMatch(/attribution:\s*getStoredAttribution\(\)/);
     // joinable : signup_completed transporte l'attribution jusqu'au compte
     const u = await makeUser({ test: true });
     await trackDb(

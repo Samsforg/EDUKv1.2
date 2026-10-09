@@ -122,10 +122,21 @@ async function countSegment(key: SegmentKey, from: string, to: string): Promise<
       return Number(r?.c ?? 0);
     }
     case "RETURNING_USER": {
+      // P2.5.2 — P2-2 : le comptage repose désormais sur l'activité
+      // utilisateur (user_id interne stable) répartie sur 2+ jours
+      // distincts de la période, et non plus sur l'événement device-level
+      // `return_visit` (localStorage, non fiable cross-device).
+      // Le `return_visit` reste émis côté client (mesure device conservée)
+      // mais n'est plus la source de vérité du segment.
       const r = await queryOne<{ c: number | string }>(
-        `SELECT COUNT(DISTINCT e.user_id) AS c FROM analytics_events e
-         WHERE e.event = 'return_visit' AND e.user_id IS NOT NULL
-           AND e.created_at >= ? AND e.created_at < ? AND ${notTest("e.user_id")}`,
+        `SELECT COUNT(*) AS c FROM (
+           SELECT e.user_id
+           FROM analytics_events e
+           WHERE e.user_id IS NOT NULL
+             AND e.created_at >= ? AND e.created_at < ? AND ${notTest("e.user_id")}
+           GROUP BY e.user_id
+           HAVING COUNT(DISTINCT substr(e.created_at, 1, 10)) >= 2
+         ) t`,
         start,
         end,
       );

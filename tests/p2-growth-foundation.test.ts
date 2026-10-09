@@ -61,7 +61,7 @@ const contractDoc = read("docs", "analytics-data-contract.md");
 
 const SIGNUP_STEP2_REL = "src/app/inscription-2-2-d-tails-acad-miques/page.tsx";
 
-/** Producteurs possibles d'un nom d'événement : constantes EVENTS, littéral dans un call site, ou writer serveur (activated/purchase). */
+/** Producteurs possibles d'un nom d'événement : constantes EVENTS, littéral dans un call site, ou writer serveur (activated/purchase/signup_completed). */
 function producerFiles(ev: string): string[] {
   if (ev === "activated") {
     return SRC.filter(
@@ -73,6 +73,15 @@ function producerFiles(ev: string): string[] {
   if (ev === "purchase") {
     return SRC.filter((f) => /recordPurchase\(/.test(f.content))
       .filter((f) => f.rel === "src/lib/analytics-db.ts" || f.rel === "src/app/api/premium/webhook/route.ts")
+      .map((f) => f.rel);
+  }
+  // P2.5.2 : signup_completed est désormais un writer serveur (P2.3) —
+  // émis via trackDb dans /api/auth/register, plus côté client.
+  if (ev === "signup_completed") {
+    return SRC.filter(
+      (f) => /trackDb\(/.test(f.content) && new RegExp(`['"]${ev}['"]`).test(f.content),
+    )
+      .filter((f) => f.rel === "src/app/api/auth/register/route.ts")
       .map((f) => f.rel);
   }
   const key = Object.keys(EVENTS).find((k) => EVENTS[k as keyof typeof EVENTS] === ev);

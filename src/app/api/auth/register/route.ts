@@ -8,7 +8,37 @@ import { RegisterSchema, validate } from "@/lib/validation";
 import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { findGradeDirect, resolveUserGradeIds } from "@/lib/level";
 import { sendWelcomeEmail } from "@/lib/mailer";
+import { trackDb } from "@/lib/analytics-db";
+import { ATTRIBUTION_KEYS } from "@/lib/attribution";
 import crypto from "crypto";
+
+/** Clés props de signup_completed (mappées depuis la whitelist attribution). */
+const ATTRIBUTION_PROP_MAP: Record<(typeof ATTRIBUTION_KEYS)[number], string> = {
+  utm_source: "source",
+  utm_medium: "medium",
+  utm_campaign: "campaign",
+  utm_content: "content",
+  utm_term: "term",
+  gclid: "gclid",
+  fbclid: "fbclid",
+};
+
+/**
+ * P2.1 — Valide l'attribution reçue du client (liste blanche, troncature).
+ * Retourne les props mappées ; rien d'invalide n'est accepté.
+ */
+function sanitizeAttribution(raw: unknown): Record<string, string> {
+  if (typeof raw !== "object" || raw === null) return {};
+  const obj = raw as Record<string, unknown>;
+  const out: Record<string, string> = {};
+  for (const key of ATTRIBUTION_KEYS) {
+    const v = obj[key];
+    if (typeof v === "string" && v.trim()) {
+      out[ATTRIBUTION_PROP_MAP[key]] = v.trim().slice(0, 120);
+    }
+  }
+  return out;
+}
 
 function normalizePhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
@@ -242,6 +272,31 @@ async function POSTHandler(req: NextRequest) {
       { status: 503 },
     );
   }
+
+  // P2.3 — signup_completed côté serveur : émis SEULEMENT après INSERT +
+  // session réussis (jamais si le compte n'a pas été créé). La props
+  // `attribution` est validée serveur (liste blanche + troncature) ;
+  // l'émission client a été supprimée pour éviter le double comptage.
+  const attribution = sanitizeAttribution(
+    typeof body === "object" && body !== null ? (body as Record<string, unknown>).attribution : undefined,
+  );
+  try {
+    await trackDb(
+      "signup_completed",
+      {
+        role,
+        method: email ? "email" : "phone",
+        ...attribution,
+      },
+      userId,
+      token,
+      null,
+    );
+  } catch (err: unknown) {
+    // Non bloquant : le compte est créé, l'analytics ne doit pas faire échouer l'inscription.
+    console.error("[register] analytics signup_completed impossible:", err instanceof Error ? err.message : err);
+  }
+
   const res = NextResponse.json(
     { ok: true, user: { id: userId, first_name: cleanFirstName, last_name: cleanLastName, email, role } },
     { status: 201 },

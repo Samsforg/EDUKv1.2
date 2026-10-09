@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { EVENTS, trackEvent } from "@/lib/analytics";
-import { signupAttributionProps } from "@/lib/attribution";
+import { getStoredAttribution } from "@/lib/attribution";
 
 interface Serie {
   id: number;
@@ -168,6 +168,12 @@ function InscriptionPage() {
           role,
           accept_privacy: acceptPrivacy,
           referral_code: referralCode.trim() || undefined,
+          // P2.1 — attribution first-stockée (mémoire d'onglet via
+          // src/lib/attribution) transmise au serveur qui la valide
+          // (liste blanche) et l'attache au signup_completed émis côté
+          // serveur (P2.3). Aucune écriture supplémentaire :
+          // getStoredAttribution() est une lecture seule.
+          attribution: getStoredAttribution(),
           ...(role === "student"
             ? {
                 serie_id: showSerie ? serieId : null,
@@ -182,21 +188,6 @@ function InscriptionPage() {
       if (!res.ok) {
         setError(data.error ?? "Une erreur est survenue.");
       } else {
-        trackEvent(EVENTS.signupCompleted, {
-          role,
-          method: email.trim() ? "email" : "phone",
-          campaign: params.get("utm_campaign") ?? from ?? null,
-          medium: params.get("utm_medium") ?? null,
-          source: params.get("utm_source") ?? null,
-          variant,
-          // P1.0 — first-touch (mémoire d'onglet portée par
-          // src/lib/attribution, capturée sur la landing) :
-          // spread APRÈS les params URL pour que le first-touch gagne,
-          // et pour ajouter les clés restantes du contrat (content/term,
-          // identifiants de clic). Le ?ref= reste hors de cette map
-          // (parcours referral séparé, contract §5).
-          ...signupAttributionProps(),
-        });
         window.location.assign(
           destAfterSignup ?? (role === "teacher" ? "/espace-prof" : "/bienvenue"),
         );

@@ -33,7 +33,11 @@ export const SEGMENT_KEYS: readonly SegmentKey[] = [
  *  - ACTIVATED_NOT_PAID       : distincts `activated` sans `purchase` ni
  *                               abonnement actif ;
  *  - PAID_USER                : abonnements `status='active'` (non-test) ;
- *  - RETURNING_USER           : distincts `return_visit` de la période ;
+ *  - RETURNING_USER           : users avec activité sur 2+ jours distincts
+ *                               de la période (P2.5.2 : user-based via
+ *                               user_id, remplace le device-level
+ *                               `return_visit` qui reste émis mais n'est
+ *                               plus la source de vérité du segment) ;
  *  - HIGH_INTENT              : distincts `begin_checkout` sans achat ni
  *                               abonnement actif ;
  *  - DORMANT_USER             : distincts ayant eu une activité entre J-30
@@ -44,7 +48,7 @@ export const SEGMENT_SOURCES: Record<SegmentKey, string> = {
   REGISTERED_NOT_ACTIVATED: "analytics_events.signup_completed DISTINCT sans activated (période, test users excluded)",
   ACTIVATED_NOT_PAID: "analytics_events.activated DISTINCT sans purchase ni subscription active (période, test users excluded)",
   PAID_USER: "subscriptions.status='active' (test users excluded)",
-  RETURNING_USER: "analytics_events.return_visit DISTINCT (période, test users excluded)",
+  RETURNING_USER: "analytics_events.user_id actif 2+ jours distincts (période, test users excluded)",
   HIGH_INTENT: "analytics_events.begin_checkout DISTINCT sans purchase ni subscription active (période, test users excluded)",
   DORMANT_USER: "analytics_events activité J-30→J-14, aucune activité depuis J-14 (test users excluded)",
 };

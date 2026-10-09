@@ -149,11 +149,15 @@ describe("P0.8 — separation Product Analytics / Funnel / Business Metrics", ()
 // E. Attribution
 // ------------------------------------------------------------------
 describe("P0.8 — attribution : ce qui existe, ce qui manque", () => {
-  it("les UTM sont lus sur la page d'inscription dans signupCompleted", () => {
-    expect(inscriptionSrc).toMatch(/params\.get\("utm_source"\)/);
-    expect(inscriptionSrc).toMatch(/params\.get\("utm_medium"\)/);
-    expect(inscriptionSrc).toMatch(/params\.get\("utm_campaign"\)/);
-    expect(inscriptionSrc).toMatch(/signupCompleted,[\s\S]{0,400}source:\s*params\.get\("utm_source"\)/);
+  it("l'attribution est transmise au serveur dans le body d'inscription (P2.1)", () => {
+    // P2.5.2 : signup_completed est émis côté serveur (P2.3). Le client
+    // envoie l'attribution stockée (sessionStorage) dans le body de
+    // /api/auth/register ; le serveur la valide (liste blanche) et
+    // l'attache à l'événement.
+    expect(inscriptionSrc).toMatch(/attribution:\s*getStoredAttribution\(\)/);
+    // La capture first-touch est montée dans le layout (AttributionCapture).
+    const layoutSrc = read("src", "app", "layout.tsx");
+    expect(layoutSrc).toMatch(/<AttributionCapture/);
   });
 
   it("les UTM ne sont pas persistes sur le compte (limite du contrat)", async () => {
@@ -180,7 +184,12 @@ describe("P0.8 — attribution : ce qui existe, ce qui manque", () => {
     // P2.2 : `growth/decision/attribution.ts` lit les mêmes props côté
     // serveur pour les canaux/couverture (pur, sans écriture, sans réseau)
     // et `growth/decision/data.ts` les agrège en SQL (2 requêtes read-only).
+    // P2.5.2 : `register/route.ts` reçoit l'attribution du client dans le
+    // body (P2.1) et la valide (liste blanche + troncature) avant de
+    // l'attacher au signup_completed serveur (P2.3) — pas de capture
+    // nouvelle, juste une validation de lecture.
     expect([...offenders].sort()).toEqual([
+      "src/app/api/auth/register/route.ts",
       "src/lib/attribution.ts",
       "src/lib/growth/decision/attribution.ts",
       "src/lib/growth/decision/data.ts",
