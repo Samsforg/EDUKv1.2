@@ -1,4 +1,4 @@
-# Contrat de données Analytics — Edukora
+﻿# Contrat de données Analytics — Edukora
 
 > **Phases P0.8 → P1.0 — contrat avant Growth / Acquisition.**
 > Le corps date de l'audit **read-only** P0.8 ; P1.0 met le contrat à jour
@@ -313,3 +313,35 @@ rédaction initiale (documentation-only) ; le reste reste non implémenté.
 - **Correction minimale proposée (P0.9)** : exposer un flag `fallback: true` et
   afficher « — » sur `/resultats` tant que la collecte échoue (2 lignes :
   `stats.ts` + `resultats/page.tsx`), au lieu de chiffres démonstratifs.
+
+
+---
+
+## 13. growth_action_implemented - evenement serveur (P2.4)
+
+- **Objet** : declaration EXPLICITE, par un administrateur, de la realisation
+  d'une action proposee par le Decision Layer P2.3 (ction_id au format
+  ction_<TYPE>#<from>/<to>#<segment>). C'est la SEULE source de l'etat
+  DECLARED_REALIZED de la couche de mesure P2.4 : une absence de declaration
+  signifie NOT_DECLARED, jamais "executee".
+- **Ecrivain** : POST /api/growth/actions/declare (admin-only via
+  equireAdmin + guardApi, CSRF exige par le proxy) qui appelle 	rackDb
+  - l'INSERT reste donc dans la couche nalytics_events existante. La route
+  est idempotente : une declaration existante pour le meme ction_id renvoie
+  lready_declared sans ecrire de seconde ligne.
+- **Lecteurs** : uniquement src/lib/growth/measure/* (SELECT), agrge dans le
+  champ measurement de GET /api/admin/growth/insights (read-only).
+- **Props (whitelist stricte, aucun contenu libre)** :
+  - ction_id : format verifie ^action_[A-Z][A-Z0-9_]*#YYYY-MM-DD/YYYY-MM-DD#[A-Za-z0-9_-]{1,40}$ ;
+  - window_days : entier 7..30 (defaut 14), fenetre d'observation avant/apres.
+  Toute autre cle, tout texte fourni par l'utilisateur, tout email ou
+  identifiant est rejete (400) sans reflet de valeur dans le message.
+- **Hors taxonomie client** : comme ctivated (P1.0) et purchase (P1.0),
+  cet evenement n'entre pas dans la constante EVENTS (33 noms inchanges) ;
+  il n'est emis par aucun SDK client et jamais fabrique historiquement.
+- **Dedoublonnage** : tri created_at ASC, id ASC, la declaration la plus
+  ancienne gagne ; seuls les comptes ole = 'admin' NON-test sont lus ;
+  plafond de lecture 100 lignes, plafond de fenetres mesurees 5 par appel.
+- **Limites** : aucun evenement d'execution n'est derive automatiquement ;
+  aucun etat "acceptee" n'existe (le produit ne suit pas ce statut) ; la
+  couche P2.4 produit une correlation temporelle, jamais une preuve causale.

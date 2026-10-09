@@ -2,26 +2,40 @@
 
 import { useEffect, useState } from "react";
 import type { GrowthActionPlan, GrowthInsightBundle } from "@/lib/growth/decision/types";
+import type {
+  ActionMeasurementEntry,
+  ExperimentPreparation,
+  FunnelRate,
+  GrowthMeasurement,
+  TrendPoint,
+  WindowMetric,
+} from "@/lib/growth/measure";
 
 /**
- * P2.1 + P2.2 + P2.3 — panneau Decision Layer (§17) : Growth Health,
+ * P2.1 + P2.2 + P2.3 + P2.4 — panneau Decision Layer (§17) : Growth Health,
  * Attribution, Channels, Referrals, Actions proposées, Top Signals,
- * Top Opportunities, Top Recommendations. Lecture seule : fetch de la
- * route admin existante, aucune action exposée (tout reste « PROPOSED »).
- * Les cartes P2.2 sont en plus des cartes P2.1 — le dashboard existant
- * reste intact ; la file P2.3 ne propose que des plans, jamais d'envoi.
+ * Top Opportunities, Top Recommendations + sections P2.4 de mesure
+ * (entonnoir, évolution, couverture, mesure avant/après des actions
+ * DÉCLARÉES, préparation d'expériences DRAFT). Lecture seule intégrale :
+ * fetch unique de la route admin existante, aucun POST, aucune action
+ * exposée (tout reste « PROPOSED »), aucune déclaration depuis l'UI
+ * (le mécanisme de déclaration vit côté API, hors panneau).
  */
+
+type InsightsBundle = GrowthInsightBundle & { measurement?: GrowthMeasurement };
 
 const CARD = "bg-surface-container-lowest border border-outline-variant rounded-xl p-4";
 const LABEL = "font-label-sm font-semibold text-on-surface-variant uppercase tracking-wide";
 
 function ratingChip(rating: string): string {
   const base = "px-2 py-0.5 rounded-full text-xs font-semibold";
-  if (rating === "GOOD" || rating === "VALID") return `${base} text-tertiary`;
+  if (rating === "GOOD" || rating === "VALID" || rating === "OBSERVED") return `${base} text-tertiary`;
   if (rating === "INSUFFICIENT_DATA" || rating === "UNAVAILABLE") return `${base} bg-surface-container-high text-on-surface-variant`;
   if (rating === "HIGH" || rating === "CRITICAL") return `${base} bg-error-container text-on-error-container`;
   if (rating === "MEDIUM") return `${base} bg-secondary-container text-secondary`;
   if (rating === "LOW") return `${base} text-primary bg-primary-container`;
+  if (rating === "DECLARED_REALIZED") return `${base} text-primary bg-primary-container`;
+  if (rating === "NOT_DECLARED" || rating === "UNKNOWN" || rating === "NOT_APPLICABLE") return `${base} bg-surface-container-high text-on-surface-variant`;
   return `${base} bg-surface-container-high text-on-surface-variant`;
 }
 
@@ -37,6 +51,273 @@ function fmtPct(v: number | null): string {
 
 function fmtMoney(cents: number): string {
   return `${(cents / 100).toLocaleString("fr-FR")} F`;
+}
+
+function fmtNum(v: number | null): string {
+  return v === null ? "n/a" : v.toLocaleString("fr-FR");
+}
+
+function fmtDelta(v: number | null, kind: "count" | "rate"): string {
+  if (v === null) return "n/a";
+  const sign = v > 0 ? "+" : "";
+  return kind === "rate" ? `${sign}${(v * 100).toFixed(1)} pts` : `${sign}${v.toLocaleString("fr-FR")}`;
+}
+
+function windowLabel(w: { from: string; to_exclusive: string } | null): string {
+  return w ? `${w.from} → ${w.to_exclusive}` : "n/a";
+}
+
+/** Ligne d'une métrique de fenêtre (P2.4) : avant → après + statuts. */
+function WindowMetricRow({ wm }: { wm: WindowMetric }) {
+  const isCount = wm.metric === "subscription_count";
+  if (!wm.measured) {
+    return (
+      <li className="text-xs flex items-start justify-between gap-2 border-t border-outline-variant pt-1">
+        <span className="text-on-surface-variant">
+          {wm.metric} — {wm.not_measured_reason}
+        </span>
+        <span className={ratingChip(wm.status)}>{wm.status}</span>
+      </li>
+    );
+  }
+  const fmt = (v: number | null): string =>
+    v === null ? "n/a" : isCount ? v.toLocaleString("fr-FR") : `${(v * 100).toFixed(1)} %`;
+  return (
+    <li className="text-xs flex items-center justify-between gap-2 border-t border-outline-variant pt-1">
+      <span>
+        {wm.metric} : {fmt(wm.before)} → {fmt(wm.after)}
+        {wm.delta !== null
+          ? ` (${wm.delta > 0 ? "+" : ""}${isCount ? wm.delta.toLocaleString("fr-FR") : `${(wm.delta * 100).toFixed(1)} pts`})`
+          : ""}
+        {wm.evolution ? ` · ${wm.evolution}` : ""}
+        {` · base avant ${fmtNum(wm.before_denominator)} / après ${fmtNum(wm.after_denominator)}`}
+      </span>
+      <span className="flex gap-1 shrink-0">
+        <span className={ratingChip(wm.before_status)}>{wm.before_status}</span>
+        <span className={ratingChip(wm.after_status)}>{wm.after_status}</span>
+      </span>
+    </li>
+  );
+}
+
+/** Carte d'une action déclarée et de sa mesure avant/après (P2.4 §D). */
+function MeasurementActionEntry({ entry }: { entry: ActionMeasurementEntry }) {
+  return (
+    <li className="text-sm border border-outline-variant rounded-lg px-3 py-2 grid gap-1">
+      <span className="flex items-center justify-between gap-2">
+        <span className="font-semibold">{entry.title}</span>
+        <span className="flex gap-1">
+          <span className={ratingChip(entry.implementation)}>{entry.implementation}</span>
+          <span className={ratingChip(entry.result)}>{entry.result}</span>
+          <span className={ratingChip(entry.confidence)}>confiance {entry.confidence}</span>
+        </span>
+      </span>
+      <span className="text-xs text-on-surface-variant">
+        {entry.action_id} · {entry.action_type} · horizon {entry.horizon} · statut {entry.plan_status}
+      </span>
+      <span className="text-xs text-on-surface-variant">
+        déclarée {entry.declared_at ?? "—"} · fenêtre {entry.window_days ?? "—"} j ·
+        avant {windowLabel(entry.before_window)} · après {windowLabel(entry.after_window)} ·
+        {" "}{entry.after_complete ? "fenêtre postérieure terminée" : "fenêtre postérieure en cours"}
+      </span>
+      {entry.volume.before_events !== null && entry.volume.after_events !== null && (
+        <span className="text-xs text-on-surface-variant">
+          événements observés : avant {fmtNum(entry.volume.before_events)} · après {fmtNum(entry.volume.after_events)}
+        </span>
+      )}
+      {entry.metrics.length > 0 && (
+        <ul className="grid gap-1 mt-1">
+          {entry.metrics.map((wm) => (
+            <WindowMetricRow key={wm.metric} wm={wm} />
+          ))}
+        </ul>
+      )}
+      <span className="text-xs text-on-surface-variant">{entry.interpretation}</span>
+    </li>
+  );
+}
+
+/** Sections P2.4 : entonnoir, évolution, couverture, actions, expériences. */
+function MeasurementSections({ measurement }: { measurement: GrowthMeasurement }) {
+  const { funnel, trend, coverage, actions, experiments } = measurement;
+  const declaredEntries = actions.entries.filter((e) => e.implementation !== "NOT_DECLARED");
+  const undeclaredCount = actions.entries.length - declaredEntries.length;
+
+  return (
+    <>
+      {/* P2.4 Étape C — entonnoir de conversion mesurable */}
+      <div className={CARD}>
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className={LABEL}>Entonnoir de conversion (P2.4)</h2>
+          <span className="text-xs text-on-surface-variant">
+            {funnel.source} · dénominateurs affichés · jamais de faux 0
+          </span>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 mb-3">
+          {funnel.steps.map((s) => (
+            <div
+              key={s.key}
+              className="flex items-center justify-between gap-2 border border-outline-variant rounded-lg px-3 py-2"
+            >
+              <span className="text-sm">{s.label}</span>
+              <span className="flex items-center gap-2">
+                <span className="text-sm font-semibold">{s.status === "MISSING_DATA" ? "n/a" : fmtNum(s.count)}</span>
+                <span className={ratingChip(s.status)}>{s.status}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+        <ul className="grid gap-2 mb-3">
+          {funnel.rates.map((r: FunnelRate) => (
+            <li key={r.key} className="text-sm border border-outline-variant rounded-lg px-3 py-2 grid gap-1 sm:grid-cols-2">
+              <span className="font-semibold">{r.label}</span>
+              <span className="flex items-center gap-2 sm:justify-end">
+                <span className="text-sm font-semibold">{r.value === null ? "n/a" : `${(r.value * 100).toFixed(1)} %`}</span>
+                <span className={ratingChip(r.status)}>{r.status}</span>
+              </span>
+              <span className="text-xs text-on-surface-variant sm:col-span-2">
+                {r.numerator_key} {fmtNum(r.numerator)} / {r.denominator_label} {fmtNum(r.denominator)} ·
+                {" "}min sample {r.min_sample}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <div className="grid gap-1">
+          {funnel.not_applicable.map((na) => (
+            <p key={na.key} className="text-xs text-on-surface-variant">
+              <span className={ratingChip("NOT_APPLICABLE")}>NOT_APPLICABLE</span>{" "}
+              {na.label} — {na.reason}
+            </p>
+          ))}
+        </div>
+      </div>
+
+      {/* P2.4 Étape C — évolution par période + couverture */}
+      <div className={CARD}>
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className={LABEL}>Évolution &amp; couverture (P2.4)</h2>
+          <span className="text-xs text-on-surface-variant">
+            {trend.period.from} → {trend.period.to} vs {trend.previous_period.from} → {trend.previous_period.to}
+            {" · "}
+            {trend.comparable ? "périodes comparables" : "périodes non comparables"}
+          </span>
+        </div>
+        <ul className="grid gap-2 mb-3">
+          {trend.points.map((p: TrendPoint) => (
+            <li key={`${p.kind}-${p.key}`} className="text-sm border border-outline-variant rounded-lg px-3 py-2 grid gap-1 sm:grid-cols-2">
+              <span className="font-semibold">{p.label}</span>
+              <span className="flex items-center gap-2 sm:justify-end">
+                <span className="text-xs text-on-surface-variant">{fmtDelta(p.delta, p.kind)}</span>
+                <span className={ratingChip(p.status)}>{p.status}</span>
+              </span>
+              <span className="text-xs text-on-surface-variant sm:col-span-2">
+                période {p.kind === "rate" ? fmtPct(p.current) : fmtNum(p.current)} ·
+                {" "}précédente {p.kind === "rate" ? fmtPct(p.previous) : fmtNum(p.previous)} ·
+                {" "}variation {p.delta_pct === null ? "n/a" : `${(p.delta_pct * 100).toFixed(1)} %`}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="border border-outline-variant rounded-lg px-3 py-2">
+            <p className="text-xs text-on-surface-variant">Jours avec données (période courante)</p>
+            <p className="text-sm font-semibold">
+              {fmtNum(coverage.current.days_with_data)}/{coverage.current.days}
+              {coverage.current.rate !== null ? ` · ${fmtPct(coverage.current.rate)}` : ""}
+            </p>
+            <span className={ratingChip(coverage.current.status)}>{coverage.current.status}</span>
+          </div>
+          <div className="border border-outline-variant rounded-lg px-3 py-2">
+            <p className="text-xs text-on-surface-variant">Jours avec données (période précédente)</p>
+            <p className="text-sm font-semibold">
+              {fmtNum(coverage.previous.days_with_data)}/{coverage.previous.days}
+              {coverage.previous.rate !== null ? ` · ${fmtPct(coverage.previous.rate)}` : ""}
+            </p>
+            <span className={ratingChip(coverage.previous.status)}>{coverage.previous.status}</span>
+          </div>
+          <div className="border border-outline-variant rounded-lg px-3 py-2">
+            <p className="text-xs text-on-surface-variant">Dernier jour partiel inclus</p>
+            <p className="text-sm font-semibold">{coverage.includes_partial_today ? "oui" : "non"}</p>
+          </div>
+          <div className="border border-outline-variant rounded-lg px-3 py-2">
+            <p className="text-xs text-on-surface-variant">Inscrits sans attribution (P2.2)</p>
+            <p className="text-sm font-semibold">{fmtNum(coverage.unattributed)}</p>
+            <span className={ratingChip(coverage.unattributed_status)}>{coverage.unattributed_status}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* P2.4 Étape D — mesure avant/après des actions déclarées */}
+      <div className={CARD}>
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className={LABEL}>Mesure des actions déclarées (P2.4)</h2>
+          <span className="text-xs text-on-surface-variant">
+            déclarées {actions.declared_valid}/{actions.declared_total} · doublons {actions.duplicates_ignored} ·
+            {" "}invalides {actions.invalid_ignored} · fenêtres {actions.processed}/{actions.window_cap} ·
+            {" "}corrélation temporelle uniquement
+          </span>
+        </div>
+        <span className={ratingChip(actions.load_status)}>{actions.load_status}</span>
+        {declaredEntries.length === 0 ? (
+          <p className="text-sm text-on-surface-variant mt-2">
+            Aucune action n&apos;a été déclarée : toutes restent des propositions PROPOSED.
+          </p>
+        ) : (
+          <ul className="grid gap-2 mt-2">
+            {declaredEntries.map((entry) => (
+              <MeasurementActionEntry key={entry.action_id} entry={entry} />
+            ))}
+          </ul>
+        )}
+        {undeclaredCount > 0 && (
+          <p className="text-xs text-on-surface-variant mt-2">
+            {undeclaredCount} action(s) sans déclaration explicite — statut PROPOSED inchangé.
+          </p>
+        )}
+      </div>
+
+      {/* P2.4 Étape E — préparation des expérimentations (DRAFT, jamais lancées) */}
+      <div className={CARD}>
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className={LABEL}>Préparation d&apos;expériences (P2.4)</h2>
+          <span className="text-xs text-on-surface-variant">
+            aucun lancement · état DRAFT · affectation absente · consentement absent
+          </span>
+        </div>
+        <ul className="grid gap-2">
+          {experiments.experiments.map((x: ExperimentPreparation) => (
+            <li key={x.id} className="text-sm border border-outline-variant rounded-lg px-3 py-2 grid gap-1">
+              <span className="flex items-center justify-between gap-2">
+                <span className="font-semibold">{x.title}</span>
+                <span className="flex gap-1">
+                  <span className={ratingChip(x.state)}>{x.state}</span>
+                  <span className={ratingChip(x.launch_state)}>{x.launch_state}</span>
+                </span>
+              </span>
+              <span className="text-xs text-on-surface-variant">{x.id} · {x.hypothesis}</span>
+              <span className="text-xs text-on-surface-variant">
+                primaire {x.primary_metric} = baseline {fmtPct(x.baseline)} (base {fmtNum(x.baseline_denominator)}) ·
+                {" "}{x.min_observations} observations requises
+                <span className={ratingChip(x.baseline_status)}> {x.baseline_status}</span>
+              </span>
+              <span className="text-xs text-on-surface-variant">
+                guardrails {x.guardrail_metrics.join(", ")} · volume ~{x.daily_volume ?? "n/a"} observation(s)/jour ·
+                {" "}~{x.estimated_days_to_min_sample ?? "n/a"} j requis
+                <span className={ratingChip(x.volume_status)}> {x.volume_status}</span>
+              </span>
+              <span className="text-xs text-on-surface-variant">Contrôle : {x.control} · Candidat : {x.candidate}</span>
+              <ul className="grid gap-1">
+                {x.blocking_reasons.map((reason) => (
+                  <li key={reason} className="text-xs text-on-surface-variant">— {reason}</li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-on-surface-variant mt-2">{experiments.note}</p>
+      </div>
+    </>
+  );
 }
 
 /** Carte d'un plan d'action proposé (P2.3 §17) — légère, sans dépendance. */
@@ -95,7 +376,7 @@ function ActionQueueCard({ title, plans }: { title: string; plans: GrowthActionP
 }
 
 export default function GrowthInsightsPanel() {
-  const [data, setData] = useState<GrowthInsightBundle | null>(null);
+  const [data, setData] = useState<InsightsBundle | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -104,7 +385,7 @@ export default function GrowthInsightsPanel() {
     fetch("/api/admin/growth/insights")
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = (await res.json()) as GrowthInsightBundle;
+        const json = (await res.json()) as InsightsBundle;
         if (alive) setData(json);
       })
       .catch(() => {
@@ -258,6 +539,9 @@ export default function GrowthInsightsPanel() {
           <ActionQueueCard title="Bloquées par les données" plans={data.actions.blocked} />
         </div>
       </div>
+
+      {/* P2.4 — sections de mesure (lecture seule, ajoutées au bundle) */}
+      {data.measurement ? <MeasurementSections measurement={data.measurement} /> : null}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className={CARD}>
