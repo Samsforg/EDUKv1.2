@@ -241,7 +241,7 @@ export default function Page() {
               onClick={finish}
               className="w-full rounded-xl bg-primary text-on-primary py-3.5 font-semibold text-base transition-all duration-150 active:scale-[0.99] disabled:opacity-60"
             >
-              {loading ? "C&apos;est parti…" : "C&apos;est parti !"}
+              {loading ? "C'est parti…" : "C'est parti !"}
             </button>
           </section>
         )}

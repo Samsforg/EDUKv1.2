@@ -148,6 +148,21 @@ export default function TutorDemoPage() {
               </div>
             ))}
 
+            {messages.filter((m) => m.role === "user").length >= 2 && (
+              <div className="bg-surface-container-low rounded-2xl p-4 border border-outline-variant">
+                <p className="text-body-sm text-on-surface mb-3">
+                  Continue à apprendre avec Kora — crée ton compte gratuit.
+                </p>
+                <Link
+                  href="/inscription-1-2-edukora"
+                  className="inline-flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-xl text-label-md font-semibold"
+                >
+                  Créer mon compte gratuit
+                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </Link>
+              </div>
+            )}
+
             {sending && (
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center flex-shrink-0">

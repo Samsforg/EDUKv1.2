@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
   { href: "/fonctionnalites", label: "Fonctionnalités" },
+  { href: "/tuteur-ia-edukora", label: "Kora IA" },
   { href: "/resultats", label: "Résultats" },
   { href: "/tarifs", label: "Tarifs" },
 ];

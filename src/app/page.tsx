@@ -143,9 +143,14 @@ export default function Page() {
               <h1 className="text-[40px] md:text-[56px] leading-[1.08] font-extrabold text-primary mb-6">
                 Réussis ton BAC &amp; BEPC avec l'excellence.
               </h1>
-              <p className="text-body-lg text-on-surface mb-10 max-w-xl">
+              <p className="text-body-lg text-on-surface mb-6 max-w-xl">
                 Accédez à des fiches de révision et progressez plus vite grâce à{" "}
                 <strong className="text-primary">Kora</strong>, votre tuteur IA disponible 24h/24.
+                <br />
+                <span className="text-label-sm text-on-surface-variant">
+                  <span className="material-symbols-outlined text-primary text-[14px] align-middle">check_circle</span>{" "}
+                  Gratuit pour commencer — sans carte bancaire.
+                </span>
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
