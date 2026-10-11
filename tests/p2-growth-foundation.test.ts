@@ -75,13 +75,14 @@ function producerFiles(ev: string): string[] {
       .filter((f) => f.rel === "src/lib/analytics-db.ts" || f.rel === "src/app/api/premium/webhook/route.ts")
       .map((f) => f.rel);
   }
-  // P2.5.2 : signup_completed est désormais un writer serveur (P2.3) —
-  // émis via trackDb dans /api/auth/register, plus côté client.
+  // P2.5.2/P2.5.4 : signup_completed est un writer serveur (P2.3/P2.5.4) —
+  // émis via maybeRecordSignup (idempotent) appelé par /api/auth/register ;
+  // le littéral 'signup_completed' vit dans le SQL de analytics-db.ts.
   if (ev === "signup_completed") {
     return SRC.filter(
-      (f) => /trackDb\(/.test(f.content) && new RegExp(`['"]${ev}['"]`).test(f.content),
+      (f) => /maybeRecordSignup\(/.test(f.content) || /'signup_completed'/.test(f.content),
     )
-      .filter((f) => f.rel === "src/app/api/auth/register/route.ts")
+      .filter((f) => f.rel === "src/lib/analytics-db.ts" || f.rel === "src/app/api/auth/register/route.ts")
       .map((f) => f.rel);
   }
   const key = Object.keys(EVENTS).find((k) => EVENTS[k as keyof typeof EVENTS] === ev);

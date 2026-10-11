@@ -5,7 +5,7 @@
  * utm_source, utm_medium, utm_campaign, utm_content, utm_term, gclid, fbclid.
  *
  * - First-touch : la première valeur capturée dans l'onglet gagne ; les
- *   captures suivantes ne font qu'ajouter des clés absentes.
+ *   captures suivantes ne font qu'ajouter les clés absentes.
  * - `ref` (parrainage) est VOLONTAIREMENT exclu d'ici : il suit son propre
  *   parcours validé côté serveur (/api/auth/register) — jamais mélangé aux
  *   UTM (contract §5).
@@ -14,6 +14,9 @@
  * - Persistance sessionStorage (onglet courant) : suffit au parcours
  *   landing → inscription ; la jointure conversion se fait ensuite par
  *   user_id sur l'événement signup_completed.
+ * - P2.5.4 — gclid/fbclid (identifiants publicitaires) ne sont capturés
+ *   que si le consentement marketing est accordé (cookie edukora_consent).
+ *   Les UTM restent capturés (analytics first-party).
  */
 
 export const ATTRIBUTION_KEYS = [
@@ -29,16 +32,35 @@ export const ATTRIBUTION_KEYS = [
 export type AttributionKey = (typeof ATTRIBUTION_KEYS)[number];
 export type StoredAttribution = Partial<Record<AttributionKey, string>>;
 
+/** P2.5.4 — clés soumises au consentement marketing (identifiants publicitaires). */
+const MARKETING_CONSENT_KEYS = new Set<AttributionKey>(["gclid", "fbclid"]);
+
 const STORAGE_KEY = "edukora_attr";
 const MAX_VALUE_LEN = 120;
+
+/** P2.5.4 — lit le consentement marketing depuis le cookie `edukora_consent`. */
+function hasMarketingConsent(): boolean {
+  if (typeof document === "undefined") return false;
+  try {
+    const match = document.cookie.match(/(?:^|; )edukora_consent=([^;]*)/);
+    if (!match) return false;
+    const prefs = JSON.parse(decodeURIComponent(match[1])) as { marketing?: boolean };
+    return prefs.marketing === true;
+  } catch {
+    return false;
+  }
+}
 
 /** Extrait la whitelist d'attribution d'une query string (?a=1&b=2 ou a=1). */
 export function parseAttribution(search: string): StoredAttribution {
   const out: StoredAttribution = {};
   if (!search) return out;
+  const marketingOk = hasMarketingConsent();
   try {
     const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
     for (const key of ATTRIBUTION_KEYS) {
+      // P2.5.4 — identifiants publicitaires soumis au consentement marketing.
+      if (MARKETING_CONSENT_KEYS.has(key) && !marketingOk) continue;
       const v = params.get(key)?.trim();
       if (v) out[key] = v.slice(0, MAX_VALUE_LEN);
     }
@@ -61,12 +83,16 @@ function storage(): Storage | null {
 export function getStoredAttribution(): StoredAttribution {
   const s = storage();
   if (!s) return {};
+  const marketingOk = hasMarketingConsent();
   try {
     const raw = s.getItem(STORAGE_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     const out: StoredAttribution = {};
     for (const key of ATTRIBUTION_KEYS) {
+      // P2.5.4 — identifiants publicitaires soumis au consentement marketing
+      // à la relecture aussi (retrait de consentement respecté).
+      if (MARKETING_CONSENT_KEYS.has(key) && !marketingOk) continue;
       const v = parsed[key];
       if (typeof v === "string" && v) out[key] = v.slice(0, MAX_VALUE_LEN);
     }

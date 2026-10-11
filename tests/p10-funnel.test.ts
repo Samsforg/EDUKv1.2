@@ -264,6 +264,7 @@ async function waitFor<T>(
 
 afterEach(() => {
   delete (globalThis as unknown as { window?: unknown }).window;
+  delete (globalThis as unknown as { document?: unknown }).document;
   mockCookies.clear();
 });
 
@@ -315,7 +316,10 @@ describe("P1.0 — attribution first-party (?utm_* + clics)", () => {
     });
     expect(ATTRIBUTION_KEYS).toHaveLength(7);
     expect(parseAttribution(`?utm_source=${"x".repeat(300)}`).utm_source).toHaveLength(120);
-    expect(parseAttribution("?gclid=GA1.1.123&fbclid=IjAbc").gclid).toBe("GA1.1.123");
+    // P2.5.4 : gclid/fbclid soumis au consentement marketing (cookie
+    // edukora_consent) — sans consentement, ils sont exclus du parse.
+    expect(parseAttribution("?gclid=GA1.1.123&fbclid=IjAbc").gclid).toBeUndefined();
+    expect(parseAttribution("?gclid=GA1.1.123&fbclid=IjAbc").fbclid).toBeUndefined();
     expect(parseAttribution("")).toEqual({});
   });
 
@@ -372,14 +376,22 @@ describe("P1.0 — attribution first-party (?utm_* + clics)", () => {
     expect(props.gclid).toBeUndefined(); // non capturé → absent (pas de 0 factice)
   });
 
-  it("6 — gclid : capturé au landing, persisté, injecté au signup", () => {
+  it("6 — gclid : capturé au landing avec consentement marketing, persisté, injecté au signup", () => {
+    // P2.5.4 : gclid n'est capturé que si le consentement marketing est accordé
+    (globalThis as unknown as { document?: unknown }).document = {
+      cookie: `edukora_consent=${encodeURIComponent(JSON.stringify({ essential: true, analytics: true, marketing: true, ia: true }))}`,
+    };
     mockWindow("?gclid=AbC123XyZ");
     captureLandingAttribution();
     expect(getStoredAttribution().gclid).toBe("AbC123XyZ");
     expect(signupAttributionProps().gclid).toBe("AbC123XyZ");
   });
 
-  it("7 — fbclid : capturé au landing, persisté, injecté au signup", () => {
+  it("7 — fbclid : capturé au landing avec consentement marketing, persisté, injecté au signup", () => {
+    // P2.5.4 : fbclid n'est capturé que si le consentement marketing est accordé
+    (globalThis as unknown as { document?: unknown }).document = {
+      cookie: `edukora_consent=${encodeURIComponent(JSON.stringify({ essential: true, analytics: true, marketing: true, ia: true }))}`,
+    };
     mockWindow("?fbclid=Ij3xyz");
     captureLandingAttribution();
     expect(getStoredAttribution().fbclid).toBe("Ij3xyz");

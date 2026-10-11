@@ -8,7 +8,7 @@ import { RegisterSchema, validate } from "@/lib/validation";
 import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { findGradeDirect, resolveUserGradeIds } from "@/lib/level";
 import { sendWelcomeEmail } from "@/lib/mailer";
-import { trackDb } from "@/lib/analytics-db";
+import { maybeRecordSignup } from "@/lib/analytics-db";
 import { ATTRIBUTION_KEYS } from "@/lib/attribution";
 import crypto from "crypto";
 
@@ -23,21 +23,42 @@ const ATTRIBUTION_PROP_MAP: Record<(typeof ATTRIBUTION_KEYS)[number], string> = 
   fbclid: "fbclid",
 };
 
+/** Clés soumises au consentement marketing (identifiants publicitaires). */
+const MARKETING_CONSENT_KEYS = new Set(["gclid", "fbclid"]);
+
 /**
- * P2.1 — Valide l'attribution reçue du client (liste blanche, troncature).
- * Retourne les props mappées ; rien d'invalide n'est accepté.
+ * P2.1/P2.5.4 — Valide l'attribution reçue du client (liste blanche,
+ * troncature). Les identifiants publicitaires (gclid/fbclid) ne sont
+ * conservés que si le consentement marketing est accordé (cookie
+ * `edukora_consent.marketing`). Les UTM restent autorisés (analytics
+ * first-party). Retourne les props mappées ; rien d'invalide n'est accepté.
  */
-function sanitizeAttribution(raw: unknown): Record<string, string> {
+function sanitizeAttribution(raw: unknown, hasMarketingConsent: boolean): Record<string, string> {
   if (typeof raw !== "object" || raw === null) return {};
   const obj = raw as Record<string, unknown>;
   const out: Record<string, string> = {};
   for (const key of ATTRIBUTION_KEYS) {
+    // P2.5.4 — identifiants publicitaires soumis au consentement marketing.
+    if (MARKETING_CONSENT_KEYS.has(key) && !hasMarketingConsent) continue;
     const v = obj[key];
     if (typeof v === "string" && v.trim()) {
       out[ATTRIBUTION_PROP_MAP[key]] = v.trim().slice(0, 120);
     }
   }
   return out;
+}
+
+/** P2.5.4 — lit le consentement marketing depuis le cookie `edukora_consent`. */
+function hasMarketingConsent(req: NextRequest): boolean {
+  const cookie = req.headers.get("cookie") ?? "";
+  const match = cookie.match(/(?:^|; )edukora_consent=([^;]*)/);
+  if (!match) return false;
+  try {
+    const prefs = JSON.parse(decodeURIComponent(match[1])) as { marketing?: boolean };
+    return prefs.marketing === true;
+  } catch {
+    return false;
+  }
 }
 
 function normalizePhone(raw: string): string {
@@ -273,23 +294,25 @@ async function POSTHandler(req: NextRequest) {
     );
   }
 
-  // P2.3 — signup_completed côté serveur : émis SEULEMENT après INSERT +
-  // session réussis (jamais si le compte n'a pas été créé). La props
-  // `attribution` est validée serveur (liste blanche + troncature) ;
-  // l'émission client a été supprimée pour éviter le double comptage.
+  // P2.3/P2.5.4 — signup_completed côté serveur, idempotent : émis
+  // SEULEMENT après INSERT + session réussis. Dédup atomique via
+  // maybeRecordSignup (INSERT…SELECT…WHERE NOT EXISTS) — un rejeu ou
+  // une requête concurrente ne crée jamais de doublon.
+  // P2.5.4 — gclid/fbclid conditionnés au consentement marketing.
+  const marketingOk = hasMarketingConsent(req);
   const attribution = sanitizeAttribution(
     typeof body === "object" && body !== null ? (body as Record<string, unknown>).attribution : undefined,
+    marketingOk,
   );
   try {
-    await trackDb(
-      "signup_completed",
+    await maybeRecordSignup(
+      userId,
+      token,
       {
         role,
         method: email ? "email" : "phone",
         ...attribution,
       },
-      userId,
-      token,
       null,
     );
   } catch (err: unknown) {

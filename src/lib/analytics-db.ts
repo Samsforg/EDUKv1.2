@@ -41,6 +41,11 @@ export async function ensureAnalyticsTable() {
     // P1.0 — activation : UNIQUE ligne `activated` par compte (dédup
     // atomique via ON CONFLICT, y compris sur requêtes concurrentes).
     await run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_analytics_activated ON analytics_events(user_id) WHERE event = 'activated'`);
+    // P2.5.4 — signup_completed : pas d'index unique partiel. La couche
+    // métrique compte COUNT(DISTINCT user_id) et peut légitimement recevoir
+    // plusieurs lignes par compte (tests, backfill rejeu). L'idempotence de
+    // l'émission est assurée côté writer (maybeRecordSignup, WHERE NOT EXISTS
+    // atomique) comme recordPurchase — jamais au niveau DDL.
     ensured = true;
   } catch (err) {
     // P1.6 F3 : jamais de fallback muet — l'échec de création de la table est
@@ -76,6 +81,55 @@ export async function backfillActivation(): Promise<number> {
   await ensureAnalyticsTable();
   const res = await run(ACTIVATION_BACKFILL);
   return res.changes;
+}
+
+// P2.5.4 — backfill signup_completed : reconstruit les événements manquants
+// pour les comptes créés avant P2.5.3 (où l'émission était côté client et
+// a pu être perdue). Source : users.created_at (timestamp serveur fiable).
+// Idempotent : NOT EXISTS sur user_id dans la requête pending, et
+// maybeRecordSignup (WHERE NOT EXISTS atomique) à l'insertion.
+// Aucune UTM inventée ; props = { role, method, backfilled: true } pour
+// distinguer les événements reconstruits des événements originaux.
+// created_at copié depuis users.created_at (conservatoire pour la rétention).
+// Exécuté en JavaScript (pas de json_object dans node:sqlite portable).
+
+/**
+ * P2.5.4 — backfill idempotent de signup_completed depuis users.created_at.
+ * Retourne le nombre d'événements reconstruits. Rejouable sans doublons.
+ * N'invente aucune UTM, aucun consentement, aucune heure d'événement.
+ */
+export async function backfillSignupCompleted(): Promise<number> {
+  await ensureAnalyticsTable();
+  // Comptes sans signup_completed (y compris créés dans la même seconde)
+  const pending = await query<{ id: number; role: string; email: string | null; created_at: string }>(
+    `SELECT u.id, u.role, u.email, u.created_at
+     FROM users u
+     WHERE NOT EXISTS (
+       SELECT 1 FROM analytics_events a WHERE a.event = 'signup_completed' AND a.user_id = u.id
+     )
+     ORDER BY u.id`,
+  );
+  let created = 0;
+  for (const u of pending) {
+    const props = JSON.stringify({
+      role: u.role,
+      method: u.email ? "email" : "phone",
+      backfilled: true,
+    });
+    const res = await run(
+      `INSERT INTO analytics_events (user_id, session_id, event, props, url, created_at)
+       SELECT ?, NULL, 'signup_completed', ?, NULL, ?
+       WHERE NOT EXISTS (
+         SELECT 1 FROM analytics_events WHERE event = 'signup_completed' AND user_id = ?
+       )`,
+      u.id,
+      props,
+      u.created_at,
+      u.id,
+    );
+    created += res.changes;
+  }
+  return created;
 }
 
 // P0.9 — migration idempotente des anciens session_id stockés en clair
@@ -131,6 +185,37 @@ export async function maybeRecordActivation(userId: number, sessionId: string | 
     sessionId,
     JSON.stringify({ trigger: "lesson_started" }),
     url
+  );
+  return res.changes > 0;
+}
+
+/**
+ * P2.5.4 — signup_completed idempotent : UN événement logique par compte.
+ * Dédup atomique : `INSERT … SELECT … WHERE NOT EXISTS` sur user_id +
+ * event (même pattern portable SQLite/PG que recordPurchase). Un rejeu de
+ * la route register (double submit, retry réseau) ne crée jamais de
+ * doublon. Retourne true si la ligne a été créée.
+ *
+ * Jamais bloquant : un échec ici ne doit pas faire échouer l'inscription.
+ */
+export async function maybeRecordSignup(
+  userId: number,
+  sessionId: string | null,
+  props: Record<string, unknown>,
+  url: string | null,
+): Promise<boolean> {
+  await ensureAnalyticsTable();
+  const res = await run(
+    `INSERT INTO analytics_events (user_id, session_id, event, props, url)
+     SELECT ?, ?, 'signup_completed', ?, ?
+     WHERE NOT EXISTS (
+       SELECT 1 FROM analytics_events WHERE event = 'signup_completed' AND user_id = ?
+     )`,
+    userId,
+    sessionId,
+    JSON.stringify(props ?? {}),
+    url,
+    userId
   );
   return res.changes > 0;
 }
