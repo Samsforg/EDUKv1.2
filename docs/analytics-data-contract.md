@@ -10,7 +10,7 @@
 > Complète `docs/analytics-funnel.md` (taxonomie 3f) et
 > `docs/growth-metrics.md` (KPI 3h) sans les remplacer.
 
-Dernière vérification : 06/10/2026 — `HEAD 269603a` + modifications locales P0.8 / P0.9 / P1.0.
+Dernière vérification : 11/10/2026 — `HEAD bc2f74d` + modifications locales P2.7.1 / P2.7.2 / P2.7.4 / P2.7.6 / P2.7.8 (demo_message_sent, signup_validation_failed, cta_impression, demo_opened, cta_id sur cta_clicked, MutationObserver, signup_completed via GA4 Measurement Protocol).
 
 ---
 
@@ -21,7 +21,7 @@ Dernière vérification : 06/10/2026 — `HEAD 269603a` + modifications locales 
 | **T1 — événements produit** | `trackEvent()` (`src/lib/analytics.ts`) | `analytics_events` (toujours) + GA4 + Clarity + Meta/TikTok/Ads (7 événements mappés) | interne : aucun ; tiers : cookie `edukora_consent` |
 | **T2 — navigation** | `fetch POST /api/analytics/track` direct (`src/components/EdukoraAnalytics.tsx:54`) | `analytics_events` uniquement (`event: "pageview"`) | aucun |
 | **T3 — script inline** | `window.edukoraTrack('signup_step_2_completed', …)` (`src/app/inscription-2-2-…/page.tsx:175`) | même chaîne que T1 | idem |
-| **T4 — serveur (GA4 MP)** | `sendGa4Purchase()` (`src/lib/ga4-ssr.ts`, appelé par le webhook GeniusPay) | GA4 **uniquement** | hors navigateur |
+| **T4 — serveur (GA4 MP)** | `sendGa4Purchase()` + `sendGa4SignupCompleted()` (`src/lib/ga4-ssr.ts`) | GA4 **uniquement** | hors navigateur ; consentement analytics vérifié côté serveur pour signup_completed |
 
 Stocker : `analytics_events(id, user_id, session_id, event, props, url, created_at)`
 (`src/lib/analytics-db.ts`), écrit par `trackDb()` via
@@ -33,14 +33,15 @@ directs : `maybeRecordActivation()` (activation dérivée) et
 
 ### 1.1 Constantes
 
-- `EVENTS` (`src/lib/analytics.ts:18-53`) : **33 noms**. La formule
-  historique « **34 noms** » comptait en réalité la liste complète du §10
-  (**33 EVENTS** + `pageview` hors EVENTS) et pointerait à tort vers §4
-  (attribution) — audit P1.1 : aucun commit n'a jamais porté 34 clés
-  (25 → 26 → 27 en historique git, +6 clés 3f non commitées = 33).
+- `EVENTS` (`src/lib/analytics.ts:18-58`) : **38 noms**. La formule
+  historique « **39 noms** » comptait en réalité la liste complète du §10
+  (**38 EVENTS** + `pageview` hors EVENTS) et pointerait à tort vers §4
+  (attribution) — audit P1.1 : aucun commit n'a jamais porté 39 clés
+  (25 → 26 → 27 en historique git, +6 clés 3f non commitées = 33,
+  +1 clé P2.7.1 = 34, +1 clé P2.7.2 = 35, +3 clés P2.7.4 = 38).
 - Émission littérale hors `EVENTS` : **`pageview`** (T2), **`activated`** et
   **`purchase`** (serveur, dérivés P1.0 — cf. §3/§10) ; le §10 listait
-  34 noms avant P1.0 (33 + `pageview`), 36 depuis (33 + 3 hors `EVENTS`).
+  39 noms avant P1.0 (38 + `pageview`), 41 depuis (38 + 3 hors `EVENTS`).
 - Taxonomie dupliquée `src/lib/growth/ai/types.ts:63-88` : **périmée** (liste
   `page_view` — jamais écrit tel quel en base —, ignore `activated` et les
   événements 3f ; `purchase` y figure sans la sémantique first-party
@@ -248,7 +249,12 @@ Légende destinations : **DB** = `analytics_events`, **G** = GA4,
 | `pageview` | 1 | navigation (chaque `pathname`) | client T2 | si connecté / sinon NULL | require : `path` ; url complet | DB | VISIT (comptage de vues) |
 | `landing_viewed` | 1 | affichage page marketing (8 routes) | client | idem | require : `page_path` | DB+G+C | début funnel acquisition |
 | `return_visit` | 1 | `landing_viewed` sur appareil déjà vu | client | idem | require : `page_path` | DB+G+C | rétention appareil |
-| `cta_clicked` | 1 | clic lien → `/inscription*` ou `/connexion*` (listener délégué, **non dédupliqué**) | client | idem | require : `cta_target`, `cta_source` ; opt : `cta_label` | DB+G+C | intention d'inscription |
+| `demo_message_sent` | 1 | envoi message démo Kora (guard `message` non vide + `!sending`) | client | idem | **aucune** (aucun texte, aucun prompt, aucune réponse) | DB+G+C | engagement démo publique ; `dedupe: false` (chaque envoi compte) |
+| `signup_validation_failed` | 1 | échec validation client formulaire inscription (12 sites `failValidation` avant fetch) | client | — | require : `rule` (enum fermé : `name`, `phone`, `password`, `email`, `class`, `serie`, `privacy`) — **aucune donnée utilisateur** | DB+G+C | friction tunnel signup ; `dedupe: false` ; erreurs réseau/serveur **non instrumentées** (limite documentée P2.7.2) |
+| `cta_impression` | 1 | element `[data-cta-id]` visible ≥50% viewport (IntersectionObserver + MutationObserver pour CTA dynamiques) | client | idem | require : `cta_id` (clé contrôlée : `home_hero_primary`, `kora_demo_signup`) | DB+G+C | dénominateur taux de clic CTA ; 1 impression/element/vue SPA ; MutationObserver couvre les éléments rendus après le mount (ex: kora_demo_signup) |
+| `demo_opened` | 1 | mount TutorDemoPage (guard useRef anti double-émmission Strict Mode) | client | idem | **aucune** | DB+G+C | ouverture démo Kora ; dénominateur démo→inscription |
+| `demo_signup_clicked` | 1 | **DEPRECATED — non émis depuis P2.7.6** (remplacé par `cta_clicked {cta_id: "kora_demo_signup"}`) | client | idem | — | — | conservé pour taxonomie historique ; ne pas utiliser |
+| `cta_clicked` | 1 | clic lien → `/inscription*` ou `/connexion*` (listener délégué, **non dédupliqué**) | client | idem | require : `cta_target`, `cta_source` ; opt : `cta_label`, `cta_id` (lu sur `data-cta-id` si présent) | DB+G+C | intention d'inscription ; **un seul événement par clic physique** ; `cta_id` distingue les CTA instrumentés |
 | `referral_clicked` | 1 | arrivée `/inscription…?ref=` | client | idem | require : `has_code`, `landing` (**jamais le code**) | DB+G+C | apport parrainage |
 | `signup_started` | 1 | submit inscription (validation OK) | client | — | require : `role`, `method`, `variant` | DB+G+C | début conversion |
 | `signup_step_2_completed` | 1 | submit étape 2 (script inline T3) | client | — | require : `examen` | DB+G+C | progression inscription |
@@ -337,7 +343,7 @@ rédaction initiale (documentation-only) ; le reste reste non implémenté.
   Toute autre cle, tout texte fourni par l'utilisateur, tout email ou
   identifiant est rejete (400) sans reflet de valeur dans le message.
 - **Hors taxonomie client** : comme ctivated (P1.0) et purchase (P1.0),
-  cet evenement n'entre pas dans la constante EVENTS (33 noms inchanges) ;
+  cet evenement n'entre pas dans la constante EVENTS (38 noms inchanges) ;
   il n'est emis par aucun SDK client et jamais fabrique historiquement.
 - **Dedoublonnage** : tri created_at ASC, id ASC, la declaration la plus
   ancienne gagne ; seuls les comptes ole = 'admin' NON-test sont lus ;
@@ -345,3 +351,52 @@ rédaction initiale (documentation-only) ; le reste reste non implémenté.
 - **Limites** : aucun evenement d'execution n'est derive automatiquement ;
   aucun etat "acceptee" n'existe (le produit ne suit pas ce statut) ; la
   couche P2.4 produit une correlation temporelle, jamais une preuve causale.
+
+---
+
+## 12. Différences DB interne / GA4 / Clarity (P2.7.8)
+
+Les trois destinations ne reçoivent pas les mêmes événements, n'ont pas les
+mêmes règles de déduplication et ne produisent pas les mêmes volumes. Les
+comparer directement sans tenir compte de ces différences produit des
+interprétations erronées.
+
+### 12.1 Source de vérité interne (DB `analytics_events`)
+
+| Aspect | Comportement |
+|---|---|
+| **Rôle** | Source de vérité complète. Enregistre **tous** les événements, sans consentement requis (first-party, finalité produit). |
+| **`signup_completed`** | Émis par `maybeRecordSignup()` (`analytics-db.ts:201-221`) après INSERT user + `createSession` OK. |
+| **Moment de réussite** | Le compte est considéré réussi quand l'INSERT en base **et** la création de session réussissent. Si `SESSION_SECRET` manque, l'événement n'est pas émis (503). |
+| **Idempotence** | Atomique : `INSERT … SELECT … WHERE NOT EXISTS (user_id + event)`. Un rejeu ou une requête concurrente ne crée jamais de doublon. 1 ligne par compte. |
+| **Rétention** | Table `analytics_events` sans expiration automatique. |
+
+### 12.2 GA4
+
+| Aspect | Comportement |
+|---|---|
+| **Mode d'envoi** | `signup_completed` envoyé via **Measurement Protocol** (`sendGa4SignupCompleted()`, `ga4-ssr.ts`) côté serveur. |
+| **Conditions** | (1) `GA4_API_SECRET` configuré, (2) consentement analytics accordé (cookie `edukora_consent.analytics` lu côté serveur), (3) `maybeRecordSignup` a réellement créé une ligne. |
+| **Paramètres transmis** | `role`, `method`, attribution (UTM, etc. déjà sanitisée). `user_id` = ID interne (dimension). `client_id` = aléatoire (pas de rapprochement session). |
+| **Données exclues** | Aucun e-mail, téléphone, nom, mot de passe, contenu de conversation. |
+| **Limites livraison** | Best-effort : un échec réseau/timeout ne bloque pas l'inscription, pas de retry. Latence : l'événement peut prendre des minutes à apparaître dans GA4. |
+| **Volumes** | Peuvent différer de la DB : GA4 déduplique côté client (consentement, bloqueurs), le serveur n'envoie que si le consentement est vérifié. |
+| **Conversion session** | Un événement serveur non relié à une session anonyme antérieure ne permet pas de calculer un taux de conversion de session fiable. |
+
+### 12.3 Microsoft Clarity
+
+| Aspect | Comportement |
+|---|---|
+| **`signup_completed`** | **Non envoyé à Clarity.** Aucune exigence produit ne prévoit cet événement dans Clarity. Ce n'est pas une erreur. |
+| **Événements Clarity** | Uniquement ceux émis via `trackEvent()` côté client avec consentement analytics. Limités à ~20 events custom par jour par session. |
+
+### 12.4 KPI et formules
+
+| KPI | Formule | Source | Statut | Limites |
+|---|---|---|---|---|
+| **Inscriptions réussies internes** | `COUNT(*) FROM analytics_events WHERE event='signup_completed'` | DB | `CALCULABLE` | Idempotent, 1/compte. Source de vérité. |
+| **`signup_completed` dans GA4** | Comptage côté GA4 (dashboard) | GA4 | `CALCULABLE AVEC RÉSERVES` | Best-effort, consentement requis, latence, volumes différents de la DB. |
+| **Taux de réussite inscription** | `signup_completed / signup_started × 100` | DB | `CALCULABLE AVEC RÉSERVES` | Cohortes différentes : `signup_started` = tentatives client, `signup_completed` = comptes créés. Serveur peut rejeter (409/400). |
+| **Conversion visiteur → inscription** | Pas de formule fiable | — | `NON CALCULABLE` | Pas de liaison individuelle (Option A agrégée, P2.7.4). Les volumes DB et GA4 ne sont pas directement comparables. |
+
+**Règle** : ne jamais présenter les volumes DB et GA4 comme directement comparables sans expliquer leurs périmètres respectifs (consentement, bloqueurs, déduplication).

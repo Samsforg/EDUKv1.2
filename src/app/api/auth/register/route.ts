@@ -9,6 +9,7 @@ import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { findGradeDirect, resolveUserGradeIds } from "@/lib/level";
 import { sendWelcomeEmail } from "@/lib/mailer";
 import { maybeRecordSignup } from "@/lib/analytics-db";
+import { sendGa4SignupCompleted } from "@/lib/ga4-ssr";
 import { ATTRIBUTION_KEYS } from "@/lib/attribution";
 import crypto from "crypto";
 
@@ -56,6 +57,19 @@ function hasMarketingConsent(req: NextRequest): boolean {
   try {
     const prefs = JSON.parse(decodeURIComponent(match[1])) as { marketing?: boolean };
     return prefs.marketing === true;
+  } catch {
+    return false;
+  }
+}
+
+/** P2.7.8 — lit le consentement analytics depuis le cookie `edukora_consent`. */
+function hasAnalyticsConsent(req: NextRequest): boolean {
+  const cookie = req.headers.get("cookie") ?? "";
+  const match = cookie.match(/(?:^|; )edukora_consent=([^;]*)/);
+  if (!match) return false;
+  try {
+    const prefs = JSON.parse(decodeURIComponent(match[1])) as { analytics?: boolean };
+    return prefs.analytics === true;
   } catch {
     return false;
   }
@@ -305,7 +319,7 @@ async function POSTHandler(req: NextRequest) {
     marketingOk,
   );
   try {
-    await maybeRecordSignup(
+    const recorded = await maybeRecordSignup(
       userId,
       token,
       {
@@ -315,6 +329,19 @@ async function POSTHandler(req: NextRequest) {
       },
       null,
     );
+    // P2.7.8 — GA4 Measurement Protocol : envoyé UNIQUEMENT si
+    // (1) maybeRecordSignup a réellement créé une ligne (idempotence),
+    // (2) le consentement analytics est accordé (cookie serveur),
+    // (3) GA4_API_SECRET est configuré (vérifié dans sendGa4SignupCompleted).
+    // Jamais bloquant : un échec GA4 ne fait pas échouer l'inscription.
+    if (recorded && hasAnalyticsConsent(req)) {
+      void sendGa4SignupCompleted({
+        userId,
+        role,
+        method: email ? "email" : "phone",
+        attribution,
+      }).catch(() => {});
+    }
   } catch (err: unknown) {
     // Non bloquant : le compte est créé, l'analytics ne doit pas faire échouer l'inscription.
     console.error("[register] analytics signup_completed impossible:", err instanceof Error ? err.message : err);
