@@ -99,12 +99,17 @@ export default function EdukoraAnalytics() {
       if (href.origin !== location.origin) return;
       if (!SIGNUP_TARGET.test(href.pathname)) return;
       const label = (anchor.textContent ?? "").replace(/\s+/g, " ").trim();
+      // P2.7.6 — cta_id lu sur data-cta-id pour distinguer les CTA
+      // instrumentes (home_hero_primary, kora_demo_signup) sans double
+      // comptage : un seul evenement cta_clicked par clic physique.
+      const ctaId = anchor.getAttribute("data-cta-id");
       trackEvent(
         EVENTS.ctaClicked,
         {
           cta_target: href.pathname,
           cta_source: pathname,
           cta_label: label ? label.slice(0, 40) : null,
+          ...(ctaId ? { cta_id: ctaId } : {}),
         },
         // Chaque clic est une interaction reelle : pas de dedupe.
         { dedupe: false },
@@ -112,6 +117,46 @@ export default function EdukoraAnalytics() {
     };
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
+  }, [pathname]);
+
+  // P2.7.4 — cta_impression via IntersectionObserver.
+  // Observe les elements portant un attribut data-cta-id (liste blanche
+  // de cles stables). Une impression n'est emise qu'une fois par element
+  // et par session de page : l'observateur est recree a chaque changement
+  // de pathname, ce qui correspond a une nouvelle vue SPA.
+  // Seuls les elements reellement visibles (seuil 50%) declenchent
+  // l'evenement — pas le simple rendu React.
+  // P2.7.6 — MutationObserver couvre les CTA montes dynamiquement
+  // (ex: kora_demo_signup apparu apres 2 messages utilisateur).
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    const seen = new Set<string>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const id = (entry.target as HTMLElement).getAttribute("data-cta-id");
+          if (!id || seen.has(id)) continue;
+          seen.add(id);
+          trackEvent(EVENTS.ctaImpression, { cta_id: id });
+        }
+      },
+      { threshold: 0.5 },
+    );
+    const observeAll = () => {
+      const targets = document.querySelectorAll<HTMLElement>("[data-cta-id]");
+      for (const el of targets) observer.observe(el);
+    };
+    observeAll();
+    // P2.7.6 — detecte les elements [data-cta-id] ajoutes apres le mount
+    // initial (CTA conditionnels, rendus tardifs). observe() est idempotent
+    // sur un element deja observe, et le Set `seen` empeche les doublons.
+    const mutationObserver = new MutationObserver(observeAll);
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      observer.disconnect();
+      mutationObserver.disconnect();
+    };
   }, [pathname]);
 
   return null;

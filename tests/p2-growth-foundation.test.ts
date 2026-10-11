@@ -85,6 +85,12 @@ function producerFiles(ev: string): string[] {
       .filter((f) => f.rel === "src/lib/analytics-db.ts" || f.rel === "src/app/api/auth/register/route.ts")
       .map((f) => f.rel);
   }
+  // P2.7.6 — demo_signup_clicked est deprecated : déclaré dans EVENTS
+  // mais non émis (remplacé par cta_clicked {cta_id}). Le contrat
+  // documente la dépréciation ; le producteur est la doc elle-même.
+  if (ev === "demo_signup_clicked") {
+    return contractDoc.includes("DEPRECATED") ? ["docs/analytics-data-contract.md"] : [];
+  }
   const key = Object.keys(EVENTS).find((k) => EVENTS[k as keyof typeof EVENTS] === ev);
   const emitterRe = /(trackEvent\(|edukoraTrack\()/;
   return SRC.filter((f) => {
@@ -99,11 +105,11 @@ function producerFiles(ev: string): string[] {
 // §1 — Taxonomie
 // ------------------------------------------------------------------
 describe("P2 §1 — taxonomie d'evenements (contrat KPI)", () => {
-  it("EVENTS compte exactement 33 cles, valeurs uniques, snake_case", () => {
+  it("EVENTS compte exactement 38 cles, valeurs uniques, snake_case", () => {
     const keys = Object.keys(EVENTS);
     const values = Object.values(EVENTS);
-    expect(keys).toHaveLength(33);
-    expect(new Set(values).size).toBe(33);
+    expect(keys).toHaveLength(38);
+    expect(new Set(values).size).toBe(38);
     for (const v of values) expect(v).toMatch(/^[a-z][a-z0-9_]*$/);
   });
 

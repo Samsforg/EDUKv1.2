@@ -99,58 +99,69 @@ function InscriptionPage() {
       .catch(() => {});
   }, []);
 
+  // P2.7.2 — instrumente les échecs de validation client uniquement.
+  // Les erreurs réseau et serveur ne sont pas distinguables côté client
+  // (res.json() hors try-catch) : non instrumentées, limitation documentée.
+  function failValidation(
+    rule: "name" | "phone" | "password" | "email" | "class" | "serie" | "privacy",
+    message: string,
+  ) {
+    setError(message);
+    trackEvent(EVENTS.signupValidationFailed, { rule }, { dedupe: false });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     const fn = firstName.trim();
     const ln = lastName.trim();
     if (!fn || !ln) {
-      setError("Veuillez renseigner votre prénom et votre nom.");
+      failValidation("name", "Veuillez renseigner votre prénom et votre nom.");
       return;
     }
     if (!NAME_RE.test(fn)) {
-      setError("Le prénom ne doit contenir que des lettres, espaces, tirets ou apostrophes.");
+      failValidation("name", "Le prénom ne doit contenir que des lettres, espaces, tirets ou apostrophes.");
       return;
     }
     if (!NAME_RE.test(ln)) {
-      setError("Le nom ne doit contenir que des lettres, espaces, tirets ou apostrophes.");
+      failValidation("name", "Le nom ne doit contenir que des lettres, espaces, tirets ou apostrophes.");
       return;
     }
     const phoneClean = phone.replace(/[\s\-().]/g, "");
     if (!phoneClean) {
-      setError("Le numéro de téléphone est requis.");
+      failValidation("phone", "Le numéro de téléphone est requis.");
       return;
     }
     if (!/^(?:\+?225)?(?:0[1-9]|[1-9])\d{8}$/.test(phoneClean)) {
-      setError("Numéro de téléphone ivoirien invalide (ex. 07 00 00 00 00).");
+      failValidation("phone", "Numéro de téléphone ivoirien invalide (ex. 07 00 00 00 00).");
       return;
     }
     if (password.length < 8) {
-      setError("Le mot de passe doit contenir au moins 8 caractères.");
+      failValidation("password", "Le mot de passe doit contenir au moins 8 caractères.");
       return;
     }
     if (!/[a-zA-Z]/.test(password)) {
-      setError("Le mot de passe doit contenir au moins une lettre.");
+      failValidation("password", "Le mot de passe doit contenir au moins une lettre.");
       return;
     }
     if (!/\d/.test(password)) {
-      setError("Le mot de passe doit contenir au moins un chiffre.");
+      failValidation("password", "Le mot de passe doit contenir au moins un chiffre.");
       return;
     }
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError("L'adresse email n'est pas valide.");
+      failValidation("email", "L'adresse email n'est pas valide.");
       return;
     }
     if (role === "student" && !classLevel.trim()) {
-      setError("Veuillez choisir votre classe ou votre niveau.");
+      failValidation("class", "Veuillez choisir votre classe ou votre niveau.");
       return;
     }
     if (role === "student" && showSerie && !serieId) {
-      setError("Veuillez choisir votre série.");
+      failValidation("serie", "Veuillez choisir votre série.");
       return;
     }
     if (!acceptPrivacy) {
-      setError("Veuillez accepter la politique de confidentialité.");
+      failValidation("privacy", "Veuillez accepter la politique de confidentialité.");
       return;
     }
     setLoading(true);

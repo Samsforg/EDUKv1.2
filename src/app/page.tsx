@@ -155,6 +155,7 @@ export default function Page() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   href="/inscription-1-2-edukora"
+                  data-cta-id="home_hero_primary"
                   className="bg-primary text-on-primary text-body-md font-bold px-8 py-4 rounded-[16px] shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   Commencer gratuitement

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { trackEvent, EVENTS } from "@/lib/analytics";
 
 interface ChatMsg {
   role: "user" | "assistant";
@@ -23,6 +24,16 @@ export default function TutorDemoPage() {
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // P2.7.4 — demo_opened : emis une seule fois au mount effectif de la page.
+  // React Strict Mode peut monter/démonter en dev : le guard useRef
+  // garantit une seule émission par instance de composant.
+  const openedRef = useRef(false);
+  useEffect(() => {
+    if (openedRef.current) return;
+    openedRef.current = true;
+    trackEvent(EVENTS.demoOpened);
+  }, []);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
@@ -31,6 +42,7 @@ export default function TutorDemoPage() {
     const message = text.trim();
     if (!message || sending) return;
     setError(null);
+    trackEvent(EVENTS.demoMessageSent, {}, { dedupe: false });
     const history = messages.slice(-6);
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: message }]);
@@ -153,8 +165,14 @@ export default function TutorDemoPage() {
                 <p className="text-body-sm text-on-surface mb-3">
                   Continue à apprendre avec Kora — crée ton compte gratuit.
                 </p>
+                {/* P2.7.6 — plus d'onClick ici : le listener deleague
+                    cta_clicked dans EdukoraAnalytics capte le clic via
+                    data-cta-id, emettant un seul cta_clicked {cta_id:
+                    "kora_demo_signup"}. L'ancien demo_signup_clicked
+                    (double comptage) est supprime. */}
                 <Link
                   href="/inscription-1-2-edukora"
+                  data-cta-id="kora_demo_signup"
                   className="inline-flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-xl text-label-md font-semibold"
                 >
                   Créer mon compte gratuit

@@ -229,6 +229,190 @@ describe("3f — taxonomie du funnel", () => {
 });
 
 // ------------------------------------------------------------------
+// C2. demo_message_sent — instrumentation demo Kora (P2.7.1)
+// ------------------------------------------------------------------
+describe("P2.7.1 — demo_message_sent (demo publique Kora)", () => {
+  const tutorDemoSrc = read("src", "components", "TutorDemoPage.tsx");
+
+  it("est present dans EVENTS", () => {
+    expect(Object.values(EVENTS)).toContain("demo_message_sent");
+    expect(EVENTS.demoMessageSent).toBe("demo_message_sent");
+  });
+
+  it("est declenche depuis TutorDemoPage via trackEvent", () => {
+    expect(tutorDemoSrc).toMatch(/trackEvent\(EVENTS\.demoMessageSent/);
+  });
+
+  it("l'appel ne transmet aucune propriete de message ni de reponse", () => {
+    // aucun parametre : ni message, prompt, content, query, question_text
+    expect(tutorDemoSrc).toMatch(/trackEvent\(EVENTS\.demoMessageSent,\s*\{\}/);
+    expect(tutorDemoSrc).not.toMatch(
+      /trackEvent\(EVENTS\.demoMessageSent,\s*\{[^}]*(message|prompt|content|query|question)/,
+    );
+  });
+
+  it("l'evenement est emis apres le guard (message non vide + !sending)", () => {
+    const guard = tutorDemoSrc.indexOf("if (!message || sending) return;");
+    const track = tutorDemoSrc.indexOf("trackEvent(EVENTS.demoMessageSent");
+    expect(guard).toBeGreaterThan(-1);
+    expect(track).toBeGreaterThan(guard);
+  });
+
+  it("utilise dedupe: false pour permettre les messages successifs", () => {
+    expect(tutorDemoSrc).toMatch(/trackEvent\(EVENTS\.demoMessageSent,\s*\{\},\s*\{\s*dedupe:\s*false\s*\}\)/);
+  });
+});
+
+// ------------------------------------------------------------------
+// C3. signup_validation_failed — echecs validation client (P2.7.2)
+// ------------------------------------------------------------------
+describe("P2.7.2 — signup_validation_failed (validation client inscription)", () => {
+  const inscriptionSrc2 = read("src", "app", "inscription-1-2-edukora", "page.tsx");
+
+  it("est present dans EVENTS", () => {
+    expect(Object.values(EVENTS)).toContain("signup_validation_failed");
+    expect(EVENTS.signupValidationFailed).toBe("signup_validation_failed");
+  });
+
+  it("est declenche via le helper failValidation", () => {
+    expect(inscriptionSrc2).toMatch(/trackEvent\(EVENTS\.signupValidationFailed/);
+  });
+
+  it("le helper utilise une enum fermee de rules, sans donnee utilisateur", () => {
+    // la signature du helper ne contient que rule (enum) et message (affiche, jamais tracke)
+    expect(inscriptionSrc2).toMatch(
+      /function failValidation\(\s*rule:\s*"name"\s*\|\s*"phone"\s*\|\s*"password"\s*\|\s*"email"\s*\|\s*"class"\s*\|\s*"serie"\s*\|\s*"privacy"/,
+    );
+    // trackEvent ne reçoit que { rule } — jamais le message
+    expect(inscriptionSrc2).toMatch(
+      /trackEvent\(EVENTS\.signupValidationFailed,\s*\{\s*rule\s*\},\s*\{\s*dedupe:\s*false\s*\}\)/,
+    );
+  });
+
+  it("les 12 sites de validation client passent par failValidation", () => {
+    // chaque setError des bornes de validation est remplace par failValidation
+    const calls = inscriptionSrc2.match(/failValidation\("/g) ?? [];
+    expect(calls).toHaveLength(12);
+  });
+
+  it("aucun appel failValidation n'est fait apres setLoading (hors validation)", () => {
+    const lastValidation = inscriptionSrc2.lastIndexOf('failValidation("privacy"');
+    const setLoading = inscriptionSrc2.indexOf("setLoading(true)");
+    expect(lastValidation).toBeGreaterThan(-1);
+    expect(setLoading).toBeGreaterThan(lastValidation);
+  });
+
+  it("les erreurs reseau et serveur ne declenchent pas signup_validation_failed", () => {
+    // le catch reseau et la branche serveur utilisent toujours setError, pas failValidation
+    const catchBlock = inscriptionSrc2.indexOf('setError("Erreur réseau. Réessayez.")');
+    const serverBlock = inscriptionSrc2.indexOf("setError(data.error ??");
+    const eventCall = inscriptionSrc2.indexOf("trackEvent(EVENTS.signupValidationFailed");
+    // failValidation est appele avant setLoading, les erreurs reseau/serveur apres
+    expect(eventCall).toBeLessThan(inscriptionSrc2.indexOf("setLoading(true)"));
+    // ni le catch ni la branche serveur ne contiennent failValidation
+    expect(inscriptionSrc2.slice(catchBlock, catchBlock + 40)).not.toMatch(/failValidation/);
+    expect(inscriptionSrc2.slice(serverBlock, serverBlock + 60)).not.toMatch(/failValidation/);
+  });
+
+  it("dedupe: false permet de compter chaque echec distinct", () => {
+    expect(inscriptionSrc2).toMatch(/dedupe:\s*false/);
+  });
+});
+
+// ------------------------------------------------------------------
+// C4. P2.7.4 — cta_impression, demo_opened, demo_signup_clicked
+// ------------------------------------------------------------------
+describe("P2.7.4 — instrumentation tunnel conversion", () => {
+  const tutorDemoSrc2 = read("src", "components", "TutorDemoPage.tsx");
+  const homepageSrc = read("src", "app", "page.tsx");
+
+  it("cta_impression est present dans EVENTS", () => {
+    expect(Object.values(EVENTS)).toContain("cta_impression");
+    expect(EVENTS.ctaImpression).toBe("cta_impression");
+  });
+
+  it("demo_opened est present dans EVENTS", () => {
+    expect(Object.values(EVENTS)).toContain("demo_opened");
+    expect(EVENTS.demoOpened).toBe("demo_opened");
+  });
+
+  it("demo_signup_clicked est present dans EVENTS (deprecated, non emis)", () => {
+    // P2.7.6 — l'evenement reste declare pour la taxonomie historique
+    // mais n'est plus emis : le clic est capte par cta_clicked {cta_id}.
+    expect(Object.values(EVENTS)).toContain("demo_signup_clicked");
+    expect(EVENTS.demoSignupClicked).toBe("demo_signup_clicked");
+  });
+
+  it("cta_impression utilise IntersectionObserver avec data-cta-id", () => {
+    expect(eduAnalyticsSrc).toMatch(/IntersectionObserver/);
+    expect(eduAnalyticsSrc).toMatch(/\[data-cta-id\]/);
+    expect(eduAnalyticsSrc).toMatch(/trackEvent\(EVENTS\.ctaImpression/);
+  });
+
+  it("cta_impression detecte les elements ajoutes dynamiquement (MutationObserver)", () => {
+    // P2.7.6 — L1 : le CTA kora_demo_signup est rendu apres 2 messages.
+    // MutationObserver re-observe les nouveaux [data-cta-id] dans le DOM.
+    expect(eduAnalyticsSrc).toMatch(/MutationObserver/);
+    expect(eduAnalyticsSrc).toMatch(/mutationObserver\.observe\(document\.body/);
+    expect(eduAnalyticsSrc).toMatch(/childList:\s*true/);
+    expect(eduAnalyticsSrc).toMatch(/subtree:\s*true/);
+  });
+
+  it("cta_impression n'est emise qu'une fois par element et par vue", () => {
+    // le Set `seen` empeche les re-emissions pour le meme cta_id
+    expect(eduAnalyticsSrc).toMatch(/seen\.has\(id\)/);
+    expect(eduAnalyticsSrc).toMatch(/seen\.add\(id\)/);
+  });
+
+  it("cta_impression ne transmet que cta_id (clé contrôlée)", () => {
+    expect(eduAnalyticsSrc).toMatch(/trackEvent\(EVENTS\.ctaImpression,\s*\{\s*cta_id:\s*id\s*\}\)/);
+  });
+
+  it("la homepage porte data-cta-id sur le CTA hero", () => {
+    expect(homepageSrc).toMatch(/data-cta-id="home_hero_primary"/);
+  });
+
+  it("demo_opened est emis au mount de TutorDemoPage avec guard useRef", () => {
+    expect(tutorDemoSrc2).toMatch(/trackEvent\(EVENTS\.demoOpened\)/);
+    expect(tutorDemoSrc2).toMatch(/openedRef\.current/);
+    // guard avant l'emission
+    const guard = tutorDemoSrc2.indexOf("if (openedRef.current) return;");
+    const track = tutorDemoSrc2.indexOf("trackEvent(EVENTS.demoOpened)");
+    expect(guard).toBeGreaterThan(-1);
+    expect(track).toBeGreaterThan(guard);
+  });
+
+  it("demo_opened ne transmet aucune propriete", () => {
+    expect(tutorDemoSrc2).toMatch(/trackEvent\(EVENTS\.demoOpened\)/);
+    expect(tutorDemoSrc2).not.toMatch(/trackEvent\(EVENTS\.demoOpened,\s*\{/);
+  });
+
+  it("kora_demo_signup a data-cta-id mais plus d'onClick (L2 : pas de double comptage)", () => {
+    // P2.7.6 — L2 : le listener delege cta_clicked capte le clic via
+    // data-cta-id. Plus d'onClick sur le Link = un seul cta_clicked.
+    expect(tutorDemoSrc2).toMatch(/data-cta-id="kora_demo_signup"/);
+    // Ne doit PLUS y avoir d'emission demo_signup_clicked sur le Link
+    const linkSection = tutorDemoSrc2.slice(
+      tutorDemoSrc2.indexOf('data-cta-id="kora_demo_signup"'),
+    );
+    const linkEnd = linkSection.indexOf(">");
+    const linkTag = linkSection.slice(0, linkEnd);
+    expect(linkTag).not.toMatch(/onClick/);
+  });
+
+  it("cta_clicked inclut cta_id depuis data-cta-id", () => {
+    // P2.7.6 — L2 : un seul cta_clicked par clic physique, avec cta_id
+    // pour distinguer home_hero_primary de kora_demo_signup.
+    expect(eduAnalyticsSrc).toMatch(/getAttribute\("data-cta-id"\)/);
+    expect(eduAnalyticsSrc).toMatch(/\.\.\.\(ctaId\s*\?\s*\{\s*cta_id:\s*ctaId\s*\}\s*:\s*\{\}\)/);
+  });
+
+  it("demo_opened et demo_opened ne transmettent aucune donnee de conversation", () => {
+    expect(tutorDemoSrc2).not.toMatch(/trackEvent\(EVENTS\.demoOpened,[^)]*(message|content|reply)/);
+  });
+});
+
+// ------------------------------------------------------------------
 // D. Non-regression 3d (Clarity, nonce CSP, first-party)
 // ------------------------------------------------------------------
 describe("3f — non-regression analytics 3d", () => {

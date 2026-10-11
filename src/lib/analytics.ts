@@ -50,6 +50,11 @@ export const EVENTS = {
   subjectSelected: "subject_selected",
   gradeSelected: "grade_selected",
   returnVisit: "return_visit",
+  demoMessageSent: "demo_message_sent",
+  signupValidationFailed: "signup_validation_failed",
+  ctaImpression: "cta_impression",
+  demoOpened: "demo_opened",
+  demoSignupClicked: "demo_signup_clicked",
 } as const;
 
 export type EdukoraEventName = (typeof EVENTS)[keyof typeof EVENTS];

@@ -224,9 +224,9 @@ describe("P0.8 — le contrat documente couvre toute la taxonomie emise", () => 
 
   it("documente l'evenement de navigation pageview et la constante EVENTS", () => {
     expect(contractDoc).toContain("`pageview`");
-    expect(Object.keys(EVENTS)).toHaveLength(33);
-    expect(contractDoc).toContain("33 noms");
-    expect(contractDoc).toContain("34 noms");
+    expect(Object.keys(EVENTS)).toHaveLength(38);
+    expect(contractDoc).toContain("38 noms");
+    expect(contractDoc).toContain("39 noms");
   });
 
   it("ne presente pas page_view comme evenement interne ; purchase first-party est documente (P1.0)", () => {
