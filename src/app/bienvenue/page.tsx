@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { trackEvent, EVENTS } from "@/lib/analytics";
 
 interface OnboardingData {
   goal: string | null;
@@ -38,6 +39,14 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [savingReminders, setSavingReminders] = useState(false);
 
+  // P2.8.1 — onboarding_started : émis une seule fois quand l'utilisateur
+  // voit réellement l'onboarding (après fetch réussi ET après vérification
+  // que seen_onboarding est false). Ne s'émet PAS si :
+  // - seen_onboarding est déjà true (redirection vers /accueil-edukora)
+  // - le fetch échoue (redirection vers /accueil-edukora)
+  // - React StrictMode remonte le composant (guard useRef)
+  const startedRef = useRef(false);
+
   useEffect(() => {
     const isEdit = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("edit") === "1";
     fetch("/api/onboarding")
@@ -50,6 +59,12 @@ export default function Page() {
         }
         setData(d);
         if (d.goal) setGoal(d.goal);
+        // P2.8.1 — onboarding_started : émis après confirmation que
+        // l'utilisateur voit l'onboarding (seen_onboarding false + fetch OK).
+        if (!startedRef.current) {
+          startedRef.current = true;
+          trackEvent(EVENTS.onboardingStarted);
+        }
       })
       .catch(() => router.replace("/accueil-edukora"));
   }, [router]);
@@ -81,7 +96,10 @@ export default function Page() {
 
   const finish = async () => {
     setLoading(true);
-    await Promise.all([
+    // P2.8.1 — onboarding_completed : émis UNIQUEMENT si le PUT
+    // seen_onboarding renvoie une réponse HTTP réussie. Un simple clic
+    // sans confirmation serveur ne déclenche pas l'événement.
+    const [, onboardingRes] = await Promise.all([
       saveReminders(),
       fetch("/api/onboarding", {
         method: "PUT",
@@ -89,6 +107,9 @@ export default function Page() {
         body: JSON.stringify({ seen_onboarding: true }),
       }),
     ]);
+    if (onboardingRes.ok) {
+      trackEvent(EVENTS.onboardingCompleted);
+    }
     router.push("/accueil-edukora");
   };
 

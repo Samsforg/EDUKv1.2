@@ -267,6 +267,17 @@ export default async function Page() {
           )}
         </section>
 
+        <section>
+          <Link
+            href="/cours"
+            data-cta-id="dashboard_first_lesson"
+            className="flex items-center justify-between bg-primary text-on-primary rounded-xl px-4 py-3.5 font-body-md font-semibold active:scale-[0.98] transition-transform"
+          >
+            <span>Commencer ta première leçon</span>
+            <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+          </Link>
+        </section>
+
         <section className="grid grid-cols-2 gap-gutter">
           {exam && <ExamCountdown kind={exam as "BAC" | "BEPC"} />}
 

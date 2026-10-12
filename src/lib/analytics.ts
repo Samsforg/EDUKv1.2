@@ -55,6 +55,13 @@ export const EVENTS = {
   ctaImpression: "cta_impression",
   demoOpened: "demo_opened",
   demoSignupClicked: "demo_signup_clicked",
+  // P2.8.1 — parcours post-inscription (/bienvenue)
+  onboardingStarted: "onboarding_started",
+  onboardingCompleted: "onboarding_completed",
+  // P2.10 — rétention produit + murs d'accès leçon
+  productReturnVisit: "product_return_visit",
+  lessonAuthWallShown: "lesson_auth_wall_shown",
+  lessonPremiumWallShown: "lesson_premium_wall_shown",
 } as const;
 
 export type EdukoraEventName = (typeof EVENTS)[keyof typeof EVENTS];

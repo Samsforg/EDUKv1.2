@@ -436,6 +436,7 @@ export default function Page() {
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <Link
                   href="/inscription-1-2-edukora"
+                  data-cta-id="home_footer_signup"
                   className="bg-secondary-container text-on-secondary-fixed text-body-md font-bold px-10 py-5 rounded-[20px] flex items-center justify-center gap-3 active:scale-95 transition-transform shadow-xl"
                 >
                   <span className="material-symbols-outlined">rocket_launch</span>

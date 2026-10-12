@@ -105,11 +105,11 @@ function producerFiles(ev: string): string[] {
 // §1 — Taxonomie
 // ------------------------------------------------------------------
 describe("P2 §1 — taxonomie d'evenements (contrat KPI)", () => {
-  it("EVENTS compte exactement 38 cles, valeurs uniques, snake_case", () => {
+  it("EVENTS compte exactement 43 cles, valeurs uniques, snake_case", () => {
     const keys = Object.keys(EVENTS);
     const values = Object.values(EVENTS);
-    expect(keys).toHaveLength(38);
-    expect(new Set(values).size).toBe(38);
+    expect(keys).toHaveLength(43);
+    expect(new Set(values).size).toBe(43);
     for (const v of values) expect(v).toMatch(/^[a-z][a-z0-9_]*$/);
   });
 

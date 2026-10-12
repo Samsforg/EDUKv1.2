@@ -160,7 +160,11 @@ export default function TutorDemoPage() {
               </div>
             ))}
 
-            {messages.filter((m) => m.role === "user").length >= 2 && (
+            {/* P2.8 — seuil abaissé de 2 à 1 message utilisateur : exiger
+                2 messages signifiait qu'un visiteur posant une seule
+                question (ou rencontrant une erreur IA) ne voyait jamais
+                le CTA d'inscription, réduisant le funnel démo → signup. */}
+            {messages.filter((m) => m.role === "user").length >= 1 && (
               <div className="bg-surface-container-low rounded-2xl p-4 border border-outline-variant">
                 <p className="text-body-sm text-on-surface mb-3">
                   Continue à apprendre avec Kora — crée ton compte gratuit.

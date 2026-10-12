@@ -321,13 +321,38 @@ function InscriptionPage() {
               <p className="text-xs text-on-surface-variant">8+ caractères, 1 lettre et 1 chiffre.</p>
             </div>
 
+            {/* P2.8 — champ classe TOUJOURS visible pour les élèves en
+                variante B : il est requis par la validation (ligne 155) et
+                le masquer derrière l'expander garantissait un échec
+                signup_validation_failed{rule:"class"} pour tout élève ne
+                dépliant pas le bloc. L'expander ne masque plus que les
+                champs optionnels. */}
+            {role === "student" && (
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-on-surface">Classe ou niveau</label>
+                <select
+                  value={classLevel}
+                  onChange={(e) => {
+                    setClassLevel(e.target.value);
+                    setSerieId(null);
+                  }}
+                  className={inputClass}
+                >
+                  <option value="">Choisir ma classe…</option>
+                  {classOptions.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {!showExtraFields && role === "student" && (
               <button
                 type="button"
                 onClick={() => setShowExtraFields(true)}
                 className="text-sm text-primary font-semibold text-left hover:underline"
               >
-                + Ajouter email, classe, commune…
+                + Ajouter email, commune, genre…
               </button>
             )}
 
@@ -373,23 +398,6 @@ function InscriptionPage() {
                       ))}
                     </select>
                   </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-sm font-semibold text-on-surface">Classe ou niveau</label>
-                  <select
-                    value={classLevel}
-                    onChange={(e) => {
-                      setClassLevel(e.target.value);
-                      setSerieId(null);
-                    }}
-                    className={inputClass}
-                  >
-                    <option value="">Choisir ma classe…</option>
-                    {classOptions.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
                 </div>
 
                 {showSerie && (

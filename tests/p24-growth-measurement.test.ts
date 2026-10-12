@@ -1156,8 +1156,8 @@ describe("P2.4 — 9 · scans source et documentation", () => {
     const doc = readSrc("docs", "analytics-data-contract.md");
     expect(doc).toContain("growth_action_implemented");
     expect(doc).toContain("## 13.");
-    expect(doc).toContain("38 noms");
-    expect(doc).toContain("39 noms");
+    expect(doc).toContain("43 noms");
+    expect(doc).toContain("44 noms");
     expect(doc).toContain("`pageview`");
     // Aucun mot de qualité non étayé dans les textes produits P2.4.
     const section = buildExperimentSection(data2099());

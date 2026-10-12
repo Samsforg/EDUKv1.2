@@ -112,6 +112,16 @@ export default function TutorPage() {
     if (!message || sending) return;
     setSendError(null);
     if (blocked) {
+      // P2.9 — émettre quota_exceeded côté client AVANT le blocage local :
+      // le blocage serveur (ligne ~140) émet déjà l'événement, mais le
+      // blocage local (quota connu côté client) ne l'émettait pas, ce qui
+      // sous-comptait la friction quota de ~50% (seul le premier envoi
+      // qui dépasse le quota serveur était compté).
+      trackEvent(EVENTS.quotaExceeded, {
+        source: "kora",
+        plan: quota!.planName,
+        plan_id: null,
+      });
       setUpsell({
         open: true,
         message: quota!.isPremium

@@ -10,7 +10,7 @@
 > Complète `docs/analytics-funnel.md` (taxonomie 3f) et
 > `docs/growth-metrics.md` (KPI 3h) sans les remplacer.
 
-Dernière vérification : 11/10/2026 — `HEAD bc2f74d` + modifications locales P2.7.1 / P2.7.2 / P2.7.4 / P2.7.6 / P2.7.8 (demo_message_sent, signup_validation_failed, cta_impression, demo_opened, cta_id sur cta_clicked, MutationObserver, signup_completed via GA4 Measurement Protocol).
+Dernière vérification : 11/10/2026 — `HEAD df95420` + modifications locales P2.8 / P2.8.1 (variante B classe visible, seuil démo 1 message, data-cta-id footer, onboarding_started, onboarding_completed).
 
 ---
 
@@ -33,15 +33,16 @@ directs : `maybeRecordActivation()` (activation dérivée) et
 
 ### 1.1 Constantes
 
-- `EVENTS` (`src/lib/analytics.ts:18-58`) : **38 noms**. La formule
-  historique « **39 noms** » comptait en réalité la liste complète du §10
-  (**38 EVENTS** + `pageview` hors EVENTS) et pointerait à tort vers §4
-  (attribution) — audit P1.1 : aucun commit n'a jamais porté 39 clés
+- `EVENTS` (`src/lib/analytics.ts:18-65`) : **43 noms**. La formule
+  historique « **44 noms** » comptait en réalité la liste complète du §10
+  (**43 EVENTS** + `pageview` hors EVENTS) et pointerait à tort vers §4
+  (attribution) — audit P1.1 : aucun commit n'a jamais porté 41 clés
   (25 → 26 → 27 en historique git, +6 clés 3f non commitées = 33,
-  +1 clé P2.7.1 = 34, +1 clé P2.7.2 = 35, +3 clés P2.7.4 = 38).
+  +1 clé P2.7.1 = 34, +1 clé P2.7.2 = 35, +3 clés P2.7.4 = 38,
+  +2 clés P2.8.1 = 40, +3 clés P2.10 = 43).
 - Émission littérale hors `EVENTS` : **`pageview`** (T2), **`activated`** et
   **`purchase`** (serveur, dérivés P1.0 — cf. §3/§10) ; le §10 listait
-  39 noms avant P1.0 (38 + `pageview`), 41 depuis (38 + 3 hors `EVENTS`).
+  39 noms avant P1.0 (38 + `pageview`), 46 depuis (43 + 3 hors `EVENTS`).
 - Taxonomie dupliquée `src/lib/growth/ai/types.ts:63-88` : **périmée** (liste
   `page_view` — jamais écrit tel quel en base —, ignore `activated` et les
   événements 3f ; `purchase` y figure sans la sémantique first-party
@@ -253,6 +254,11 @@ Légende destinations : **DB** = `analytics_events`, **G** = GA4,
 | `signup_validation_failed` | 1 | échec validation client formulaire inscription (12 sites `failValidation` avant fetch) | client | — | require : `rule` (enum fermé : `name`, `phone`, `password`, `email`, `class`, `serie`, `privacy`) — **aucune donnée utilisateur** | DB+G+C | friction tunnel signup ; `dedupe: false` ; erreurs réseau/serveur **non instrumentées** (limite documentée P2.7.2) |
 | `cta_impression` | 1 | element `[data-cta-id]` visible ≥50% viewport (IntersectionObserver + MutationObserver pour CTA dynamiques) | client | idem | require : `cta_id` (clé contrôlée : `home_hero_primary`, `kora_demo_signup`) | DB+G+C | dénominateur taux de clic CTA ; 1 impression/element/vue SPA ; MutationObserver couvre les éléments rendus après le mount (ex: kora_demo_signup) |
 | `demo_opened` | 1 | mount TutorDemoPage (guard useRef anti double-émmission Strict Mode) | client | idem | **aucune** | DB+G+C | ouverture démo Kora ; dénominateur démo→inscription |
+| `onboarding_started` | 1 | `/bienvenue` : fetch `/api/onboarding` réussi ET `seen_onboarding === false` (guard useRef anti double-émmission Strict Mode) ; **non émis** si redirection (`seen_onboarding` déjà true) ou erreur fetch | client | si connecté / sinon NULL | **aucune** | DB+G+C | début onboarding post-inscription ; dénominateur taux de démarrage onboarding ; P2.8.1 |
+| `onboarding_completed` | 1 | `/bienvenue` : clic « C'est parti ! » **ET** PUT `/api/onboarding {seen_onboarding: true}` renvoie HTTP 2xx (`onboardingRes.ok`) ; **non émis** si le PUT échoue | client | idem | **aucune** | DB+G+C | fin onboarding confirmée serveur ; numérateur taux de complétion ; P2.8.1 |
+| `product_return_visit` | 1 | `/accueil-edukora` : localStorage `edukora_product_seen === "1"` déjà posé (retour réel sur le produit) ; première visite = poser le temoin, sans émission ; dédup par le temoin | client | si connecté | **aucune** (aucun nom, e-mail, contenu) | DB+G+C | rétention produit ; distinct de `return_visit` (marketing) ; P2.10 |
+| `lesson_auth_wall_shown` | 1 | `/cours/lecon/[id]` : réponse API HTTP 401 (mur d'authentification exposé) ; émission avant rendu du mur | client | idem | `lesson_id` | DB+G+C | exposition mur auth ; diagnostic abandon ; P2.10 |
+| `lesson_premium_wall_shown` | 1 | `/cours/lecon/[id]` : réponse API HTTP 402 (mur premium exposé) ; émission avant rendu du mur | client | idem | `lesson_id` | DB+G+C | exposition mur premium ; diagnostic abandon ; P2.10 |
 | `demo_signup_clicked` | 1 | **DEPRECATED — non émis depuis P2.7.6** (remplacé par `cta_clicked {cta_id: "kora_demo_signup"}`) | client | idem | — | — | conservé pour taxonomie historique ; ne pas utiliser |
 | `cta_clicked` | 1 | clic lien → `/inscription*` ou `/connexion*` (listener délégué, **non dédupliqué**) | client | idem | require : `cta_target`, `cta_source` ; opt : `cta_label`, `cta_id` (lu sur `data-cta-id` si présent) | DB+G+C | intention d'inscription ; **un seul événement par clic physique** ; `cta_id` distingue les CTA instrumentés |
 | `referral_clicked` | 1 | arrivée `/inscription…?ref=` | client | idem | require : `has_code`, `landing` (**jamais le code**) | DB+G+C | apport parrainage |
@@ -343,7 +349,7 @@ rédaction initiale (documentation-only) ; le reste reste non implémenté.
   Toute autre cle, tout texte fourni par l'utilisateur, tout email ou
   identifiant est rejete (400) sans reflet de valeur dans le message.
 - **Hors taxonomie client** : comme ctivated (P1.0) et purchase (P1.0),
-  cet evenement n'entre pas dans la constante EVENTS (38 noms inchanges) ;
+  cet evenement n'entre pas dans la constante EVENTS (43 noms) ;
   il n'est emis par aucun SDK client et jamais fabrique historiquement.
 - **Dedoublonnage** : tri created_at ASC, id ASC, la declaration la plus
   ancienne gagne ; seuls les comptes ole = 'admin' NON-test sont lus ;
@@ -398,5 +404,12 @@ interprétations erronées.
 | **`signup_completed` dans GA4** | Comptage côté GA4 (dashboard) | GA4 | `CALCULABLE AVEC RÉSERVES` | Best-effort, consentement requis, latence, volumes différents de la DB. |
 | **Taux de réussite inscription** | `signup_completed / signup_started × 100` | DB | `CALCULABLE AVEC RÉSERVES` | Cohortes différentes : `signup_started` = tentatives client, `signup_completed` = comptes créés. Serveur peut rejeter (409/400). |
 | **Conversion visiteur → inscription** | Pas de formule fiable | — | `NON CALCULABLE` | Pas de liaison individuelle (Option A agrégée, P2.7.4). Les volumes DB et GA4 ne sont pas directement comparables. |
+| **Taux de démarrage onboarding** | `onboarding_started / signup_completed × 100` | DB | `CALCULABLE` | Cohortes temporelles : `signup_completed` peut précéder l'arrivée sur `/bienvenue`. Redirection si `seen_onboarding` déjà true → pas de `onboarding_started`. |
+| **Taux de complétion onboarding** | `onboarding_completed / onboarding_started × 100` | DB | `CALCULABLE` | `onboarding_completed` confirmé serveur (HTTP 2xx). Les utilisateurs quittant sans cliquer « C'est parti ! » sont des abandons. |
+| **Abandon onboarding** | `onboarding_started − onboarding_completed` (même cohorte) | DB | `CALCULABLE` | Fenêtre temporelle à définir (ex : 7 jours). Les rafraîchissements après complétion redirigent → pas de double comptage. |
+| **Première action utile** | `lesson_started` (activation dérivée) | DB | `CALCULABLE` | Événement existant, déclencheur serveur `maybeRecordActivation`. Distinct de `onboarding_completed` (l'utilisateur peut terminer l'onboarding sans avoir ouvert de leçon). |
+| **Rétention produit J1/J7/J30** | `product_return_visit` dans les fenêtres J+1/J+7/J+30 après la cohorte d'inscription, dénominateur = `signup_completed` de la cohorte | DB | `CALCULABLE` (après P2.10) | Fenêtre = 1er retour produit dans l'intervalle. Cohorte = jour de `signup_completed`. Fuseau = UTC. Ne confondre pas taux de rétention et nombre brut de retours. |
+| **Exposition mur auth leçon** | `COUNT(lesson_auth_wall_shown) / COUNT(lesson_started)` sur la même période | DB | `CALCULABLE` | Mesure l'exposition au mur, pas le clic. `dedupe` par vue. |
+| **Exposition mur premium leçon** | `COUNT(lesson_premium_wall_shown) / COUNT(lesson_started)` sur la même période | DB | `CALCULABLE` | Idem. |
 
 **Règle** : ne jamais présenter les volumes DB et GA4 comme directement comparables sans expliquer leurs périmètres respectifs (consentement, bloqueurs, déduplication).

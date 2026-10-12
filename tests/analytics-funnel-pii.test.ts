@@ -449,3 +449,217 @@ describe("3f — non-regression analytics 3d", () => {
     expect(analyticsSrc).toMatch(/params\.plan = plan/);
   });
 });
+
+// ------------------------------------------------------------------
+// P2.8 — Corrections conversion / activation
+// ------------------------------------------------------------------
+describe("P2.8 — corrections du funnel conversion", () => {
+  const tutorDemoSrc = read("src", "components", "TutorDemoPage.tsx");
+  const homeSrc = read("src", "app", "page.tsx");
+
+  it("variante B : le champ classe est visible sans déplier l'expander", () => {
+    // Le champ classe doit être rendu pour tout élève, indépendamment
+    // de showExtraFields. Avant la correction, il était uniquement
+    // dans le bloc showExtraFields, garantissant un échec de validation.
+    const classSelect = inscriptionSrc.match(
+      /role === "student" && \(\s*<div className="space-y-1\.5">\s*<label[^>]*>Classe ou niveau<\/label>/,
+    );
+    expect(classSelect).not.toBeNull();
+  });
+
+  it("variante B : l'expander ne masque plus le champ classe", () => {
+    // Le bouton d'expander ne doit plus mentionner « classe » puisque
+    // ce champ est maintenant toujours visible.
+    expect(inscriptionSrc).toMatch(/\+ Ajouter email, commune, genre/);
+    // Et ne doit plus contenir l'ancien libellé.
+    expect(inscriptionSrc).not.toMatch(/\+ Ajouter email, classe, commune/);
+  });
+
+  it("démo : le CTA d'inscription apparaît après 1 message utilisateur", () => {
+    // Seuil abaissé de 2 à 1 pour réduire le drop-off démo → signup.
+    expect(tutorDemoSrc).toMatch(/messages\.filter\(\(m\) => m\.role === "user"\)\.length >= 1/);
+    expect(tutorDemoSrc).not.toMatch(/messages\.filter\(\(m\) => m\.role === "user"\)\.length >= 2/);
+  });
+
+  it("accueil : le CTA bas de page porte un data-cta-id", () => {
+    // Avant la correction, seul le CTA hero était instrumenté。
+    expect(homeSrc).toMatch(/data-cta-id="home_hero_primary"/);
+    expect(homeSrc).toMatch(/data-cta-id="home_footer_signup"/);
+  });
+});
+
+// ------------------------------------------------------------------
+// P2.8.1 — Instrumentation onboarding (/bienvenue)
+// ------------------------------------------------------------------
+describe("P2.8.1 — événements onboarding", () => {
+  const bienvenueSrc = read("src", "app", "bienvenue", "page.tsx");
+
+  it("les événements onboarding_started et onboarding_completed existent dans la taxonomie", () => {
+    expect(EVENTS).toHaveProperty("onboardingStarted", "onboarding_started");
+    expect(EVENTS).toHaveProperty("onboardingCompleted", "onboarding_completed");
+  });
+
+  it("onboarding_started est protégé par un guard useRef (pas de doublon StrictMode)", () => {
+    expect(bienvenueSrc).toMatch(/startedRef\.current/);
+    expect(bienvenueSrc).toMatch(/startedRef\.current = true/);
+  });
+
+  it("onboarding_started n'est émis qu'après le fetch réussi et hors redirection", () => {
+    // L'événement doit être dans le .then() du fetch, APRÈS la vérification
+    // seen_onboarding et APRÈS setData(d).
+    const thenBlock = bienvenueSrc.match(/setData\(d\);[\s\S]*?trackEvent\(EVENTS\.onboardingStarted\)/);
+    expect(thenBlock).not.toBeNull();
+  });
+
+  it("onboarding_started n'est pas émis sur une page d'erreur ou une redirection", () => {
+    // Le catch du fetch fait un router.replace — pas de trackEvent dans le catch。
+    const catchBlock = bienvenueSrc.match(/\.catch\(\(\) => router\.replace\([^)]+\)\)/);
+    expect(catchBlock).not.toBeNull();
+    // Et le bloc de redirection seen_onboarding ne contient pas de trackEvent.
+    const redirectBlock = bienvenueSrc.match(/if \(d\.seen_onboarding && !isEdit\) \{[\s\S]*?\}/);
+    expect(redirectBlock).not.toBeNull();
+    expect(redirectBlock![0]).not.toMatch(/trackEvent/);
+  });
+
+  it("onboarding_completed exige une réponse HTTP réussie du PUT", () => {
+    // L'événement ne doit être émis que si onboardingRes.ok est true。
+    expect(bienvenueSrc).toMatch(/if \(onboardingRes\.ok\)/);
+    expect(bienvenueSrc).toMatch(/trackEvent\(EVENTS\.onboardingCompleted\)/);
+  });
+
+  it("onboarding_completed n'est pas émis sur un simple clic sans confirmation", () => {
+    // trackEvent doit être À L'INTÉRIEUR du if (onboardingRes.ok)。
+    const okBlock = bienvenueSrc.match(/if \(onboardingRes\.ok\) \{[\s\S]*?\}/);
+    expect(okBlock).not.toBeNull();
+    expect(okBlock![0]).toMatch(/trackEvent\(EVENTS\.onboardingCompleted\)/);
+  });
+
+  it("aucune PII n'est transmise dans les propriétés des événements onboarding", () => {
+    // trackEvent appelé sans params (objet vide par défaut) ou avec des
+    // params non-PII. Vérifier qu'aucun appel ne passe first_name, email,
+    // phone, password ou userId.
+    const calls = bienvenueSrc.match(/trackEvent\(EVENTS\.onboarding\w+[^)]*\)/g) ?? [];
+    for (const call of calls) {
+      expect(call).not.toMatch(/first_name|email|phone|password|userId|user_id/);
+    }
+  });
+
+  it("le contrat analytique documente les événements onboarding", () => {
+    const contractSrc = read("docs", "analytics-data-contract.md");
+    expect(contractSrc).toMatch(/onboarding_started/);
+    expect(contractSrc).toMatch(/onboarding_completed/);
+  });
+
+  it("la non-régression des événements existants est préservée", () => {
+    // Les événements de la taxonomie existante ne sont pas renommés.
+    expect(EVENTS).toHaveProperty("signupCompleted", "signup_completed");
+    expect(EVENTS).toHaveProperty("lessonStarted", "lesson_started");
+    expect(EVENTS).toHaveProperty("demoOpened", "demo_opened");
+    expect(EVENTS).toHaveProperty("ctaImpression", "cta_impression");
+  });
+});
+
+// ------------------------------------------------------------------
+// P2.9 — Activation & rétention
+// ------------------------------------------------------------------
+describe("P2.9 — activation et rétention", () => {
+  const tuteurSrc = read("src", "app", "tuteur-ia", "page.tsx");
+
+  it("tuteur-ia : le blocage local quota émet quota_exceeded", () => {
+    // Avant la correction, seul le blocage serveur émettait
+    // quota_exceeded. Le blocage local (quota connu côté client)
+    // affichait l'upsell sans émettre l'événement, sous-comptant
+    // la friction quota.
+    const blockedBlock = tuteurSrc.match(/if \(blocked\) \{[\s\S]*?setUpsell/);
+    expect(blockedBlock).not.toBeNull();
+    expect(blockedBlock![0]).toMatch(/trackEvent\(EVENTS\.quotaExceeded/);
+  });
+
+  it("tuteur-ia : quota_exceeded côté client utilise source kora", () => {
+    expect(tuteurSrc).toMatch(/trackEvent\(EVENTS\.quotaExceeded,\s*\{[^}]*source:\s*"kora"/);
+  });
+
+  it("tuteur-ia : le blocage serveur émet toujours quota_exceeded", () => {
+    // Non-régression : le blocage serveur (data.code === "quota_exceeded")
+    // continue d'émettre l'événement.
+    expect(tuteurSrc).toMatch(/data\.code === "quota_exceeded"/);
+    const serverBlock = tuteurSrc.match(/data\.code === "quota_exceeded"[\s\S]*?trackEvent\(EVENTS\.quotaExceeded/);
+    expect(serverBlock).not.toBeNull();
+  });
+
+  it("tuteur-ia : ai_question_sent n'est émis qu'après le blocage", () => {
+    // trackEvent(aiQuestionSent) doit être APRÈS le if (blocked) return.
+    const blockedIdx = tuteurSrc.indexOf("if (blocked) {");
+    const sentIdx = tuteurSrc.indexOf("trackEvent(EVENTS.aiQuestionSent");
+    expect(blockedIdx).toBeGreaterThan(-1);
+    expect(sentIdx).toBeGreaterThan(blockedIdx);
+  });
+
+  it("return_visit existe dans la taxonomie", () => {
+    expect(EVENTS).toHaveProperty("returnVisit", "return_visit");
+  });
+
+  it("l'événement activated est dérivé côté serveur (analytics-db)", () => {
+    const dbSrc = read("src", "lib", "analytics-db.ts");
+    expect(dbSrc).toMatch(/maybeRecordActivation/);
+    expect(dbSrc).toMatch(/lesson_started/);
+  });
+});
+// ============================================================
+// P2.10 — CTA première leçon, product_return_visit, murs d'accès
+// ============================================================
+describe("P2.10 — activation et rétention produit", () => {
+  const dashSrc = read("src", "app", "accueil-edukora", "page.tsx");
+  const analyticsCompSrc = read("src", "components", "EdukoraAnalytics.tsx");
+  const lessonSrc = read("src", "app", "cours", "lecon", "[lessonId]", "page.tsx");
+
+  it("dashboard : CTA première leçon vers /cours présent", () => {
+    expect(dashSrc).toContain("/cours");
+    expect(dashSrc).toContain("data-cta-id=\"dashboard_first_lesson\"");
+  });
+
+  it("dashboard : CTA porte data-cta-id pour impression/clic", () => {
+    expect(dashSrc).toContain("dashboard_first_lesson");
+  });
+
+  it("EdukoraAnalytics : clé PRODUCT_VISIT_KEY définie", () => {
+    expect(analyticsCompSrc).toContain('edukora_product_seen');
+  });
+
+  it("EdukoraAnalytics : product_return_visit émis sur /accueil-edukora uniquement", () => {
+    expect(analyticsCompSrc).toContain('pathname !== "/accueil-edukora"');
+    expect(analyticsCompSrc).toContain("productReturnVisit");
+  });
+
+  it("EdukoraAnalytics : product_return_visit conditionné au témoin", () => {
+    // Le retour n'est émis que si returning === true
+    const idx = analyticsCompSrc.indexOf("productReturnVisit");
+    expect(idx).toBeGreaterThan(-1);
+    const before = analyticsCompSrc.slice(Math.max(0, idx - 200), idx);
+    expect(before).toContain("returning");
+  });
+
+  it("leçon : lesson_auth_wall_shown émis sur 401", () => {
+    expect(lessonSrc).toContain("lessonAuthWallShown");
+    const block401 = lessonSrc.match(/r\.status === 401[\s\S]*?trackEvent\(EVENTS\.lessonAuthWallShown/);
+    expect(block401).not.toBeNull();
+  });
+
+  it("leçon : lesson_premium_wall_shown émis sur 402", () => {
+    expect(lessonSrc).toContain("lessonPremiumWallShown");
+    const block402 = lessonSrc.match(/r\.status === 402[\s\S]*?trackEvent\(EVENTS\.lessonPremiumWallShown/);
+    expect(block402).not.toBeNull();
+  });
+
+  it("les murs n'émettent aucune donnée pédagogique ou PII", () => {
+    // Seul lesson_id (numérique) est transmis
+    expect(lessonSrc).toMatch(/lessonPremiumWallShown,\s*\{[^}]*lesson_id/);
+    expect(lessonSrc).toMatch(/lessonAuthWallShown,\s*\{[^}]*lesson_id/);
+  });
+
+  it("taxonomie : 3 nouvelles clés P2.10 présentes", () => {
+    expect(EVENTS).toHaveProperty("productReturnVisit", "product_return_visit");
+    expect(EVENTS).toHaveProperty("lessonAuthWallShown", "lesson_auth_wall_shown");
+    expect(EVENTS).toHaveProperty("lessonPremiumWallShown", "lesson_premium_wall_shown");
+  });
+});

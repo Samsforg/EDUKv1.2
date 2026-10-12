@@ -25,6 +25,11 @@ const MARKETING_PATHS = [
 ];
 
 const RETURN_VISIT_KEY = "edukora_seen";
+// P2.10 — temoin de retour produit (dashboard), distinct du
+// temoin marketing edukora_seen. Une visite produit = un acces au
+// dashboard /accueil-edukora. Premiere visite : poser le temoin.
+// Retour (temoin deja present) : emettre product_return_visit.
+const PRODUCT_VISIT_KEY = "edukora_product_seen";
 
 // Cibles considerées comme « sortie vers l'inscription ». Le listener
 // délégué les capte en une seule fois, quel que soit le nombre de CTA.
@@ -75,6 +80,26 @@ export default function EdukoraAnalytics() {
     trackEvent(EVENTS.landingViewed, { page_path: pathname });
     if (returning) {
       trackEvent(EVENTS.returnVisit, { page_path: pathname });
+    }
+  }, [pathname]);
+
+  // P2.10 — product_return_visit.
+  // Mesure un retour reel sur le produit (dashboard), distinct de
+  // return_visit (marketing). Emission uniquement sur /accueil-edukora
+  // quand le temoin edukora_product_seen existe deja : premiere visite
+  // = poser le temoin, retour = emettre l'evenement. Pas d'emission a
+  // chaque changement de route. Deduplication par le temoin localStorage.
+  useEffect(() => {
+    if (pathname !== "/accueil-edukora") return;
+    let returning = false;
+    try {
+      returning = window.localStorage.getItem(PRODUCT_VISIT_KEY) === "1";
+      window.localStorage.setItem(PRODUCT_VISIT_KEY, "1");
+    } catch {
+      // navigation privee : on ignore, l'evenement reste envoye
+    }
+    if (returning) {
+      trackEvent(EVENTS.productReturnVisit, { page_path: pathname });
     }
   }, [pathname]);
 

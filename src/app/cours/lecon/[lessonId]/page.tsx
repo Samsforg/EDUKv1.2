@@ -51,10 +51,16 @@ export default function LessonPage({ params }: LessonPageProps) {
         const r = await fetch(`/api/cours/lecons/${p.lessonId}`, { cache: "no-store" });
         if (r.status === 402) {
           setPremiumRequired(true);
+          trackEvent(EVENTS.lessonPremiumWallShown, {
+            lesson_id: String(p.lessonId),
+          });
           return;
         }
         if (r.status === 401) {
           setNeedsAuth(true);
+          trackEvent(EVENTS.lessonAuthWallShown, {
+            lesson_id: String(p.lessonId),
+          });
           return;
         }
         if (!r.ok) throw new Error();
