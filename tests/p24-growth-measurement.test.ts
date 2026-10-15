@@ -63,6 +63,7 @@ import { hashPassword } from "@/lib/auth";
 import { createSession } from "@/lib/session";
 import * as db from "@/lib/db";
 import { query, queryOne, run } from "@/lib/db";
+import { ensureAnalyticsTable } from "@/lib/analytics-db";
 
 process.env.SESSION_SECRET = "p24-unit-test-session-secret-0123456789";
 
@@ -275,6 +276,7 @@ const EXTRA_ACTION = (n: number) =>
   `action_RUN_CAMPAIGN#2099-03-14/2099-03-20#extra${n}${STAMP}`.slice(0, 120);
 
 beforeAll(async () => {
+  await ensureAnalyticsTable();
   realAdminId = await insertUser("admin", 0, `p24.admin.${STAMP}@edukora.net`);
   testAdminId = await insertUser("admin", 1, `p24.testadmin.${STAMP}@test.ci`);
   testUserId = await insertUser("student", 1, `p24.testuser.${STAMP}@test.ci`);
