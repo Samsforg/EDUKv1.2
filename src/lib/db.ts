@@ -337,6 +337,7 @@ CREATE TABLE IF NOT EXISTS exam_attempts (
   score INTEGER NOT NULL DEFAULT 0,
   score_over_20 REAL NOT NULL DEFAULT 0,
   duration_seconds INTEGER NOT NULL DEFAULT 0,
+  timed_out INTEGER NOT NULL DEFAULT 0,
   completed_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -1491,6 +1492,10 @@ CREATE INDEX IF NOT EXISTS idx_dissertation_corrections_user ON dissertation_cor
       try { await withPgRetry(() => pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS has_used_trial INTEGER NOT NULL DEFAULT 0")); } catch {}
       try { await withPgRetry(() => pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_canonical TEXT")); } catch {}
       try { await withPgRetry(() => pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT")); } catch {}
+      // P2.13 — origine de la soumission d'examen (manuelle vs expiration du
+      // chronomètre). Colonne additive pour rester compatible avec les
+      // tentatives existantes.
+      try { await withPgRetry(() => pool.query("ALTER TABLE exam_attempts ADD COLUMN IF NOT EXISTS timed_out INTEGER NOT NULL DEFAULT 0")); } catch {}
       try { await withPgRetry(() => pool.query("CREATE UNIQUE INDEX IF NOT EXISTS uniq_active_sub ON subscriptions(user_id) WHERE status = 'active'")); } catch {}
       try { await withPgRetry(() => pool.query("CREATE INDEX IF NOT EXISTS idx_users_phone_canonical ON users(phone_canonical)")); } catch {}
       try { await withPgRetry(() => pool.query("CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_email ON users(email) WHERE email IS NOT NULL AND email != ''")); } catch {}
@@ -1513,6 +1518,10 @@ CREATE INDEX IF NOT EXISTS idx_dissertation_corrections_user ON dissertation_cor
   try { db.exec("ALTER TABLE users ADD COLUMN has_used_trial INTEGER NOT NULL DEFAULT 0"); } catch {}
   try { db.exec("ALTER TABLE users ADD COLUMN phone_canonical TEXT"); } catch {}
   try { db.exec("ALTER TABLE users ADD COLUMN avatar_url TEXT"); } catch {}
+  // P2.13 — origine de la soumission d'examen (manuelle vs expiration du
+  // chronomètre). Colonne additive pour rester compatible avec les tentatives
+  // existantes ; échec silencieux = colonne déjà présente.
+  try { db.exec("ALTER TABLE exam_attempts ADD COLUMN timed_out INTEGER NOT NULL DEFAULT 0"); } catch {}
   try { db.exec("CREATE INDEX IF NOT EXISTS idx_users_phone_canonical ON users(phone_canonical)"); } catch {}
   try { db.exec("CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_email ON users(email) WHERE email IS NOT NULL AND email != ''"); } catch {}
   try { db.exec("CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_phone ON users(phone) WHERE phone IS NOT NULL AND phone != ''"); } catch {}
