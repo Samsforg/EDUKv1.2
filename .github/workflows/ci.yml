@@ -6,8 +6,14 @@ on:
   pull_request:
     branches: [master]
 
+# Une seule exécution CI par branche : annule la précédente si un nouveau push
+# arrive, plutôt que de la mettre en file derrière un build déjà obsolète.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint-typecheck-test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,27 +21,60 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - run: npm ci
 
       - name: Lint
         run: npm run lint
 
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Tests
-        run: npx jest --forceExit --detectOpenHandles
-
-  build:
+  typecheck:
     runs-on: ubuntu-latest
-    needs: lint-typecheck-test
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+  # Les tests sont répartis sur plusieurs jobs exécutés EN PARALLÈLE (shards
+  # Jest) au lieu d'un seul job séquentiel : la durée totale est divisée par le
+  # nombre de shards. fail-fast désactivé pour voir tous les échecs d'un coup.
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Tests (shard ${{ matrix.shard }}/3)
+        run: npx jest --forceExit --shard=${{ matrix.shard }}/3
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
 
       - run: npm ci
 
