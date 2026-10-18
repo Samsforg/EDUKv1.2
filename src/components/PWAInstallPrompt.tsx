@@ -3,7 +3,16 @@ import { useEffect, useState } from "react";
 
 export default function PWAInstallPrompt() {
   const [deferred, setDeferred] = useState<Event | null>(null);
-  const [dismissed, setDismissed] = useState(false);
+  // Lu une fois au montage : le premier rendu est `null` dans tous les cas
+  // (`deferred` est nul), donc aucun risque de mismatch d'hydratation.
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      if (typeof window === "undefined") return false;
+      return !!localStorage.getItem("pwa-dismissed");
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -11,15 +20,12 @@ export default function PWAInstallPrompt() {
       setDeferred(e);
     };
     window.addEventListener("beforeinstallprompt", handler);
-    const seen = localStorage.getItem("pwa-dismissed");
-    if (seen) setDismissed(true);
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
   if (!deferred || dismissed) return null;
 
   const install = async () => {
-    // @ts-ignore
     await (deferred as unknown as { prompt: () => Promise<void> }).prompt();
     setDeferred(null);
   };

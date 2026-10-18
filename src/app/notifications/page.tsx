@@ -26,6 +26,10 @@ const ICONS: Record<string, string> = {
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  // Instant figé au montage : `Date.now()` était relu à chaque notification
+  // affichée, ce qui rendait le rendu impur. Capturé une fois via
+  // l'initialisation paresseuse de useState.
+  const [nowMs] = useState(() => Date.now());
 
   useEffect(() => {
     fetch("/api/notifications")
@@ -36,7 +40,7 @@ export default function NotificationsPage() {
   }, []);
 
   function timeAgo(date: string) {
-    const s = Math.floor((Date.now() - new Date(date + "Z").getTime()) / 1000);
+    const s = Math.floor((nowMs - new Date(date + "Z").getTime()) / 1000);
     if (s < 60) return "à l'instant";
     if (s < 3600) return `il y a ${Math.floor(s / 60)} min`;
     if (s < 86400) return `il y a ${Math.floor(s / 3600)} h`;

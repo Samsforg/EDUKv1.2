@@ -1,5 +1,6 @@
 import type { AIEvent } from "./types";
+import { logger } from "../logger";
 
 export function logAI(event: AIEvent): void {
-  console.log(`[ai] ${JSON.stringify({ t: new Date().toISOString(), ...event })}`);
+  logger.info(`[ai] ${JSON.stringify({ t: new Date().toISOString(), ...event })}`);
 }

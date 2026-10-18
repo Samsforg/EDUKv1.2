@@ -1,10 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import ThemeToggle from "@/components/ThemeToggle";
 import ExamCountdown from "@/components/ExamCountdown";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
-import AdSenseBanner from "@/components/AdSenseBanner";
 
 import {
   getCurrentUser,
@@ -17,7 +15,7 @@ import {
   examCycleOfClassLevel,
 } from "@/lib/accueil-data";
 
-import type { SessionUser, ProgressData, ReReadItem, DailyQuiz, StreakInfo } from "@/lib/accueil-data";
+import type { SessionUser } from "@/lib/accueil-data";
 
 const GOAL_LABELS: Record<string, string> = {
   bac: "Préparer le BAC",

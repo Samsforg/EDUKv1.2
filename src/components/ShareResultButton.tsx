@@ -166,7 +166,7 @@ export default function ShareResultButton(props: ShareResultButtonProps) {
       }
       // 2) Repli : lien WhatsApp avec le texte
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
-    } catch (err) {
+    } catch {
       setError("Impossible de partager le résultat. Réessaie.");
     } finally {
       setBusy(false);

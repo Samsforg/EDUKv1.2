@@ -34,6 +34,10 @@ function getABVariant(): string {
 function InscriptionPage() {
   const params = useSearchParams();
   const from = params.get("from");
+  // Présence d'un code de parrainage. On ne remonte que sa présence, jamais sa
+  // valeur (le code est un identifiant unique lié à un compte). Extraite en
+  // primitive : `params` change d'identité à chaque rendu, la string non.
+  const refCode = params.get("ref");
   const destAfterSignup =
     from && from.startsWith("/") && !from.startsWith("//") && !from.startsWith("/connexion") && !from.startsWith("/inscription")
       ? from
@@ -83,10 +87,10 @@ function InscriptionPage() {
     // 3f : arrivee via un lien de parrainage. On ne remonte que la
     // presence d'un code, jamais sa valeur (le code est un
     // identifiant unique lie a un compte).
-    if (params.get("ref")) {
+    if (refCode) {
       trackEvent(EVENTS.referralClicked, { has_code: true, landing: "inscription" });
     }
-  }, []);
+  }, [refCode]);
 
   useEffect(() => {
     fetch("/api/series")

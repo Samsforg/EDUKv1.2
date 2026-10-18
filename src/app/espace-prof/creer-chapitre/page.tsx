@@ -15,16 +15,6 @@ interface Grade {
   name: string;
 }
 
-interface Chapter {
-  id: number;
-  code: string;
-  title: string;
-  description: string;
-  grade_id: number | null;
-  grade_name: string | null;
-  order_index: number;
-  status: string;
-}
 
 function CreateChapterPage() {
   const router = useRouter();

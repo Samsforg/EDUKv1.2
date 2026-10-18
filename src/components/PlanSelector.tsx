@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { trackEvent, EVENTS } from "@/lib/analytics";
 
 // Sélecteur Mensuel/Trimestriel + checkout — composant React pur (remplace les
@@ -21,6 +22,7 @@ export default function PlanSelector({
   monthPlan: PlanLite | null;
   quarterPlan: PlanLite | null;
 }) {
+  const router = useRouter();
   const [monthly, setMonthly] = useState(true);
   const [trial, setTrial] = useState(true);
   const [promoInput, setPromoInput] = useState("");
@@ -85,7 +87,7 @@ export default function PlanSelector({
         body: JSON.stringify({ plan_id: pid, promo: promo?.code, trial, oneClick: true }),
       });
       const d = await r.json().catch(() => ({}) as Record<string, unknown>);
-      if (r.status === 401) { window.location.href = "/connexion-edukora?from=/plans-d-abonnement-edukora-1"; return; }
+      if (r.status === 401) { router.push("/connexion-edukora?from=/plans-d-abonnement-edukora-1"); return; }
       if (typeof d.url === "string" && d.url) { window.location.href = d.url; return; }
       if (d.code === "PHONE_REQUIRED") {
         setShowPhone(true);

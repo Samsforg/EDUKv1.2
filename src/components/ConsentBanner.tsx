@@ -14,7 +14,7 @@ function saveConsent(prefs: { essential: boolean; analytics: boolean; marketing?
     CONSENT_COOKIE + "=" + encodeURIComponent(JSON.stringify(prefs)) + ";path=/;max-age=15552000;samesite=lax";
   try {
     localStorage.setItem("edukora_cookie_prefs", JSON.stringify(prefs));
-  } catch (e) {}
+  } catch {}
   window.dispatchEvent(new CustomEvent("edukora-consent-updated", { detail: prefs }));
 }
 

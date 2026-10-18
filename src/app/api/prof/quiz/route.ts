@@ -30,7 +30,7 @@ async function GETHandler() {
     `SELECT q.id, s.name AS subject_name, s.icon, s.color, q.title, q.level, q.status,
             (SELECT COUNT(*) FROM questions x WHERE x.quiz_id = q.id) AS question_count,
             (SELECT COUNT(*) FROM quiz_attempts a WHERE a.quiz_id = q.id) AS attempts,
-            (SELECT ROUND(AVG(a.score * 100.0 / a.max_score)) FROM quiz_attempts a WHERE a.quiz_id = q.id) AS avg_percent
+            (SELECT ROUND(AVG(a.score * 100.0 / NULLIF(a.max_score, 0))) FROM quiz_attempts a WHERE a.quiz_id = q.id) AS avg_percent
      FROM quizzes q JOIN subjects s ON s.id = q.subject_id
      WHERE q.created_by = ?
      ORDER BY q.id DESC`,

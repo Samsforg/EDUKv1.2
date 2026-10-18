@@ -1,4 +1,4 @@
-import { query, queryOne } from "@/lib/db";
+import {  queryOne } from "@/lib/db";
 import { notify } from "@/lib/session";
 import { parseDbDate } from "@/lib/date-parse";
 import { sendPushToUser } from "@/lib/push";

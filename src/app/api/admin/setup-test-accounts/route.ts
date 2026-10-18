@@ -1,6 +1,6 @@
 import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
-import { query, run, queryOne } from "@/lib/db";
+import {  run, queryOne } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
 import { requireAdmin } from "@/lib/admin-guard";
 

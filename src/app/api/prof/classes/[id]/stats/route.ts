@@ -36,8 +36,8 @@ async function GETHandler(
   const globalStats = memberIds.length > 0
     ? await query<{ attempts: number; avg_pct: number | null; best_pct: number | null; students: number }>(
         `SELECT COUNT(*) AS attempts,
-                ROUND(AVG(a.score * 100.0 / a.max_score)) AS avg_pct,
-                MAX(ROUND(a.score * 100.0 / a.max_score)) AS best_pct,
+                ROUND(AVG(a.score * 100.0 / NULLIF(a.max_score, 0))) AS avg_pct,
+                MAX(ROUND(a.score * 100.0 / NULLIF(a.max_score, 0))) AS best_pct,
                 COUNT(DISTINCT a.user_id) AS students
          FROM quiz_attempts a
          WHERE a.user_id IN (${memberIds.map(() => "?").join(",")})`,
@@ -68,7 +68,7 @@ async function GETHandler(
     }>(
       `SELECT s.name AS subject_name, s.icon, s.color,
               COUNT(*) AS attempts,
-              ROUND(AVG(a.score * 100.0 / a.max_score)) AS avg_pct
+              ROUND(AVG(a.score * 100.0 / NULLIF(a.max_score, 0))) AS avg_pct
        FROM quiz_attempts a
        JOIN quizzes q ON q.id = a.quiz_id
        JOIN subjects s ON s.id = q.subject_id
@@ -91,8 +91,8 @@ async function GETHandler(
     }>(
       `SELECT q.id AS quiz_id, q.title, s.name AS subject_name, s.icon, s.color,
               COUNT(*) AS attempts,
-              ROUND(AVG(a.score * 100.0 / a.max_score)) AS avg_pct,
-              MAX(ROUND(a.score * 100.0 / a.max_score)) AS best_pct,
+              ROUND(AVG(a.score * 100.0 / NULLIF(a.max_score, 0))) AS avg_pct,
+              MAX(ROUND(a.score * 100.0 / NULLIF(a.max_score, 0))) AS best_pct,
               COUNT(DISTINCT a.user_id) AS students
        FROM quiz_attempts a
        JOIN quizzes q ON q.id = a.quiz_id

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { guardApi } from "@/lib/api-guard";
 import { getCurrentUser } from "@/lib/session";
 import { getDueReviews, type ReviewItem } from "@/lib/spaced-repetition";
-import { query, queryOne } from "@/lib/db";
+import {  queryOne } from "@/lib/db";
 
 interface EnrichedReview extends ReviewItem {
   best_score: number | null;

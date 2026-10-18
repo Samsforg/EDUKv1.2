@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
@@ -39,7 +39,7 @@ export default function ThreadPage() {
   const [voting, setVoting] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  function load() {
+  const load = useCallback(() => {
     setLoading(true);
     fetch(`/api/forum/posts/${id}`)
       .then(async (r) => {
@@ -56,11 +56,11 @@ export default function ThreadPage() {
         }
       })
       .finally(() => setLoading(false));
-  }
+  }, [id]);
 
   useEffect(() => {
     load();
-  }, [id]);
+  }, [load]);
 
   async function sendReply() {
     if (!text.trim() || sending) return;

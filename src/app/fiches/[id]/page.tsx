@@ -49,7 +49,7 @@ export default function LessonReader() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quotaMsg, setQuotaMsg] = useState<string | null>(null);
-  const [quota, setQuota] = useState<QuotaInfo | null>(null);
+  const [_quota, setQuota] = useState<QuotaInfo | null>(null);
   const [plan, setPlan] = useState<PlanInfo | null>(null);
   const [decouvertePrice, setDecouvertePrice] = useState(0);
   const [userRole, setUserRole] = useState<string | undefined>(undefined);

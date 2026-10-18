@@ -20,17 +20,6 @@ interface ChapterRow {
   grade_name: string;
 }
 
-interface ClassChapterRow {
-  class_id: number;
-  class_name: string;
-  chapter_id: number;
-  chapter_title: string;
-  chapter_code: string;
-  subject_name: string;
-  grade_name: string;
-  scheduled_at: string | null;
-  status: string;
-}
 
 function PlanificationTable() {
   const [classes, setClasses] = useState<ClassRow[]>([]);
@@ -57,15 +46,16 @@ function PlanificationTable() {
     status: "planned",
   });
 
-  const fetchClasses = async () => {
-    try {
-      const res = await fetch("/api/admin/classes");
-      const data = await res.json();
-      if (data.classes) setClasses(data.classes);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  useEffect(() => {
+    fetch("/api/admin/classes")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.classes) setClasses(data.classes);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, []);
 
   const fetchChapters = async (classId: number) => {
     try {
@@ -79,10 +69,6 @@ function PlanificationTable() {
       console.error(err);
     }
   };
-
-  useEffect(() => {
-    fetchClasses();
-  }, []);
 
   const handleClassChange = (value: string) => {
     const id = Number(value);

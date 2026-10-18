@@ -67,7 +67,7 @@ export async function topReminderSubject(userId: number): Promise<{ id: number; 
     `SELECT s.id AS subject_id, s.name, s.icon, s.color,
             (SELECT COUNT(*) FROM lessons l JOIN chapters c ON c.id = l.chapter_id WHERE c.subject_id = s.id
               AND NOT EXISTS (SELECT 1 FROM lesson_reads r WHERE r.user_id = ? AND r.lesson_id = l.id)) AS unread,
-            (SELECT MAX(a.score * 100.0 / a.max_score) FROM quiz_attempts a JOIN quizzes q ON q.id = a.quiz_id WHERE q.subject_id = s.id AND a.user_id = ?) AS best
+            (SELECT MAX(a.score * 100.0 / NULLIF(a.max_score, 0)) FROM quiz_attempts a JOIN quizzes q ON q.id = a.quiz_id WHERE q.subject_id = s.id AND a.user_id = ?) AS best
      FROM subjects s
      ORDER BY s.id`,
     userId,

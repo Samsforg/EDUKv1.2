@@ -12,6 +12,7 @@ import { maybeRecordSignup } from "@/lib/analytics-db";
 import { sendGa4SignupCompleted } from "@/lib/ga4-ssr";
 import { ATTRIBUTION_KEYS } from "@/lib/attribution";
 import crypto from "crypto";
+import { logger } from "@/lib/logger";
 
 /** Clés props de signup_completed (mappées depuis la whitelist attribution). */
 const ATTRIBUTION_PROP_MAP: Record<(typeof ATTRIBUTION_KEYS)[number], string> = {
@@ -102,7 +103,7 @@ async function POSTHandler(req: NextRequest) {
   if (role === "teacher") {
     return NextResponse.json({ error: "L'inscription enseignant nécessite une validation admin. Contactez le support." }, { status: 403 });
   }
-  const db = getDb();
+  const _db = getDb();
 
   const cleanFirstName = sanitizeName(first_name);
   const cleanLastName = sanitizeName(last_name);
@@ -295,7 +296,7 @@ async function POSTHandler(req: NextRequest) {
   }
 
   // Email de bienvenue non bloquant
-  if (email) void sendWelcomeEmail(userId).then((ok) => console.log(`[register] welcome ${ok ? "envoyé" : "échoué"} -> ${email}`)).catch(() => {});
+  if (email) void sendWelcomeEmail(userId).then((ok) => logger.info(`[register] welcome ${ok ? "envoyé" : "échoué"} -> ${email}`)).catch(() => {});
 
   let token: string;
   try {

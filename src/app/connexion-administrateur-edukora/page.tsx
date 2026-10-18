@@ -3,6 +3,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { AdminLoginForm } from "./form";
+import Link from "next/link";
 
 export const metadata: Metadata = { title: "Connexion Sécurisée | Edukora Admin", robots: { index: false, follow: false } };
 
@@ -42,7 +43,7 @@ export default async function Page() {
         <p className="text-[11px] font-medium">© 2026 Edukora Admin - Portail de Sécurité Académique</p>
         <div className="flex items-center gap-6">
           <a className="text-[11px] font-semibold hover:text-primary transition-colors uppercase tracking-wider" href="/mot-de-passe-oubli-edukora">Mot de passe oublié</a>
-          <a className="text-[11px] font-semibold hover:text-primary transition-colors uppercase tracking-wider" href="/">Retour au site</a>
+          <Link className="text-[11px] font-semibold hover:text-primary transition-colors uppercase tracking-wider" href="/">Retour au site</Link>
         </div>
       </footer>
     </div>

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { EVENTS, trackEvent } from "@/lib/analytics";
 
 export default function Page() {
@@ -9,6 +10,7 @@ export default function Page() {
 }
 
 function GeniusPayValidation() {
+  const router = useRouter();
   const [ref, setRef] = React.useState<string | null>(null);
   const [amount, setAmount] = React.useState<number | null>(null);
   const [planName, setPlanName] = React.useState<string>("");
@@ -39,11 +41,11 @@ function GeniusPayValidation() {
         });
         if (d.is_active) {
           setDone(true);
-          setTimeout(() => { window.location.href = `/paiement-reussi-edukora-premium-geniuspay?ref=${encodeURIComponent(r)}`; }, 800);
+          setTimeout(() => { router.push(`/paiement-reussi-edukora-premium-geniuspay?ref=${encodeURIComponent(r)}`); }, 800);
         }
       })
       .catch((e) => setError(e.message || "Erreur de chargement"));
-  }, []);
+  }, [router]);
 
   React.useEffect(() => {
     if (done || timeLeft <= 0) return;
@@ -59,7 +61,7 @@ function GeniusPayValidation() {
         .then((d) => {
           if (d.is_active) {
             setDone(true);
-setTimeout(() => { window.location.href = `/paiement-r-ussi-edukora-premium-geniuspay?ref=${encodeURIComponent(ref)}`; }, 800);
+setTimeout(() => { router.push(`/paiement-r-ussi-edukora-premium-geniuspay?ref=${encodeURIComponent(ref)}`); }, 800);
           } else if (d.status === "failed" || d.status === "cancelled") {
             setError("Le paiement a échoué ou a été annulé. Réessayez depuis la page des plans.");
             setChecking(false);
@@ -68,7 +70,7 @@ setTimeout(() => { window.location.href = `/paiement-r-ussi-edukora-premium-geni
         .catch(() => {});
     }, 3000);
     return () => clearInterval(iv);
-  }, [ref, checking, done]);
+  }, [ref, checking, done, router]);
 
   const mins = Math.floor(Math.max(timeLeft, 0) / 60);
   const secs = Math.max(timeLeft % 60, 0);
@@ -79,7 +81,7 @@ setTimeout(() => { window.location.href = `/paiement-r-ussi-edukora-premium-geni
 
 <header className="fixed top-0 w-full flex items-center justify-between px-4 h-16 w-full z-50 bg-surface border-b border-outline-variant">
 <div className="flex items-center gap-4">
-<button onClick={() => { window.location.href = "/plans-d-abonnement-edukora-1"; }} className="w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-200 active:scale-95 hover:bg-surface-container-low">
+<button onClick={() => { router.push("/plans-d-abonnement-edukora-1"); }} className="w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-200 active:scale-95 hover:bg-surface-container-low">
 <span className="material-symbols-outlined text-primary">arrow_back</span>
 </button>
 <h1 className="font-headline text-xl font-semibold text-primary">Paiement Sécurisé</h1>

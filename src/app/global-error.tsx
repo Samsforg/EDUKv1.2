@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
+
 export default function GlobalError({
-  error,
   retry,
 }: {
   error: Error & { digest?: string };
@@ -75,7 +76,7 @@ export default function GlobalError({
               >
                 Réessayer
               </button>
-              <a
+              <Link
                 href="/"
                 style={{
                   padding: "0.75rem 1.5rem",
@@ -85,8 +86,8 @@ export default function GlobalError({
                   textDecoration: "none",
                 }}
               >
-                Retour à l&apos;accueil
-              </a>
+                Retour &agrave; l&apos;accueil
+              </Link>
             </div>
           </main>
         </div>

@@ -21,7 +21,7 @@ const bentoItems = [
 export default function BentoGridClient() {
   return (
     <section className="grid grid-cols-2 gap-gutter" aria-label="Actions rapides">
-      {bentoItems.map((item, index) => (
+      {bentoItems.map((item, _index) => (
         <Link
           key={item.href}
           href={item.href}

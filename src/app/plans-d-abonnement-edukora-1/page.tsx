@@ -165,7 +165,7 @@ async function PlansContent({ plansPromise }: { plansPromise: Promise<Awaited<Re
     null;
   const quarterDisplay = quarterPlan ?? (monthPlan ? { ...monthPlan, id: 0, interval: "quarter" as const, price_cents: 0 } : null);
   const monthFeatures = monthPlan ? planFeatures(monthPlan) : [];
-  const quarterFeatures = quarterPlan?.features
+  const _quarterFeatures = quarterPlan?.features
     ? planFeatures(quarterPlan)
     : monthFeatures.map((f) => (f.includes("Kora IA") ? "100 questions par trimestre à Kora IA" : f));
 

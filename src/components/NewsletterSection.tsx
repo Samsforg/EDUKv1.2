@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export default function NewsletterSection({
   source = "home",
@@ -54,13 +55,13 @@ export default function NewsletterSection({
               Chaque semaine : méthodes de révision, plans de travail, gestion du stress et
               astuces d'élèves. Rejoins gratuitement notre communauté d'étudiants.
             </p>
-            <a
+            <Link
               href="/blog"
               className="inline-flex items-center gap-2 mt-5 text-primary font-bold text-body-md hover:underline"
             >
-              Découvrir les articles du blog
+              D&eacute;couvrir les articles du blog
               <span className="material-symbols-outlined text-lg">arrow_forward</span>
-            </a>
+            </Link>
           </div>
           <div>
             {status === "success" ? (

@@ -26,8 +26,8 @@ export default function QuizSharePage({ params }: { params: Promise<{ token: str
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [submitted, setSubmitted] = useState(false);
-  const [score, setScore] = useState(0);
-  const [total, setTotal] = useState(0);
+  const [_score, setScore] = useState(0);
+  const [_total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -55,9 +55,9 @@ export default function QuizSharePage({ params }: { params: Promise<{ token: str
   }
 
   function handleSubmit() {
-    const pts = 0;
+    const _pts = 0;
     questions.forEach((q) => {
-      const correctOptions = q.options.map((_, i) => i).filter((_, i) => {
+      const _correctOptions = q.options.map((_, i) => i).filter((_, _i) => {
         // The correct answer is stored in the DB but we don't send it to the client
         // For share quizzes, we validate server-side or show results after signup
         return false;

@@ -9,16 +9,6 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net";
 // Rapport hebdo parent : envoyé chaque dimanche (cron) à tous les parents liés.
 // Contenu : score moyen 7j, streak, quiz faits, temps estimé, conseil pédagogique.
 
-interface ChildReport {
-  child_id: number;
-  child_name: string;
-  email: string | null;
-  quizzes_7d: number;
-  avg_pct: number | null;
-  streak: number;
-  xp: number;
-  premium: boolean;
-}
 
 async function GETHandler(req: NextRequest) {
   const forbidden = requireCronSecret(req);

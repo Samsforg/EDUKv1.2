@@ -3,47 +3,11 @@
 import { useState } from "react";
 import { getCsrfToken } from "@/lib/csrf-client";
 
-interface SubjectGradeRow {
-  subject_id: number;
-  subject_name: string;
-  subject_code: string;
-  grade_id: number;
-  grade_name: string;
-  grade_code: string;
-  coefficient: number;
-}
 
-interface GradeRow {
-  id: number;
-  code: string;
-  name: string;
-  cycle: string;
-  order_index: number;
-}
 
-interface SubjectRow {
-  id: number;
-  code: string;
-  name: string;
-  icon: string;
-  color: string;
-}
 
-interface CoefficientsTableProps {
-  subjectGrades: {
-    subject_id: number;
-    subject_name: string;
-    subject_code: string;
-    grade_id: number;
-    grade_name: string;
-    grade_code: string;
-    coefficient: number;
-  }[];
-  grades: { id: number; code: string; name: string; cycle: string; order_index: number }[];
-  subjects: { id: number; code: string; name: string; icon: string; color: string }[];
-}
 
-function CoefficientDialog({ isOpen, onClose, editing, loading, error, formData, setFormData, onSubmit, onCancel, subjects, grades, resetForm }: {
+function CoefficientDialog({ isOpen, onClose, loading, error, formData, setFormData, onSubmit, onCancel, subjects, grades }: {
   isOpen: boolean;
   onClose: () => void;
   editing: { subject_id: number; grade_id: number } | null;

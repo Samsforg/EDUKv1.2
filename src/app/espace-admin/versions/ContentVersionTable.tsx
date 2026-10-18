@@ -106,7 +106,7 @@ export default function ContentVersionTable() {
   );
 }
 
-function formatPayload(json: string) {
+function _formatPayload(json: string) {
   try {
     return JSON.stringify(JSON.parse(json), null, 2).slice(0, 200) + "...";
   } catch {

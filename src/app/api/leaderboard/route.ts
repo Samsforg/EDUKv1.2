@@ -2,6 +2,7 @@ import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
+import { realUsersWhere } from "@/lib/test-users";
 
 async function GETHandler(req: NextRequest) {
   const user = await getCurrentUser();
@@ -20,7 +21,7 @@ async function GETHandler(req: NextRequest) {
   }>(
     `SELECT u.id, u.first_name, u.last_name, u.xp, u.streak, u.class_level, s.name AS serie
      FROM users u LEFT JOIN series s ON s.id = u.serie_id
-     WHERE u.role = 'student'
+     WHERE u.role = 'student' AND ${realUsersWhere("u")}
      ORDER BY u.xp DESC, u.last_active DESC, u.id ASC
      LIMIT ?`,
     limit,
@@ -42,13 +43,13 @@ async function GETHandler(req: NextRequest) {
     `SELECT rk.rank, rk.xp FROM (
        SELECT u.id, u.xp,
               ROW_NUMBER() OVER (ORDER BY u.xp DESC, u.last_active DESC, u.id ASC) AS rank
-       FROM users u WHERE u.role = 'student'
+       FROM users u WHERE u.role = 'student' AND ${realUsersWhere("u")}
      ) rk WHERE rk.id = ?`,
     user.id,
   );
 
   const total = (await queryOne<{ c: number }>(
-    "SELECT COUNT(*) AS c FROM users WHERE role = 'student'",
+    `SELECT COUNT(*) AS c FROM users u WHERE u.role = 'student' AND ${realUsersWhere("u")}`,
   ))!.c;
 
   const top = rows[0]?.xp ?? 0;

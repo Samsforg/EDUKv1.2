@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import ImageUploader from "@/components/ImageUploader";
 import { useRouter, useSearchParams } from "next/navigation";

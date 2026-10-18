@@ -145,7 +145,7 @@ function AttemptsContent() {
                 <p className="font-label-sm text-on-surface-variant">{data.summary.students} élève{data.summary.students > 1 ? "s" : ""} · {type === "paper" && data.summary.passed !== undefined && `${data.summary.passed} réussite(s) (≥ 10/20)`}</p>
                 {data.attempts.map((a) => {
                   const score = type === "quiz" ? `${a.score} / ${a.max_score}` : `${a.score_over_20}/20`;
-                  const note = type === "quiz" ? a.pct : a.score_over_20;
+                  const _note = type === "quiz" ? a.pct : a.score_over_20;
                   const ok = type === "quiz" ? (a.pct ?? 0) >= 70 : (a.score_over_20 ?? 0) >= 10;
                   return (
                     <div key={a.id} className="bg-surface border border-outline-variant rounded-xl p-4 flex items-center gap-4">

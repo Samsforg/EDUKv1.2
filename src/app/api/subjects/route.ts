@@ -1,6 +1,6 @@
 import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
-import { query, queryOne } from "@/lib/db";
+import { query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ async function GETHandler() {
     `SELECT s.id, s.code, s.name, s.icon, s.color,
             (SELECT COUNT(*) FROM quizzes q WHERE q.subject_id = s.id AND q.status = 'approved') AS quiz_count,
             (SELECT COUNT(*) FROM exam_papers p WHERE p.subject_id = s.id AND p.status = 'approved') AS paper_count,
-            (SELECT MAX(score * 100.0 / max_score) FROM quiz_attempts a JOIN quizzes q ON q.id = a.quiz_id
+            (SELECT MAX(score * 100.0 / NULLIF(max_score, 0)) FROM quiz_attempts a JOIN quizzes q ON q.id = a.quiz_id
              WHERE q.subject_id = s.id AND a.user_id = ?) AS best_score,
             (SELECT COUNT(*) FROM lessons l
              JOIN chapters c ON c.id = l.chapter_id

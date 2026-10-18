@@ -40,13 +40,19 @@ function formatEntry(level: LogLevel, message: string, context?: LogContext): st
 }
 
 function createLogger(): Logger {
+  // NOTE : ce module EST la transport de logs du projet. C'est l'unique point
+  // d'écriture console de l'application (niveaux warn/error restent autorisés par
+  // la règle). Les deux appels debug/info ci-dessous sont l'exception justifiée ;
+  // aucun autre fichier n'appelle console.* (les appelants passent par logger).
   const base = {
     debug: (message: string, context?: LogContext) => {
       if (process.env.NODE_ENV === "development") {
+        // eslint-disable-next-line no-console
         console.debug(formatEntry("debug", message, context));
       }
     },
     info: (message: string, context?: LogContext) => {
+      // eslint-disable-next-line no-console
       console.info(formatEntry("info", message, context));
     },
     warn: (message: string, context?: LogContext) => {

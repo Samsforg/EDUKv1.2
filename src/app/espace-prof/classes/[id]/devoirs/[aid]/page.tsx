@@ -35,32 +35,26 @@ export default function AssignmentDetailPage() {
   const [busy, setBusy] = useState<Record<number, boolean>>({});
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  async function load() {
-    try {
-        const res = await fetchFresh(`/api/prof/classes/${id}/assignments/${aid}`).then(async (r) => {
-          if (!r.ok) throw new Error((await r.json().catch(() => ({})))?.error ?? "Erreur");
-          return r.json();
-        });
-      setAssignment(res.assignment);
-      setSubmissions(res.submissions ?? []);
-      const initScore: Record<number, string> = {};
-      const initFb: Record<number, string> = {};
-      for (const s of res.submissions ?? []) {
-        initScore[s.student_id] = s.score != null ? String(s.score) : "";
-        initFb[s.student_id] = s.feedback ?? "";
-      }
-      setScores(initScore);
-      setFeedbacks(initFb);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchFresh(`/api/prof/classes/${id}/assignments/${aid}`)
+      .then(async (r) => {
+        if (!r.ok) throw new Error((await r.json().catch(() => ({})))?.error ?? "Erreur");
+        return r.json();
+      })
+      .then((res) => {
+        setAssignment(res.assignment);
+        setSubmissions(res.submissions ?? []);
+        const initScore: Record<number, string> = {};
+        const initFb: Record<number, string> = {};
+        for (const s of res.submissions ?? []) {
+          initScore[s.student_id] = s.score != null ? String(s.score) : "";
+          initFb[s.student_id] = s.feedback ?? "";
+        }
+        setScores(initScore);
+        setFeedbacks(initFb);
+      })
+      .catch((e) => setError((e as Error).message))
+      .finally(() => setLoading(false));
   }, [id, aid]);
 
   async function grade(studentId: number) {

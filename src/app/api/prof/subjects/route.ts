@@ -1,6 +1,6 @@
 import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
-import { query, queryOne, run } from "@/lib/db";
+import {  queryOne, run } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { getProfSubjects, ensureProfSubject } from "@/lib/prof-subjects";
 

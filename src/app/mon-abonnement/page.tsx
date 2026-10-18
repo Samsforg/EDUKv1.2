@@ -20,7 +20,7 @@ interface ActivePlan {
 }
 
 export default function SubscriptionPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [activePlan, setActivePlan] = useState<ActivePlan | null>(null);
   const [loading, setLoading] = useState(true);

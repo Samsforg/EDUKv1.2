@@ -22,7 +22,7 @@ async function POSTHandler(req: Request) {
     return NextResponse.json({ error: "Format d'image invalide" }, { status: 400 });
   }
 
-  const mimeType = match[1];
+  const _mimeType = match[1];
   const b64 = match[2];
   const byteLen = Math.round((b64.length * 3) / 4);
 

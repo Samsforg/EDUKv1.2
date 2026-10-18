@@ -1,7 +1,7 @@
 import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
-import { CATEGORY_ORDER, computeBadgeProgress, refreshBadges, type BadgeCategory, type BadgeProgress } from "@/lib/badges";
+import { CATEGORY_ORDER, computeBadgeProgress, refreshBadges } from "@/lib/badges";
 
 async function GETHandler() {
   const user = await getCurrentUser();

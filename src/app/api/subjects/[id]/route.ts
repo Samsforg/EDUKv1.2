@@ -36,7 +36,7 @@ async function GETHandler(
             (SELECT COUNT(*) FROM quizzes q WHERE q.chapter_id = c.id AND q.status = 'approved') AS quiz_count,
             (SELECT COUNT(*) FROM quiz_attempts a JOIN quizzes q ON q.id = a.quiz_id
              WHERE q.chapter_id = c.id AND q.status = 'approved' AND a.user_id = ?) AS attempts,
-            (SELECT MAX(score * 100.0 / max_score) FROM quiz_attempts a JOIN quizzes q ON q.id = a.quiz_id
+            (SELECT MAX(score * 100.0 / NULLIF(max_score, 0)) FROM quiz_attempts a JOIN quizzes q ON q.id = a.quiz_id
              WHERE q.chapter_id = c.id AND q.status = 'approved' AND a.user_id = ?) AS best_percent
      FROM chapters c WHERE c.subject_id = ? AND c.status = 'approved'
      ORDER BY c.position`,

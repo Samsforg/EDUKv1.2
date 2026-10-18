@@ -223,7 +223,13 @@ export async function getClassLeaderboard(classId: number, userId: number, limit
   );
   const myRank = allRanked.find((r) => r.id === userId)?.rank ?? null;
   const total = allRanked.length;
-  return { class: cls, ranking: rows.map((r) => ({ ...r, is_me: r.id === userId })), me: meRow ? { ...meRow, is_me: true } : { id: userId, rank: myRank, is_me: true } as any, total, isMember, myRank };
+  // Ligne "moi" : complète si l'utilisateur figure dans le top `limit`,
+  // partielle sinon (id + rang global + marqueur). Union explicite plutôt
+  // qu'un `any` : les consommateurs (API + page mes-classes) n'exigent que
+  // ces champs dans le cas partiel.
+  const me: (Row & { rank: number; is_me: boolean }) | { id: number; rank: number | null; is_me: boolean } =
+    meRow ? { ...meRow, is_me: true } : { id: userId, rank: myRank, is_me: true };
+  return { class: cls, ranking: rows.map((r) => ({ ...r, is_me: r.id === userId })), me, total, isMember, myRank };
 }
 
 export async function getLigueStatus(userId: number) {

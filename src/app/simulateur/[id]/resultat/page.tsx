@@ -112,7 +112,7 @@ export default function SimulatorResultPage() {
                       {q.options.map((opt, i) => {
                         const isCorrect = i === d?.answer_index;
                         const isWrongChoice = !isCorrect && userChoice === i;
-                        const isSkipped = userChoice === undefined || userChoice === -1;
+                        const _isSkipped = userChoice === undefined || userChoice === -1;
                         return (
                           <div
                             key={i}

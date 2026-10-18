@@ -69,6 +69,11 @@ export type EdukoraEventName = (typeof EVENTS)[keyof typeof EVENTS];
 declare global {
   interface Window {
     edukoraTrack?: (name: EdukoraEventName, params?: TrackParams, opts?: { dedupe?: boolean }) => void;
+    edukora_analytics_loaded?: boolean;
+    edukora_gtag_loaded?: boolean;
+    edukora_clarity_loaded?: boolean;
+    gtag?: (...args: unknown[]) => void;
+    clarity?: ((...args: unknown[]) => void) & { q?: unknown[][] };
   }
 }
 
@@ -164,13 +169,13 @@ export function loadAnalyticsScripts(): void {
   if (typeof document === "undefined") return;
   if (!analyticsAccepted()) return;
   ensureGaClientId();
-  if (!(window as any).edukora_analytics_loaded) {
-    (window as any).edukora_analytics_loaded = true;
+  if (!window.edukora_analytics_loaded) {
+    window.edukora_analytics_loaded = true;
   }
 
   // --- GA4 ---
-  if (GA_ID && !(window as any).edukora_gtag_loaded) {
-    (window as any).edukora_gtag_loaded = true;
+  if (GA_ID && !window.edukora_gtag_loaded) {
+    window.edukora_gtag_loaded = true;
     const script = document.createElement("script");
     script.async = true;
     script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
@@ -187,20 +192,21 @@ gtag('config', '${GA_ID}', { send_page_view: true });`;
   }
 
   // --- Clarity ---
-  if (CLARITY_ID && !(window as any).edukora_clarity_loaded) {
-    (window as any).edukora_clarity_loaded = true;
+  if (CLARITY_ID && !window.edukora_clarity_loaded) {
+    window.edukora_clarity_loaded = true;
     // 3d.3 : le tag Clarity (/tag/<id>) lit `window.clarity.v` des sa premiere
     // instruction, puisemplace window.clarity par son collecteur et vide la
     // file `q`. Sans ce stub, window.clarity vaut undefined et le tag leve
     // "Cannot read properties of undefined (reading 'v')" avant d'injecter
     // scripts.clarity.ms : Clarity ne collecte rien du tout. Le stub doit donc
     // exister AVANT l'ajout du tag, et ne pas ecraser un Clarity deja actif.
-    const w = window as any;
+    const w: Window = window;
     if (typeof w.clarity !== "function") {
+      const queue: unknown[][] = [];
       w.clarity = (...args: unknown[]) => {
-        (w.clarity.q = w.clarity.q || []).push(args);
+        queue.push(args);
       };
-      w.clarity.q = [];
+      w.clarity.q = queue;
     }
     const script = document.createElement("script");
     script.async = true;
@@ -313,19 +319,19 @@ export function trackEvent(
   const out = sanitizeForThirdParty(params);
 
   // GA4
-  if (GA_ID && typeof (window as any).gtag === "function") {
-    (window as any).gtag("event", name, {
+  if (GA_ID && typeof window.gtag === "function") {
+    window.gtag("event", name, {
       ...out,
       event_source: "edukora",
     });
   }
 
   // Clarity : custom events (limités à 20 events custom par jour par session)
-  if (CLARITY_ID && typeof (window as any).clarity === "function") {
+  if (CLARITY_ID && typeof window.clarity === "function") {
     const clarityParams: Record<string, string | number> = {};
     for (const [k, v] of Object.entries(out)) {
       if (typeof v === "string" || typeof v === "number") clarityParams[k] = v;
     }
-    (window as any).clarity("event", name, clarityParams);
+    window.clarity("event", name, clarityParams);
   }
 }

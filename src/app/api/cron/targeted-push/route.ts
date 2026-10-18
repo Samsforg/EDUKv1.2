@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { guardApi } from "@/lib/api-guard";
-import { query, queryOne } from "@/lib/db";
+import { query } from "@/lib/db";
 import { sendPushToUser } from "@/lib/push";
 import { logger } from "@/lib/logger";
 import { requireCronSecret } from "@/lib/cron-auth";

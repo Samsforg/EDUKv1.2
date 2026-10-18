@@ -1,6 +1,6 @@
 import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
-import { query, queryOne } from "@/lib/db";
+import { query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { resolveUserGradeIds, gradeInClause } from "@/lib/level";
 
@@ -72,7 +72,7 @@ async function GETHandler() {
     attempts: number;
   }>(
     `SELECT q.id, q.subject_id, q.chapter_id, q.title,
-            (SELECT MAX(a.score * 100.0 / a.max_score) FROM quiz_attempts a WHERE a.quiz_id = q.id AND a.user_id = ?) AS best,
+            (SELECT MAX(a.score * 100.0 / NULLIF(a.max_score, 0)) FROM quiz_attempts a WHERE a.quiz_id = q.id AND a.user_id = ?) AS best,
             (SELECT COUNT(*) FROM quiz_attempts a WHERE a.quiz_id = q.id AND a.user_id = ?) AS attempts
      FROM quizzes q WHERE ${quizChapterClause} ORDER BY q.subject_id, q.id`,
     user.id,

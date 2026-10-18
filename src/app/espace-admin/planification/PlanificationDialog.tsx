@@ -35,14 +35,11 @@ export default function PlanificationDialog({
   onClose,
   selectedClassId,
   chapters,
-  classChapters,
   formData,
   setFormData,
   onSubmit,
-  onDelete,
   loading,
   error,
-  setIsOpen,
 }: PlanificationDialogProps) {
   if (!isOpen || !selectedClassId) return null;
 

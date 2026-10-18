@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Préférences de cookies",
-  description: "Gérez vos préférences de cookies et de données personnelles sur Edukora : cookies essentiels, analytiques et personnalisation IA.",
+  description: "Gérez vos préférences de cookies et de données personnelles sur Edukora : cookies essentiels, analytiques, mesure d'audience/publicité et personnalisation IA.",
   alternates: { canonical: "/pr-f-rences-de-cookies-et-donn-es" },
 };
 
@@ -64,6 +64,23 @@ export default function Page() {
               <div className="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
                 <input className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 border-outline appearance-none cursor-pointer translate-x-0.5 mt-0.5 peer" id="toggle_analytics" name="toggle_analytics" type="checkbox" />
                 <label className="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer transition-colors duration-200 peer-checked:bg-primary-container" htmlFor="toggle_analytics">
+                  <span className="toggle-dot absolute block w-5 h-5 rounded-full bg-white shadow-sm transform transition-transform duration-200 ease-in-out translate-x-0.5 mt-0.5 peer-checked:translate-x-4"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-surface-container-lowest border border-outline-variant p-5 rounded-xl shadow-sm transition-all duration-300">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 pr-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-bold text-on-surface text-lg">Mesure d&apos;audience et publicité</h3>
+                </div>
+                <p className="text-sm text-on-surface-variant">Autorise les partenaires publicitaires (Meta, TikTok, Google Ads/AdSense) à mesurer l&apos;audience et à diffuser des annonces. Aucun trackeur publicitaire n&apos;est chargé sans votre accord explicite ici.</p>
+              </div>
+              <div className="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                <input className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 border-outline appearance-none cursor-pointer translate-x-0.5 mt-0.5 peer" id="toggle_marketing" name="toggle_marketing" type="checkbox" />
+                <label className="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer transition-colors duration-200 peer-checked:bg-primary-container" htmlFor="toggle_marketing">
                   <span className="toggle-dot absolute block w-5 h-5 rounded-full bg-white shadow-sm transform transition-transform duration-200 ease-in-out translate-x-0.5 mt-0.5 peer-checked:translate-x-4"></span>
                 </label>
               </div>

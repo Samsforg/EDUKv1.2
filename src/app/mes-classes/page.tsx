@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchFresh } from "@/lib/client-fetch";
@@ -33,7 +33,7 @@ export default function StudentClassesPage() {
   const [loading, setLoading] = useState(true);
   const [leaderboards, setLeaderboards] = useState<Record<number, ClassLeaderboard>>({});
 
-  async function load() {
+  const load = useCallback(async () => {
     const res = await fetchFresh("/api/classes/mine");
     if (res.status === 401) {
       router.replace("/connexion-edukora");
@@ -53,11 +53,11 @@ export default function StudentClassesPage() {
       });
     }
     setLoading(false);
-  }
+  }, [router]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   async function join(e: React.FormEvent) {
     e.preventDefault();

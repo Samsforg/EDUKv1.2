@@ -1,7 +1,7 @@
 import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { getCurrentUser } from "@/lib/session";
+import {  } from "@/lib/session";
 
 async function GETHandler(
   _req: Request,

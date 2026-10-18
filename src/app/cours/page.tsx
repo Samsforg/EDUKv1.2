@@ -57,7 +57,7 @@ const CYCLE_COLORS: Record<string, string> = {
 export default function CoursPage() {
   const [data, setData] = useState<CoursData | null>(null);
   const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [_selectedSubject, _setSelectedSubject] = useState<string | null>(null);
   const [error, setError] = useState<"unauthorized" | "network" | null>(null);
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function CoursPage() {
       })
       .then((d) => {
         setData(d);
-        if (d.userGrade && !selectedGrade) setSelectedGrade(d.userGrade.code);
+        if (d.userGrade) setSelectedGrade((prev) => prev ?? d.userGrade.code);
       })
       .catch((e) => setError(e.message === "unauthorized" ? "unauthorized" : "network"));
   }, []);

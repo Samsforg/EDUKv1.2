@@ -85,8 +85,8 @@ async function GETHandler(
     stats = await query<StudentStats>(
       `SELECT a.user_id,
               COUNT(*) AS attempts,
-              ROUND(AVG(a.score * 100.0 / a.max_score)) AS avg_pct,
-              MAX(ROUND(a.score * 100.0 / a.max_score)) AS best_pct,
+              ROUND(AVG(a.score * 100.0 / NULLIF(a.max_score, 0))) AS avg_pct,
+              MAX(ROUND(a.score * 100.0 / NULLIF(a.max_score, 0))) AS best_pct,
               0 AS lessons_read
        FROM quiz_attempts a
        WHERE a.user_id IN (${placeholders})

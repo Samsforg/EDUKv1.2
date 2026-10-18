@@ -121,8 +121,7 @@ export default async function Page({
               <tbody className="divide-y divide-outline-variant">
                 {subs.map((s) => {
                   const st = STATUS_LABELS[s.status] ?? { label: s.status, cls: "bg-surface-container-high text-on-surface-variant", icon: "help" };
-                  const expiringSoon =
-                    s.status === "active" && s.end_at && new Date(s.end_at).getTime() < Date.now() + 30 * 86400000;
+                  const expiringSoon = s.expiring_soon;
                   return (
                     <tr key={s.id} className="hover:bg-surface-container transition-colors">
                       <td className="px-6 py-4">

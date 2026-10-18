@@ -81,8 +81,8 @@ export default async function Page({ searchParams }: { searchParams?: Promise<{ 
   }
   const decouverte = plans.find((p) => p.price_cents === 0 && p.interval === "month") ?? FALLBACK_DECOUVERTE;
   const reussite = plans.find((p) => p.price_cents > 0 && p.interval === "month") ?? FALLBACK_REUSSITE;
-  const decouverteFeatures = planFeatures(decouverte);
-  const reussiteFeatures = planFeatures(reussite);
+  const _decouverteFeatures = planFeatures(decouverte);
+  const _reussiteFeatures = planFeatures(reussite);
 
   return (
     <div className="bg-background text-on-background min-h-screen font-body">
@@ -317,17 +317,12 @@ function PlansGridA({ decouverte, reussite }: { decouverte: PlanRow; reussite: P
   );
 }
 
-function PlansGridB({ decouverte, reussite, plans }: { decouverte: PlanRow; reussite: PlanRow; plans: PlanRow[] }) {
-  const decouverteFeatures = planFeatures(decouverte);
-  const reussiteFeatures = planFeatures(reussite);
-  const promoActive = isRentreePromoActive();
-  const promoPrice = Math.round((reussite.price_cents * (100 - RENTREE_PROMO_PERCENT)) / 100);
-  const endDate = new Date(`${RENTREE_PROMO_ENDS_AT}T23:59:59Z`);
-  const endLabel = endDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+interface TrimaestrielCardProps {
+  trimaestriel: PlanRow | undefined;
+}
 
-  const trimaestriel = plans.find((p) => p.interval === "quarter" && p.price_cents > 0);
-
-  const TrimaestrielCard = () => (
+function TrimaestrielCard({ trimaestriel }: TrimaestrielCardProps) {
+  return (
     <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 border border-outline-variant relative overflow-hidden hover:border-primary/30 transition-all text-center">
       <div className="absolute top-0 right-0 bg-tertiary-container text-on-tertiary-container px-6 py-2 rounded-bl-[24px] text-label-xs font-bold uppercase tracking-tighter">
         Sans engagement
@@ -355,6 +350,17 @@ function PlansGridB({ decouverte, reussite, plans }: { decouverte: PlanRow; reus
       <SubscriptionCta label="Choisir le trimestriel" cta="tarifs" icon="calendar_month" />
     </div>
   );
+}
+
+function PlansGridB({ decouverte, reussite, plans }: { decouverte: PlanRow; reussite: PlanRow; plans: PlanRow[] }) {
+  const decouverteFeatures = planFeatures(decouverte);
+  const reussiteFeatures = planFeatures(reussite);
+  const promoActive = isRentreePromoActive();
+  const promoPrice = Math.round((reussite.price_cents * (100 - RENTREE_PROMO_PERCENT)) / 100);
+  const endDate = new Date(`${RENTREE_PROMO_ENDS_AT}T23:59:59Z`);
+  const endLabel = endDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+
+  const trimaestriel = plans.find((p) => p.interval === "quarter" && p.price_cents > 0);
 
   return (
     <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 items-stretch">
@@ -430,7 +436,7 @@ function PlansGridB({ decouverte, reussite, plans }: { decouverte: PlanRow; reus
         <SubscriptionCta label={promoActive ? `Profiter de -${RENTREE_PROMO_PERCENT}% maintenant` : "S'abonner maintenant"} cta="tarifs" icon="local_fire_department" />
       </div>
 
-      {trimaestriel && <TrimaestrielCard />}
+      {trimaestriel && <TrimaestrielCard trimaestriel={trimaestriel} />}
     </div>
   );
 }

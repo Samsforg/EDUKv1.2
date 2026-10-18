@@ -1,6 +1,6 @@
 import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
-import { query, queryOne } from "@/lib/db";
+import {  queryOne } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { isPremiumUser } from "@/lib/quotas";
 

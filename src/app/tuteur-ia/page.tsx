@@ -59,7 +59,18 @@ export default function TutorPage() {
   const [upsell, setUpsell] = useState<{ open: boolean; message: string }>({ open: false, message: "" });
   const [sendError, setSendError] = useState<string | null>(null);
   const [lessonCtx, setLessonCtx] = useState<{ id: number; title: string } | null>(null);
-  const [subjectCtx, setSubjectCtx] = useState<number | null>(null);
+  // Identifiant de matière issu de l'URL, figé au montage : il n'alimente que
+  // le payload API (jamais le rendu), donc aucun risque de mismatch
+  // d'hydratation. Plus de setState synchrone dans l'effet pour cette valeur.
+  const [subjectCtx] = useState<number | null>(() => {
+    try {
+      if (typeof window === "undefined") return null;
+      const sid = Number(new URLSearchParams(window.location.search).get("subjectId"));
+      return Number.isFinite(sid) && sid > 0 ? sid : null;
+    } catch {
+      return null;
+    }
+  });
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -69,8 +80,6 @@ export default function TutorPage() {
     try {
       const q = new URLSearchParams(window.location.search);
       const lid = Number(q.get("lessonId"));
-      const sid = Number(q.get("subjectId"));
-      if (Number.isFinite(sid) && sid > 0) setSubjectCtx(sid);
       if (Number.isFinite(lid) && lid > 0) {
         fetch(`/api/cours/lecons/${lid}`, { cache: "no-store" })
           .then((r) => (r.ok ? r.json() : null))

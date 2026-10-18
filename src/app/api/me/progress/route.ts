@@ -26,7 +26,7 @@ async function GETHandler() {
     total_attempts: number;
   }>(
     `SELECT s.id AS subject_id, s.name, s.icon, s.color,
-            MAX(a.score * 100.0 / a.max_score) AS best_percent,
+            MAX(a.score * 100.0 / NULLIF(a.max_score, 0)) AS best_percent,
             COUNT(a.id) AS total_attempts
      FROM subjects s
      LEFT JOIN quizzes q ON q.subject_id = s.id

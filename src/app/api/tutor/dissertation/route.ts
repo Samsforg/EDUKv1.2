@@ -84,7 +84,7 @@ async function POSTHandler(req: NextRequest) {
   const result = await correctDissertation({ text, exam, subject });
   const provider = result ? "gateway" : null;
 
-  const raw = result?.raw ?? null;
+  const _raw = result?.raw ?? null;
   await run(
     "INSERT INTO dissertation_corrections (user_id, exam, subject, input_text, note, criteria, feedback, provider) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     user.id,

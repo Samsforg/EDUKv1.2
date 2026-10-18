@@ -35,8 +35,8 @@ async function POSTHandler(
      VALUES (?, ?, 1, ?, ?, datetime('now'))
      ON CONFLICT(user_id, lesson_id) DO UPDATE SET
        completed = 1,
-       score = MAX(score, excluded.score),
-       time_spent_min = MAX(time_spent_min, excluded.time_spent_min),
+       score = CASE WHEN excluded.score > score THEN excluded.score ELSE score END,
+       time_spent_min = CASE WHEN excluded.time_spent_min > time_spent_min THEN excluded.time_spent_min ELSE time_spent_min END,
        completed_at = datetime('now')`,
     user.id,
     Number(lessonId),

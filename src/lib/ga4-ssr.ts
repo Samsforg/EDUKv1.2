@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { logger } from "@/lib/logger";
 
 // ============================================================
 // GA4 Measurement Protocol (événements serveur)
@@ -35,7 +36,7 @@ export interface Ga4PurchaseParams {
  */
 export async function sendGa4Purchase(p: Ga4PurchaseParams): Promise<boolean> {
   if (!isEnabled()) {
-    console.log(`[ga4] purchase skip (GA4_API_SECRET non configuré) — ref ${p.transactionId}`);
+    logger.info(`[ga4] purchase skip (GA4_API_SECRET non configuré) — ref ${p.transactionId}`);
     return false;
   }
 
@@ -78,7 +79,7 @@ export async function sendGa4Purchase(p: Ga4PurchaseParams): Promise<boolean> {
       console.warn(`[ga4] purchase ref ${p.transactionId} rejeté (${res.status}): ${await res.text().catch(() => "")}`);
       return false;
     }
-    console.log(`[ga4] purchase envoyé ref ${p.transactionId} (${p.value} ${p.currency}) clientId ${clientId}`);
+    logger.info(`[ga4] purchase envoyé ref ${p.transactionId} (${p.value} ${p.currency}) clientId ${clientId}`);
     return true;
   } catch (err) {
     console.warn(`[ga4] purchase ref ${p.transactionId} échec réseau:`, err);

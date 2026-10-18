@@ -13,12 +13,12 @@ export class ApiError extends Error {
   }
 }
 
-type ApiHandler = (req: NextRequest, ctx: any) => Promise<Response | undefined>;
+type ApiHandler = (req: NextRequest, ctx: never) => Promise<Response | undefined>;
 
 const GLOBAL_LIMIT_BYPASS = new Set(["/api/health", "/api/warmup"]);
 
 export function guardApi<H extends ApiHandler>(label: string, handler: H): H {
-  const wrapped = async (req: NextRequest, ctx: any) => {
+  const wrapped = async (req: NextRequest, ctx: never) => {
     try {
       // Protection globale sans casser : rate limit générique 120 req/min par IP
       const pathname = req.nextUrl?.pathname ?? new URL(req.url).pathname;

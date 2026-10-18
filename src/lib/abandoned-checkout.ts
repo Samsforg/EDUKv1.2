@@ -74,7 +74,7 @@ function stepCopy(step: number, price: number | null): { title: string; body: st
 
 export async function sendAbandonedReminder(sub: AbandonedSub): Promise<{ ok: boolean; channel: string }> {
   const prenom = sub.first_name?.trim() || "cher élève";
-  const planName = sub.plan_name;
+  const _planName = sub.plan_name;
   const step = sub.reminder_step ?? 0;
   const { title, body, cta } = stepCopy(step, sub.price_cents);
 

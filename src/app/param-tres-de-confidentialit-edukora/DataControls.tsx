@@ -1,6 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 export default function DataControls() {
+  const router = useRouter();
   async function handleExport() {
     const res = await fetch("/api/me/export", { credentials: "same-origin" });
     if (!res.ok) return alert((await res.json()).error || "Erreur export");
@@ -24,7 +27,7 @@ export default function DataControls() {
     const d = await res.json().catch(() => ({}));
     if (d.ok) {
       alert("Votre compte a été supprimé. Vous allez être redirigé…");
-      window.location.href = "/connexion-edukora";
+      router.push("/connexion-edukora");
     } else {
       alert(d.error || "Erreur lors de la suppression");
     }

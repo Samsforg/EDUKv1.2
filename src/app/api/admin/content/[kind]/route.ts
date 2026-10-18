@@ -17,17 +17,13 @@ import {
   getPaperQuestions,
   getCurricula,
   createCurriculum,
-  updateCurriculum,
-  deleteCurriculum,
-  getSubjectGrades,
+      getSubjectGrades,
   upsertSubjectGrade,
-  deleteSubjectGrade,
-  getContentVersions,
+    getContentVersions,
   createContentVersion,
   getClassChapters,
   upsertClassChapter,
-  deleteClassChapter,
-  reorderEntities,
+    reorderEntities,
 } from "@/lib/admin-content";
 
 const KINDS = ["subject", "chapter", "lesson", "exercise", "quiz", "paper", "questions", "challenge", "league_challenge", "curriculum", "subject_grade", "content_version", "class_chapter", "reorder"];

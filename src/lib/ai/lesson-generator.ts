@@ -1,4 +1,4 @@
-import { query, queryOne, run } from "@/lib/db";
+import {  queryOne, run } from "@/lib/db";
 import { generateWithGateway, getProviderChain } from "@/lib/ai/gateway";
 import type { AIGenerateOptions } from "@/lib/ai/types";
 

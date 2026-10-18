@@ -574,7 +574,7 @@ export async function getQuizzes(subjectId: number): Promise<AdminQuiz[]> {
     `SELECT q.id, q.title, q.level, q.status, q.chapter_id, c.title AS chapter_title,
             (SELECT COUNT(*) FROM questions x WHERE x.quiz_id = q.id) AS question_count,
             (SELECT COUNT(*) FROM quiz_attempts a WHERE a.quiz_id = q.id) AS attempts,
-            (SELECT ROUND(AVG(a.score * 100.0 / a.max_score)) FROM quiz_attempts a WHERE a.quiz_id = q.id) AS avg_percent
+            (SELECT ROUND(AVG(a.score * 100.0 / NULLIF(a.max_score, 0))) FROM quiz_attempts a WHERE a.quiz_id = q.id) AS avg_percent
      FROM quizzes q LEFT JOIN chapters c ON c.id = q.chapter_id
      WHERE q.subject_id = ? ORDER BY q.id DESC`,
     subjectId,
@@ -768,6 +768,16 @@ export const GOAL_TYPES = ["quiz_done", "quiz_perfect", "forum_replies", "xp_tot
 export const REWARD_TYPES = ["xp", "badge"] as const;
 export const CHALLENGE_STATUSES = ["upcoming", "active", "ended"] as const;
 
+/**
+ * Garde de validation runtime : teste si une chaîne reçue (formulaire admin,
+ * donc entrée non fiable) appartient à une liste fermée de littéraux.
+ * Le `as readonly string[]` est un upcast sûr (covariant, lecture seule :
+ * `includes` ne mute pas), localisé ici plutôt qu'un `as any` à chaque appel.
+ */
+export function isOneOf<T extends string>(list: readonly T[], value: string): value is T {
+  return (list as readonly string[]).includes(value);
+}
+
 export interface AdminChallenge {
   id: number;
   name: string;
@@ -810,7 +820,7 @@ export async function createChallenge(
   const name = input.name.trim();
   if (!name) return { error: "Nom requis" };
   if (!input.commune_a.trim() || !input.commune_b.trim()) return { error: "Deux communes requises" };
-  if (!CHALLENGE_STATUSES.includes(input.status as any)) return { error: "Statut invalide" };
+  if (!isOneOf(CHALLENGE_STATUSES, input.status)) return { error: "Statut invalide" };
   if (!input.starts_at || !input.ends_at) return { error: "Dates de début et fin requises" };
   const start = new Date(input.starts_at).getTime();
   const end = new Date(input.ends_at).getTime();
@@ -844,7 +854,7 @@ export async function updateChallenge(
   const name = input.name.trim();
   if (!name) return { error: "Nom requis" };
   if (!input.commune_a.trim() || !input.commune_b.trim()) return { error: "Deux communes requises" };
-  if (!CHALLENGE_STATUSES.includes(input.status as any)) return { error: "Statut invalide" };
+  if (!isOneOf(CHALLENGE_STATUSES, input.status)) return { error: "Statut invalide" };
   if (!input.starts_at || !input.ends_at) return { error: "Dates de début et fin requises" };
   const start = new Date(input.starts_at).getTime();
   const end = new Date(input.ends_at).getTime();
@@ -879,11 +889,11 @@ export async function createLeagueChallenge(
   input: { ligue: string; title: string; icon: string; color: string; description: string; goal_type: string; goal_value: number; reward_type: string; reward_label: string; reward_value: string },
   actorId: number,
 ): Promise<{ ok: true; id: number } | { error: string }> {
-  if (!LIGUE_KEYS.includes(input.ligue as any)) return { error: "Ligue invalide" };
+  if (!isOneOf(LIGUE_KEYS, input.ligue)) return { error: "Ligue invalide" };
   const title = input.title.trim();
   if (!title) return { error: "Titre requis" };
-  if (!GOAL_TYPES.includes(input.goal_type as any)) return { error: "Type d'objectif invalide" };
-  if (!REWARD_TYPES.includes(input.reward_type as any)) return { error: "Type de récompense invalide" };
+  if (!isOneOf(GOAL_TYPES, input.goal_type)) return { error: "Type d'objectif invalide" };
+  if (!isOneOf(REWARD_TYPES, input.reward_type)) return { error: "Type de récompense invalide" };
   const goalValue = Math.max(1, Number(input.goal_value) || 1);
   if (input.reward_type === "xp") {
     const val = Number(input.reward_value);
@@ -918,11 +928,11 @@ export async function updateLeagueChallenge(
 ): Promise<{ ok: true } | { error: string }> {
   const row = await queryOne<{ title: string }>("SELECT title FROM league_challenges WHERE id = ?", id);
   if (!row) return { error: "Défi introuvable" };
-  if (!LIGUE_KEYS.includes(input.ligue as any)) return { error: "Ligue invalide" };
+  if (!isOneOf(LIGUE_KEYS, input.ligue)) return { error: "Ligue invalide" };
   const title = input.title.trim();
   if (!title) return { error: "Titre requis" };
-  if (!GOAL_TYPES.includes(input.goal_type as any)) return { error: "Type d'objectif invalide" };
-  if (!REWARD_TYPES.includes(input.reward_type as any)) return { error: "Type de récompense invalide" };
+  if (!isOneOf(GOAL_TYPES, input.goal_type)) return { error: "Type d'objectif invalide" };
+  if (!isOneOf(REWARD_TYPES, input.reward_type)) return { error: "Type de récompense invalide" };
   const goalValue = Math.max(1, Number(input.goal_value) || 1);
   if (input.reward_type === "xp") {
     const val = Number(input.reward_value);

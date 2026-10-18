@@ -86,7 +86,7 @@ export async function correctDissertation(input: {
   return parseCorrection(completion.text, completion.provider);
 }
 
-export function parseCorrection(raw: string, provider: string): DissertationCorrection {
+export function parseCorrection(raw: string, _provider: string): DissertationCorrection {
   const base: DissertationCorrection = {
     note: 0,
     noteMax: 20,

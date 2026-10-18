@@ -1,4 +1,5 @@
 import { queryOne, run } from "./db";
+import { logger } from "@/lib/logger";
 
 export interface ProgressionChapter {
   code: string;
@@ -696,5 +697,5 @@ export async function seedProgressionMENAET(): Promise<void> {
     }
   }
 
-  console.log(`Progression MENAET seed: ${inserted} chapitres insérés, ${coeffPatched} matières complétées, ${subjectsCreated} matières créées`);
+  logger.info(`Progression MENAET seed: ${inserted} chapitres insérés, ${coeffPatched} matières complétées, ${subjectsCreated} matières créées`);
 }

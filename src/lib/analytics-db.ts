@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { query, queryOne, run, IS_PG, toPgSchema } from "@/lib/db";
 import { testUsersWhere } from "@/lib/test-users";
 
-const TABLE_DDL = `
+const _TABLE_DDL = `
 CREATE TABLE IF NOT EXISTS analytics_events (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,

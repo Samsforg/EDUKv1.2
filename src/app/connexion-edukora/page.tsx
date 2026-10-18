@@ -2,12 +2,25 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { EVENTS, trackEvent } from "@/lib/analytics";
 
+function afterLogin(from: string | null, role?: string) {
+  const dest =
+    from && from.startsWith("/") && !from.startsWith("//") && !from.startsWith("/connexion") && !from.startsWith("/inscription")
+      ? from
+      : role === "parent"
+        ? "/espace-parent"
+        : role === "admin"
+          ? "/espace-admin"
+          : role === "teacher"
+            ? "/espace-prof"
+            : "/accueil-edukora";
+  window.location.assign(dest);
+}
+
 function ConnexionForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const from = params.get("from");
   const [showPassword, setShowPassword] = useState(false);
@@ -17,31 +30,17 @@ function ConnexionForm() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
 
-  function afterLogin(role?: string) {
-    const dest =
-      from && from.startsWith("/") && !from.startsWith("//") && !from.startsWith("/connexion") && !from.startsWith("/inscription")
-        ? from
-        : role === "parent"
-          ? "/espace-parent"
-          : role === "admin"
-            ? "/espace-admin"
-            : role === "teacher"
-              ? "/espace-prof"
-              : "/accueil-edukora";
-    window.location.assign(dest);
-  }
-
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => {
         if (d.user) {
-          afterLogin(d.user.role);
+          afterLogin(from, d.user.role);
         }
       })
       .catch(() => {})
       .finally(() => setChecking(false));
-  }, [router, from]);
+  }, [from]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -65,7 +64,7 @@ function ConnexionForm() {
           method: /^\d[\d\s+()-]*$/.test(identifier) ? "phone" : "email",
           role: data.user?.role ?? null,
         });
-        afterLogin(data.user?.role);
+        afterLogin(from, data.user?.role);
       }
     } catch {
       setError("Erreur réseau. Réessayez.");

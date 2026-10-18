@@ -25,7 +25,7 @@ function formatPrice(p: number): string {
 
 export function TariffsManager({ initialPlans }: { initialPlans: TariffPlan[] }) {
   const router = useRouter();
-  const [plans, setPlans] = useState<TariffPlan[]>(initialPlans);
+  const [plans, _setPlans] = useState<TariffPlan[]>(initialPlans);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState({ name: "", interval: "month", price_cents: "", features: "", sort_order: "0" });
   const [busy, setBusy] = useState(false);

@@ -49,7 +49,7 @@ export default function QuizResultPage() {
     const hasError = (data.details as { correct: boolean }[]).some((d) => !d.correct);
     if (hasError) {
       setAiLoading(true);
-      const answers = Object.values((data.userAnswers ?? {}) as Record<string, number>);
+      const _answers = Object.values((data.userAnswers ?? {}) as Record<string, number>);
       // fallback: reconstruire tableau ordonné via questions
       const ordered = (data.questions as { id: number }[]).map((q) => (data.userAnswers?.[q.id] ?? -1));
       fetch(`/api/quiz/${id}/ai-correct`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ answers: ordered }) })
@@ -121,7 +121,7 @@ export default function QuizResultPage() {
                       {q.options.map((opt, i) => {
                         const isCorrect = i === d?.answer_index;
                         const isWrongChoice = !isCorrect && userChoice === i;
-                        const isSkipped = userChoice === undefined || userChoice === -1;
+                        const _isSkipped = userChoice === undefined || userChoice === -1;
                         return (
                           <div
                             key={i}

@@ -242,10 +242,10 @@ export default function TutorDemoPage() {
       </div>
 
       <nav aria-label="Navigation principale" className="fixed bottom-0 left-0 w-full z-50 bg-surface shadow-[0_-1px_4px_rgba(0,0,0,0.1)] flex justify-around items-center h-20 pb-safe px-2 rounded-t-xl">
-        <a className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-90 duration-200" href="/">
+        <Link className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-90 duration-200" href="/">
           <span className="material-symbols-outlined">home</span>
           <span className="font-label-xs text-label-xs">Accueil</span>
-        </a>
+        </Link>
         <a className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-90 duration-200" href="/tuteur-ia">
           <span className="material-symbols-outlined">menu_book</span>
           <span className="font-label-xs text-label-xs">Cours</span>

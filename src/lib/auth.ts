@@ -1,6 +1,6 @@
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 
-function decodeHex(hex: string): Buffer {
+function _decodeHex(hex: string): Buffer {
   return Buffer.from(hex, "hex");
 }
 

@@ -1,4 +1,5 @@
 import { query, queryOne, run } from "./db";
+import { logger } from "@/lib/logger";
 
 /**
  * Contenu de fiches pour les niveaux qui n'ont pas encore de leçons seedées
@@ -845,7 +846,7 @@ const SUBJECT_BANKS: Record<string, Record<"college" | "lycee", ContentBlock>> =
   },
 };
 
-function findBlock(subjectCode: string, chapterCode: string, cycle: "college" | "lycee"): ContentBlock | null {
+function findBlock(subjectCode: string, chapterCode: string, _cycle: "college" | "lycee"): ContentBlock | null {
   if (subjectCode === "maths") {
     return MATHS_BLOCKS[chapterCode] ?? null;
   }
@@ -903,7 +904,7 @@ export async function seedCollegeContent(): Promise<void> {
     }
   }
 
-  console.log(`Seed contenu collège/lycée : ${inserted} leçons insérées, ${skipped} chapitres déjà pourvus`);
+  logger.info(`Seed contenu collège/lycée : ${inserted} leçons insérées, ${skipped} chapitres déjà pourvus`);
 }
 
 interface SeedQuestion {
@@ -1266,5 +1267,5 @@ export async function seedCollegeQuizzes(regenerateSubjects: string[] = []): Pro
     inserted++;
   }
 
-  console.log(`Seed quiz par chapitre : ${inserted} quiz créés, ${skipped} chapitres déjà pourvus`);
+  logger.info(`Seed quiz par chapitre : ${inserted} quiz créés, ${skipped} chapitres déjà pourvus`);
 }

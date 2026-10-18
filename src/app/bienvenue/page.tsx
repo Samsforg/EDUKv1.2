@@ -37,7 +37,7 @@ export default function Page() {
   const [hour, setHour] = useState<string>("18:30");
   const [remindersOn, setRemindersOn] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [savingReminders, setSavingReminders] = useState(false);
+  const [_savingReminders, setSavingReminders] = useState(false);
 
   // P2.8.1 — onboarding_started : émis une seule fois quand l'utilisateur
   // voit réellement l'onboarding (après fetch réussi ET après vérification

@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 
 interface Student {

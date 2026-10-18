@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import ConfirmDialog, { type ConfirmState } from "@/components/ConfirmDialog";
 import { performLogout } from "@/components/LogoutAction";
@@ -204,7 +205,7 @@ export default function TeacherDashboardPage() {
         <div className="flex items-center gap-3">
           <Link href="/espace-prof/profil" className="w-9 h-9 rounded-full bg-primary-container/30 text-on-primary flex items-center justify-center hover:opacity-90 overflow-hidden" aria-label="Mon profil">
             {prof?.avatar_url ? (
-              <img src={prof.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+              <Image src={prof.avatar_url} alt="Avatar" width={36} height={36} unoptimized className="w-full h-full object-cover" />
             ) : (
               <span className="material-symbols-outlined text-[18px]">person</span>
             )}
@@ -223,7 +224,7 @@ export default function TeacherDashboardPage() {
         <div className="flex items-center gap-4 mb-6">
           <div className="w-14 h-14 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-headline-md font-bold overflow-hidden shrink-0">
             {prof?.avatar_url ? (
-              <img src={prof.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+              <Image src={prof.avatar_url} alt="Avatar" width={56} height={56} unoptimized className="w-full h-full object-cover" />
             ) : (
               <span>{prof?.first_name?.[0] ?? "P"}{prof?.last_name?.[0] ?? ""}</span>
             )}

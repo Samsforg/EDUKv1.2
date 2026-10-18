@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 
 interface Props {
   currentAvatar: string | null;
@@ -10,6 +11,8 @@ interface Props {
 }
 
 const SIZE_MAP = { sm: "w-10 h-10 text-sm", md: "w-16 h-16 text-lg", lg: "w-24 h-24 text-2xl" };
+// Dimensions intrinsèques (px) correspondant aux classes Tailwind de SIZE_MAP.
+const SIZE_PX: Record<keyof typeof SIZE_MAP, number> = { sm: 40, md: 64, lg: 96 };
 
 export default function AvatarUpload({ currentAvatar, initials, size = "lg", onUploaded }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -59,7 +62,7 @@ export default function AvatarUpload({ currentAvatar, initials, size = "lg", onU
         className={`relative rounded-full overflow-hidden border-2 border-primary/30 hover:border-primary transition-colors ${SIZE_MAP[size]} flex items-center justify-center shrink-0 ${uploading ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
       >
         {currentAvatar ? (
-          <img src={currentAvatar} alt="Avatar" className="w-full h-full object-cover" />
+          <Image src={currentAvatar} alt="Avatar" width={SIZE_PX[size]} height={SIZE_PX[size]} unoptimized className="w-full h-full object-cover" />
         ) : (
           <span className="font-headline-md font-bold text-on-primary">{initials}</span>
         )}
@@ -92,7 +95,7 @@ function compressImage(file: File, targetBytes: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      const img = new Image();
+      const img = document.createElement("img");
       img.onload = () => {
         const canvas = document.createElement("canvas");
         // Max 400px wide for avatar

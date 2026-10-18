@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EVENTS, trackEvent } from "@/lib/analytics";
 import { useRouter, useParams } from "next/navigation";
 
@@ -17,6 +17,20 @@ interface PaperData {
   questions: Question[];
 }
 
+// Identifiant de tentative stable (UUID v4) pour la clé d'idempotence
+// serveur. `crypto.randomUUID` exige un contexte sécurisé ; repli déterministe
+// sinon (le serveur revalide de toute façon le format strictement).
+function newAttemptId(): string {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+  } catch {}
+  const hex = () => Math.floor(Math.random() * 16).toString(16);
+  const seg = (n: number) => Array.from({ length: n }, hex).join("");
+  return `${seg(8)}-${seg(4)}-4${seg(3)}-${"89ab"[Math.floor(Math.random() * 4)]}${seg(3)}-${seg(12)}`;
+}
+
 export default function SimulatorTakePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -27,12 +41,36 @@ export default function SimulatorTakePage() {
   const [submitting, setSubmitting] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [confirmQuit, setConfirmQuit] = useState(false);
-  const [showNav, setShowNav] = useState(false);
+  const [_showNav, _setShowNav] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [fsWarning, setFsWarning] = useState(false);
+  // Identité stable de la tentative, générée une seule fois par examen. Elle
+  // sert de clé d'idempotence côté serveur : un rejeu ou deux soumissions
+  // concurrentes de la MÊME tentative ne produisent qu'une tentative et un
+  // seul crédit de récompenses. Réinitialisée au changement d'examen pour que
+  // chaque nouvel examen retrouve une tentative légitime.
+  const [attemptId, setAttemptId] = useState<string>("");
+  // Verrou d'idempotence de la soumission automatique. Il garantit qu'une
+  // expiration de chronomètre ne déclenche qu'une seule soumission par examen,
+  // même si l'effet est rejoué : reactStrictMode double-invoque les effets en
+  // développement, et `submit` est recréé à chaque tick (donc rejoué aussi).
+  // Il ne bloque jamais la soumission manuelle, qui garde son propre garde-fou.
+  const autoSubmitLockRef = useRef(false);
 
   useEffect(() => {
+    autoSubmitLockRef.current = false;
+    setAttemptId(newAttemptId());
+    // Nouvel examen = tentative neuve : on purge les états de l'épreuve
+    // précédente (sinon `submitting` bloquerait la soumission, et les réponses
+    // ou le chronomètre résiduels fuiraient d'un examen à l'autre).
+    setData(null);
+    setCurrent(0);
+    setAnswers({});
+    setSecondsLeft(null);
+    setSubmitting(false);
+    setSubmitError("");
+    setNotFound(false);
     fetch(`/api/simulator/${id}`)
       .then((r) => r.json())
       .then((d) => {
@@ -51,16 +89,6 @@ export default function SimulatorTakePage() {
       })
       .catch(() => setNotFound(true));
   }, [id]);
-
-  useEffect(() => {
-    if (secondsLeft === null) return;
-    if (secondsLeft <= 0) {
-      submit(true);
-      return;
-    }
-    const t = setTimeout(() => setSecondsLeft((s) => (s === null ? null : s - 1)), 1000);
-    return () => clearTimeout(t);
-  }, [secondsLeft]);
 
   useEffect(() => {
     if (!data) return;
@@ -155,38 +183,59 @@ export default function SimulatorTakePage() {
     };
   }, [data, id]);
 
-  async function submit(timeout = false) {
-    if (!data || submitting) return;
-    setSubmitting(true);
-    setSubmitError("");
-    const payload = {
-      answers: data.questions.map((q) => ({ questionId: q.id, selected: answers[q.id] ?? -1 })),
-      duration_seconds: data.paper.duration_minutes * 60 - (secondsLeft ?? 0),
-      timed_out: timeout,
-    };
-    const res = await fetch(`/api/simulator/${id}/submit`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const result = await res.json();
-    if (!res.ok || result.error) {
-      setSubmitting(false);
-      setSubmitError(result.error ?? "Erreur lors de la correction. Réessaie.");
+  const submit = useCallback(
+    async (timeout = false) => {
+      if (!data || submitting || !attemptId) return;
+      setSubmitting(true);
+      setSubmitError("");
+      const payload = {
+        attempt_id: attemptId,
+        answers: data.questions.map((q) => ({ questionId: q.id, selected: answers[q.id] ?? -1 })),
+        duration_seconds: data.paper.duration_minutes * 60 - (secondsLeft ?? 0),
+        timed_out: timeout,
+      };
+      const res = await fetch(`/api/simulator/${id}/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await res.json();
+      if (!res.ok || result.error) {
+        setSubmitting(false);
+        setSubmitError(result.error ?? "Erreur lors de la correction. Réessaie.");
+        return;
+      }
+      sessionStorage.setItem(`edukora-exam-result-${id}`, JSON.stringify({ ...result, exam_id: id, exam_title: data.paper.title, questions: data.questions, userAnswers: answers }));
+      trackEvent(EVENTS.simulateurCompleted, {
+        exam_id: String(id),
+        exam_title: data.paper.title,
+        score: result.score,
+        max: result.max ?? result.total ?? null,
+        score_over_20: result.score_over_20 ?? null,
+        duration_seconds: payload.duration_seconds,
+        timed_out: timeout,
+      });
+      router.push(`/simulateur/${id}/resultat`);
+    },
+    [data, submitting, answers, secondsLeft, id, router, attemptId],
+  );
+
+  // Compte à rebours puis soumission automatique à l'expiration. `submit` est
+  // en dépendance : il change à chaque tick et à chaque réponse modifiée, donc
+  // l'effet est recréé souvent. Le verrou `autoSubmitLockRef` garantit qu'une
+  // seule soumission automatique part réellement par examen, tandis que la
+  // garde `if (!data || submitting)` de `submit` couvre la soumission manuelle.
+  useEffect(() => {
+    if (secondsLeft === null) return;
+    if (secondsLeft <= 0) {
+      if (autoSubmitLockRef.current) return;
+      autoSubmitLockRef.current = true;
+      submit(true);
       return;
     }
-    sessionStorage.setItem(`edukora-exam-result-${id}`, JSON.stringify({ ...result, exam_id: id, exam_title: data.paper.title, questions: data.questions, userAnswers: answers }));
-    trackEvent(EVENTS.simulateurCompleted, {
-      exam_id: String(id),
-      exam_title: data.paper.title,
-      score: result.score,
-      max: result.max ?? result.total ?? null,
-      score_over_20: result.score_over_20 ?? null,
-      duration_seconds: payload.duration_seconds,
-      timed_out: timeout,
-    });
-    router.push(`/simulateur/${id}/resultat`);
-  }
+    const t = setTimeout(() => setSecondsLeft((s) => (s === null ? null : s - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [secondsLeft, submit]);
 
   const q = data?.questions[current];
   const total = data?.questions.length ?? 0;

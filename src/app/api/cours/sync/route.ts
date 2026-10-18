@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { query } from "@/lib/db";
 
-async function GETHandler(req: NextRequest) {
+async function GETHandler(_req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
@@ -16,7 +16,7 @@ async function GETHandler(req: NextRequest) {
 
   const items = [
     ...lessons.map((l) => ({ url: `/cours/lecon/${l.id}` })),
-    ...chapters.map((c) => ({ url: `/cours` })),
+    ...chapters.map((_c) => ({ url: `/cours` })),
   ];
 
   return NextResponse.json({ items });

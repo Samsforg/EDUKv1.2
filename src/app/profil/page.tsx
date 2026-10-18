@@ -199,7 +199,7 @@ export default function ProfilePage() {
 
   const { user, stats, badges, quiz_history, exam_history } = data;
   const earned = badges.filter((b) => b.earned_at !== null);
-  const locked = badges.filter((b) => b.earned_at === null);
+  const _locked = badges.filter((b) => b.earned_at === null);
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen pb-16 font-['Hanken_Grotesk']">

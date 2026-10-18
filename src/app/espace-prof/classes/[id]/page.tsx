@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { fetchFresh } from "@/lib/client-fetch";
@@ -39,7 +39,7 @@ interface ClassStats {
 
 export default function TeacherClassDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
+  const _router = useRouter();
   const [cls, setCls] = useState<ClsInfo | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [stats, setStats] = useState<ClassStats | null>(null);
@@ -51,7 +51,7 @@ export default function TeacherClassDetailPage() {
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
   const [copied, setCopied] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const [detail, st] = await Promise.all([
         fetchFresh(`/api/prof/classes/${id}`).then(async (r) => {
@@ -71,11 +71,11 @@ export default function TeacherClassDetailPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [id]);
 
   useEffect(() => {
     load();
-  }, [id]);
+  }, [load]);
 
   async function addStudent(e: React.FormEvent) {
     e.preventDefault();

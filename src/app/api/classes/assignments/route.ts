@@ -1,11 +1,11 @@
 import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
-import { query, queryOne, run } from "@/lib/db";
+import { query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-export async function GETHandler(req: NextRequest) {
+export async function GETHandler(_req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 

@@ -39,7 +39,7 @@ interface CurriculumTableProps {
   subjects: SubjectRow[];
 }
 
-function MaterialIcon({ name }: { name: string }) {
+function _MaterialIcon({ name }: { name: string }) {
   return <span className="material-symbols-outlined text-base">{name}</span>;
 }
 

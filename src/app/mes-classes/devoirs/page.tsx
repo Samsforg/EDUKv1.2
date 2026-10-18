@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { fetchFresh } from "@/lib/client-fetch";
 import PageHeader from "@/components/PageHeader";
 
@@ -29,6 +28,13 @@ export default function StudentAssignmentsPage() {
   const [drafts, setDrafts] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState<Record<number, boolean>>({});
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Instant figé au montage : `Date.now()` était relu à chaque ligne de la
+  // liste, ce qui rendait le rendu impur (chaque ligne comparée à un instant
+  // différent) et déclenchait la règle react-hooks/purity. L'initialisation
+  // paresseuse de useState est le pattern React prévu pour capturer une fois
+  // une valeur impure.
+  const [nowMs] = useState(() => Date.now());
 
   async function load() {
     try {
@@ -80,7 +86,7 @@ export default function StudentAssignmentsPage() {
     );
   if (error) return <div className="p-6 text-sm text-error">{error}</div>;
 
-  const overdue = (d: string | null) => d && new Date(d + "T23:59:59").getTime() < Date.now();
+  const overdue = (d: string | null) => d && new Date(d + "T23:59:59").getTime() < nowMs;
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen pb-16 font-['Hanken_Grutesk']">

@@ -15,6 +15,7 @@ export default function WelcomeSplash() {
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
+    const active = timers.current;
     let reduced = false;
     try {
       reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -57,7 +58,7 @@ export default function WelcomeSplash() {
     timers.current.push(setTimeout(dismiss, exit));
 
     return () => {
-      timers.current.forEach(clearTimeout);
+      active.forEach(clearTimeout);
       window.removeEventListener("click", dismiss);
       document.documentElement.style.overflow = "";
     };

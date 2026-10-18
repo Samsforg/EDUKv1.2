@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import {  } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import { EVENTS, trackEvent } from "@/lib/analytics";
 

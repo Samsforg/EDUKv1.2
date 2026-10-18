@@ -1,4 +1,5 @@
 import { queryOne, run } from "./db";
+import { logger } from "@/lib/logger";
 
 /**
  * Comble les trous du tronc commun existant (programme MENAET / officiel ivoirien)
@@ -247,5 +248,5 @@ export async function seedProgressionGaps(): Promise<void> {
     }
   }
 
-  console.log(`Progression gaps seed: ${inserted} chapitres insérés, ${coeffPatched} matières complétées`);
+  logger.info(`Progression gaps seed: ${inserted} chapitres insérés, ${coeffPatched} matières complétées`);
 }

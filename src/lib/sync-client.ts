@@ -1,6 +1,7 @@
 import { enqueue, getQueue, removeFromQueue, incrementRetries, QueuedAction } from "@/lib/offline-queue";
+import { logger } from "@/lib/logger";
 
-const MAX_RETRIES = 3;
+const _MAX_RETRIES = 3;
 
 export async function queueAction(action: Omit<QueuedAction, 'id' | 'timestamp' | 'retries'>) {
   await enqueue(action);
@@ -65,7 +66,7 @@ export async function registerPeriodicSync() {
   if ("serviceWorker" in navigator && "periodicSync" in (window.ServiceWorkerRegistration.prototype as unknown as Record<string, unknown>)) {
     navigator.serviceWorker.ready.then((reg) => {
       (reg as unknown as { periodicSync: { register: (tag: string, opts: { minInterval: number }) => Promise<void> } }).periodicSync.register("edukora-content-sync", { minInterval: 24 * 60 * 60 * 1000 })
-        .catch(() => console.log("Periodic sync not granted"));
+        .catch(() => logger.info("Periodic sync not granted"));
     });
   } else {
     setInterval(async () => await registerSync(), 24 * 60 * 60 * 1000);

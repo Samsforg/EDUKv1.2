@@ -10,7 +10,7 @@ async function POSTHandler(req: NextRequest) {
   const rl = await rateLimit(`forgot:${ip}`, "login");
   if (!rl.allowed) return rateLimitResponse(rl.resetAt);
 
-  const db = getDb();
+  const _db = getDb();
   const body = await req.json().catch(() => null);
   const email = body?.email?.trim().toLowerCase();
   if (!email) {
@@ -37,7 +37,7 @@ async function POSTHandler(req: NextRequest) {
       ? process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net"
       : `http://localhost:${process.env.PORT || 3001}`;
   const resetUrl = `${baseUrl}/reinitialiser-mot-de-passe?token=${token}`;
-  const sent = await sendMail({
+  const _sent = await sendMail({
     to: email,
     subject: "Réinitialisation de votre mot de passe EduKora",
     html: resetPasswordHtml(resetUrl),

@@ -25,7 +25,7 @@ async function GETHandler(req: NextRequest) {
         signal: AbortSignal.timeout(9000),
       });
       return [path, res.status] as const;
-    } catch (err) {
+    } catch {
       return [path, -1] as const;
     }
   });

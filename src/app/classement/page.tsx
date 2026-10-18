@@ -53,7 +53,7 @@ const TIERS: Record<string, { label: string; cls: string; icon: string }> = {
   novice: { label: "Novice", cls: "bg-surface-container-high text-on-surface-variant", icon: "new_releases" },
 };
 
-const LIGUE_STYLE: Record<string, { icon: string; chip: string }> = {
+const _LIGUE_STYLE: Record<string, { icon: string; chip: string }> = {
   maitre: { icon: "workspace_premium", chip: "bg-on-tertiary-fixed/10 text-tertiary-fixed" },
   diamant: { icon: "diamond", chip: "bg-blue-50 text-blue-600" },
   or: { icon: "military_tech", chip: "bg-yellow-50 text-yellow-600" },

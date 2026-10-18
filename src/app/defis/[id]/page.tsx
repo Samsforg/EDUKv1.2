@@ -34,6 +34,41 @@ function fmtXp(n: number) {
   return n.toLocaleString("fr-FR");
 }
 
+interface TopListProps {
+  title: string;
+  side: "a" | "b";
+  list: Contributor[];
+}
+
+function TopList({ title, side, list }: TopListProps) {
+  return (
+    <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
+      <div className={`${side === "a" ? "bg-primary" : "bg-secondary"} text-white px-4 py-2 font-bold flex justify-between items-center`}>
+        <span>Commune : {title}</span>
+        <span className="material-symbols-outlined">{side === "a" ? "shield" : "flag"}</span>
+      </div>
+      <div className="p-2 space-y-1">
+        {list.length === 0 && (
+          <p className="text-sm text-on-surface-variant p-3">Aucune contribution pour l'instant.</p>
+        )}
+        {list.map((c) => (
+          <div key={c.user_id} className="flex items-center gap-3 p-3 hover:bg-surface-container-low transition-colors rounded-lg">
+            <span className={`font-bold w-6 ${side === "a" ? "text-primary" : "text-secondary"}`}>{c.rank}.</span>
+            <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold text-sm shrink-0">
+              {c.name.slice(0, 1).toUpperCase()}
+            </div>
+            <div className="flex-grow">
+              <p className="font-bold text-on-surface text-sm">{c.name}</p>
+              <p className="text-xs text-on-surface-variant">{c.contributions} contributions</p>
+            </div>
+            <span className={`font-bold text-sm ${side === "a" ? "text-primary" : "text-secondary"}`}>{fmtXp(c.xp)} XP</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function useCountdown(endsAt: string | null) {
   const [left, setLeft] = useState("");
   useEffect(() => {
@@ -57,7 +92,7 @@ export default function DefiDetailPage({ params }: { params: Promise<{ id: strin
   const [id, setId] = useState<string | null>(null);
   const [data, setData] = useState<ChallengeDetail | null>(null);
   const [error, setError] = useState<"unauthorized" | "network" | null>(null);
-  const [joined, setJoined] = useState(false);
+  const [_joined, _setJoined] = useState(false);
   const left = useCountdown(data?.ends_at ?? null);
 
   useEffect(() => {
@@ -109,33 +144,6 @@ export default function DefiDetailPage({ params }: { params: Promise<{ id: strin
   const diff = Math.abs(data.a.xp - data.b.xp);
   const isMine = data.me.side !== null;
   const mySide = data.me.side === "a" ? data.commune_a : data.me.side === "b" ? data.commune_b : null;
-
-  const TopList = ({ title, side, list }: { title: string; side: "a" | "b"; list: Contributor[] }) => (
-    <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
-      <div className={`${side === "a" ? "bg-primary" : "bg-secondary"} text-white px-4 py-2 font-bold flex justify-between items-center`}>
-        <span>Commune : {title}</span>
-        <span className="material-symbols-outlined">{side === "a" ? "shield" : "flag"}</span>
-      </div>
-      <div className="p-2 space-y-1">
-        {list.length === 0 && (
-          <p className="text-sm text-on-surface-variant p-3">Aucune contribution pour l'instant.</p>
-        )}
-        {list.map((c) => (
-          <div key={c.user_id} className="flex items-center gap-3 p-3 hover:bg-surface-container-low transition-colors rounded-lg">
-            <span className={`font-bold w-6 ${side === "a" ? "text-primary" : "text-secondary"}`}>{c.rank}.</span>
-            <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold text-sm shrink-0">
-              {c.name.slice(0, 1).toUpperCase()}
-            </div>
-            <div className="flex-grow">
-              <p className="font-bold text-on-surface text-sm">{c.name}</p>
-              <p className="text-xs text-on-surface-variant">{c.contributions} contributions</p>
-            </div>
-            <span className={`font-bold text-sm ${side === "a" ? "text-primary" : "text-secondary"}`}>{fmtXp(c.xp)} XP</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 
   return (
     <div className="bg-background text-on-background font-['Hanken_Grotesk'] min-h-screen pb-40">

@@ -33,7 +33,7 @@ function fmtDate(iso: string) {
     `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-const STATUS_BADGE: Record<string, { label: string; cls: string; icon: string }> = {
+const _STATUS_BADGE: Record<string, { label: string; cls: string; icon: string }> = {
   live: { label: "En direct", cls: "bg-red-100 text-red-800", icon: "circle" },
   upcoming: { label: "Programmé", cls: "bg-blue-100 text-blue-800", icon: "schedule" },
   ended: { label: "Terminé", cls: "bg-gray-100 text-gray-600", icon: "check_circle" },

@@ -16,7 +16,7 @@ function row(cells: (string | number | null | undefined)[]): string {
   return cells.map(esc).join(";") + "\r\n";
 }
 
-function section(lines: string[]): string {
+function _section(lines: string[]): string {
   return lines.join("");
 }
 

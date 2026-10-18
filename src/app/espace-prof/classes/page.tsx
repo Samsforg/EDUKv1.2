@@ -74,7 +74,7 @@ export default function TeacherClassesPage() {
       setLoading(false);
       router.replace("/connexion-edukora");
     });
-  }, []);
+  }, [router]);
 
   async function createClass(e: React.FormEvent) {
     e.preventDefault();

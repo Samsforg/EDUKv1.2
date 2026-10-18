@@ -132,7 +132,7 @@ async function POSTHandler(req: Request) {
     const errors: { lessonId: number; error: string }[] = [];
     for (const id of ids) {
       try {
-        const { changed, total } = await indexOne(id, force);
+        const { changed } = await indexOne(id, force);
         if (changed < 0) {
           errors.push({ lessonId: id, error: "introuvable" });
         } else if (changed === 0) {

@@ -267,7 +267,7 @@ const sections: Section[] = [
   },
 ];
 
-const navLabels = [
+const _navLabels = [
   "Responsable du traitement",
   "Données collectées",
   "Utilisateurs mineurs",
