@@ -8,6 +8,8 @@ import EdukoraAnalytics from "@/components/EdukoraAnalytics";
 import AttributionCapture from "@/components/AttributionCapture";
 import ConsentBanner from "@/components/ConsentBanner";
 import AdSenseLoader from "@/components/AdSenseLoader";
+import VersionSync from "@/components/VersionSync";
+import { getBuildId } from "@/lib/version";
 import { Hanken_Grotesk, Inter } from "next/font/google";
 
 const hankenGrotesk = Hanken_Grotesk({
@@ -102,6 +104,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             est deja expose via l'en-tete X-Nonce ; ce meta permet au client de le
             lire au moment de l'injection. */}
         {nonce ? <meta name="csp-nonce" content={nonce} /> : null}
+        {/* Version du déploiement ayant produit ce document : comparée par le
+            client à /api/version pour détecter un bundle obsolète après un
+            nouveau déploiement, et se resynchroniser automatiquement. */}
+        <meta name="edukora-build" content={getBuildId()} />
         <script
           nonce={nonce}
           dangerouslySetInnerHTML={{
@@ -127,6 +133,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <EdukoraAnalytics />
         <ConsentBanner />
         <AdSenseLoader />
+        <VersionSync />
       </body>
     </html>
   );
