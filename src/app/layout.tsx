@@ -102,7 +102,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             est deja expose via l'en-tete X-Nonce ; ce meta permet au client de le
             lire au moment de l'injection. */}
         {nonce ? <meta name="csp-nonce" content={nonce} /> : null}
-        <script nonce={nonce} src="/theme-init.js" />
+        <script
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('edukora-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');}}catch(e){}})();",
+          }}
+        />
         {process.env.GSC_VERIFICATION ? (
           <meta
             name="google-site-verification"

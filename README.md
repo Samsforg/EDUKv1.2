@@ -85,7 +85,7 @@ npm run dev
 
 ```
 edukora-app/
-├── public/                  # Assets statiques (images, sw.js, theme-init.js)
+├── public/                  # Assets statiques (images, sw.js)
 ├── src/
 │   ├── app/                 # Pages Next.js (App Router)
 │   │   ├── api/             # Routes API REST
