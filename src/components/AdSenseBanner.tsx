@@ -43,7 +43,8 @@ export default function AdSenseBanner({
     if (match) {
       try {
         const prefs = JSON.parse(decodeURIComponent(match[1]));
-        if (prefs.marketing !== true && prefs.ia !== true) return;
+        // P2.12.1 A1 — la pub (AdSense) exige le consentement `marketing` seul.
+        if (prefs.marketing !== true) return;
       } catch {
         return;
       }
@@ -57,7 +58,7 @@ export default function AdSenseBanner({
     const timer = setTimeout(() => {
       if (!ref.current || ref.current.dataset.adRendered) return;
       try {
-        // @ts-ignore — adsbyglobal est défini par le script AdSense
+        // @ts-expect-error — adsbyglobal est défini par le script AdSense
         (window.adsbygoogle = window.adsbygoogle || []).push({});
         ref.current.dataset.adRendered = "1";
       } catch {
@@ -71,7 +72,7 @@ export default function AdSenseBanner({
       if (m) {
         try {
           const p = JSON.parse(decodeURIComponent(m[1]));
-          if (p.marketing === true || p.ia === true) setVisible(true);
+          if (p.marketing === true) setVisible(true);
         } catch {}
       }
     };

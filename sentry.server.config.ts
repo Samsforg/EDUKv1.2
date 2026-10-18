@@ -4,16 +4,21 @@ if (process.env.SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
 
+    // P2.12.1 F3 — minimisation des données envoyées à Sentry :
+    //  - userInfo: false       → pas d'email / id utilisateur en clair ;
+    //  - httpBodies: []        → pas de corps de requête (peut contenir mots
+    //    de passe, tokens, données personnelles).
+    // Les en-têtes restent couverts par le nettoyage par défaut de Sentry.
     dataCollection: {
-      // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
-      // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#dataCollection
-      // userInfo: false,
-      // httpBodies: [],
+      userInfo: false,
+      httpBodies: [],
     },
     tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
 
-    // Attach local variable values to stack frames
-    includeLocalVariables: true,
+    // Ne pas joindre les valeurs des variables locales aux frames de stack :
+    // elles peuvent contenir des secrets (SESSION_SECRET, clés API) ou des
+    // PII lues dans la requête. Désactivé par défaut côté sécurité.
+    includeLocalVariables: false,
 
     environment: process.env.NODE_ENV,
     release: process.env.SENTRY_RELEASE,

@@ -1,11 +1,12 @@
 import { query, queryOne, run } from "./db";
-import { notify } from "./session";
+import { notify, revokeUserSessions } from "./session";
 import { hashPassword } from "./auth";
 import { logAudit } from "./audit";
 import { getAdminChallenges, getAdminLeagueChallenges } from "./admin-content";
 import { realUsersWhere, testUsersWhere, isTestUser } from "./test-users";
 import { parseDbDate } from "./date-parse";
 import { PasswordSchema } from "./validation";
+import { getCanonicalMRR } from "./business-metrics";
 
 const ROLES = ["student", "teacher", "admin", "parent", "expert"] as const;
 export type AdminRole = (typeof ROLES)[number];
@@ -50,16 +51,19 @@ export async function getAdminStats(): Promise<AdminStats> {
     questions: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM questions"))?.c ?? 0,
   };
 
+  // P2.12.1 E2 — les tentatives et le engagement sont filtrés sur les vrais
+  // utilisateurs, comme les compteurs users / online_today / new_week. Avant,
+  // les tentatives et moyennes comptaient aussi les comptes de test.
   const attempts = {
-    quiz: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM quiz_attempts"))?.c ?? 0,
-    exam: (await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM exam_attempts"))?.c ?? 0,
+    quiz: (await queryOne<{ c: number }>(`SELECT COUNT(*) AS c FROM quiz_attempts qa JOIN users u ON u.id = qa.user_id WHERE ${realUsersWhere("u")}`))?.c ?? 0,
+    exam: (await queryOne<{ c: number }>(`SELECT COUNT(*) AS c FROM exam_attempts ea JOIN users u ON u.id = ea.user_id WHERE ${realUsersWhere("u")}`))?.c ?? 0,
   };
 
   const engagement = {
     avg_quiz_percent:
-      (await queryOne<{ v: number | null }>("SELECT ROUND(AVG(score * 100.0 / max_score)) AS v FROM quiz_attempts"))?.v ?? null,
+      (await queryOne<{ v: number | null }>(`SELECT ROUND(AVG(qa.score * 100.0 / NULLIF(qa.max_score, 0))) AS v FROM quiz_attempts qa JOIN users u ON u.id = qa.user_id WHERE ${realUsersWhere("u")}`))?.v ?? null,
     avg_exam_over_20:
-      (await queryOne<{ v: number | null }>("SELECT ROUND(AVG(score_over_20), 1) AS v FROM exam_attempts"))?.v ?? null,
+      (await queryOne<{ v: number | null }>(`SELECT ROUND(AVG(ea.score_over_20), 1) AS v FROM exam_attempts ea JOIN users u ON u.id = ea.user_id WHERE ${realUsersWhere("u")}`))?.v ?? null,
     total_xp: (await queryOne<{ v: number }>(`SELECT COALESCE(SUM(u.xp), 0) AS v FROM users u WHERE ${realUsersWhere()}`))?.v ?? 0,
   };
 
@@ -208,7 +212,7 @@ export async function getSubjectStats(): Promise<SubjectStats[]> {
             (SELECT COUNT(*) FROM exam_papers p WHERE p.subject_id = s.id) AS papers,
             (SELECT COUNT(*) FROM quiz_attempts a JOIN quizzes q ON q.id = a.quiz_id WHERE q.subject_id = s.id) AS quiz_attempts,
             (SELECT COUNT(*) FROM exam_attempts a JOIN exam_papers p ON p.id = a.paper_id WHERE p.subject_id = s.id) AS exam_attempts,
-            (SELECT ROUND(AVG(a.score * 100.0 / a.max_score)) FROM quiz_attempts a JOIN quizzes q ON q.id = a.quiz_id WHERE q.subject_id = s.id) AS avg_quiz_percent,
+            (SELECT ROUND(AVG(a.score * 100.0 / NULLIF(a.max_score, 0))) FROM quiz_attempts a JOIN quizzes q ON q.id = a.quiz_id WHERE q.subject_id = s.id) AS avg_quiz_percent,
             (SELECT ROUND(AVG(a.score_over_20), 1) FROM exam_attempts a JOIN exam_papers p ON p.id = a.paper_id WHERE p.subject_id = s.id) AS avg_exam_over_20
      FROM subjects s ORDER BY s.id`,
   );
@@ -897,7 +901,9 @@ export async function resetUserPassword(
   );
   if (!target) return { error: "Utilisateur introuvable" };
   await run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(newPassword), targetId);
-  await run("DELETE FROM sessions WHERE user_id = ?", targetId);
+  // P2.12.1 A3 — invalide les sessions HMAC du compte cible (l'ancien DELETE
+  // sur la table legacy `sessions` était sans effet sur les tokens sans état).
+  await revokeUserSessions(targetId);
   await logAudit(actorId, "mot_de_passe", `Mot de passe de « ${target.first_name} ${target.last_name} » (#${targetId}) réinitialisé`);
   return { ok: true };
 }
@@ -1018,6 +1024,7 @@ export interface SubscriptionRow {
   end_at: string | null;
   cancel_at_period_end: number;
   created_at: string | null;
+  expiring_soon: boolean;
 }
 
 export interface SubscriptionListResult {
@@ -1084,7 +1091,14 @@ export async function getSubscriptionsPage(filters: {
     pageSize,
     (page - 1) * pageSize,
   );
-  const subs = rows.map((r) => ({ ...r }));
+  const subs = rows.map((r) => ({
+    ...r,
+    // Drapeau calculé côté serveur : le rendu doit rester pur (pas de Date.now()
+    // dans le composant). Sémantique identique au calcul client d'origine :
+    // abonnement actif, date de fin connue, fin sous 30 jours.
+    expiring_soon:
+      r.status === "active" && !!r.end_at && new Date(r.end_at).getTime() < Date.now() + 30 * 86400000,
+  }));
 
   const counts = await query<{ status: string; c: number }>(
     `SELECT s.status, COUNT(*) AS c FROM subscriptions s WHERE ${realOnly} GROUP BY s.status`,
@@ -1098,13 +1112,10 @@ export async function getSubscriptionsPage(filters: {
       `${in30}T23:59:59`,
     ))?.c ?? 0);
 
-  const activePlans = await query<{ interval: string; price_cents: number }>(
-    `SELECT p.interval, COALESCE(s.price_cents, p.price_cents) AS price_cents FROM subscriptions s JOIN subscription_plans p ON p.id = s.plan_id WHERE s.status = 'active' AND ${realOnly}`,
-  );
-  const monthlyRecurring = activePlans.reduce((sum, p) => {
-    const divisor = p.interval === "year" ? 12 : p.interval === "quarter" ? 3 : 1;
-    return sum + Math.round(p.price_cents / divisor);
-  }, 0);
+  // P2.12.1 C — source de vérité unique : getCanonicalMRR (normalise l'intervalle
+  // et exclut les abonnements expirés). Remplace la formule locale qui
+  // surévaluait les plans trimestriels et comptait les abonnements expirés.
+  const monthlyRecurring = await getCanonicalMRR();
 
   return {
     subs,

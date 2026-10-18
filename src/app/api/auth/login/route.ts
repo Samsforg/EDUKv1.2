@@ -19,7 +19,7 @@ async function POSTHandler(req: NextRequest) {
   if (!v.ok) return NextResponse.json({ error: v.errors[0] }, { status: 400 });
 
   const { identifier, password } = v.data;
-  const db = getDb();
+  const _db = getDb();
 
   const user = await queryOne<{
     id: number;
@@ -47,9 +47,10 @@ async function POSTHandler(req: NextRequest) {
   if (user.locked_until) {
     const lockDate = new Date(user.locked_until);
     if (lockDate > new Date()) {
-      const remaining = Math.ceil((lockDate.getTime() - Date.now()) / 60000);
+      // P2.12.1 F1 — message générique : ne pas divulguer le temps restant,
+      // qui permet de déduire l'état du compte et d'affiner une énumération.
       return NextResponse.json(
-        { error: `Compte temporairement bloqué. Réessayez dans ${remaining} minute(s).` },
+        { error: "Compte temporairement bloqué. Réessayez plus tard." },
         { status: 423 },
       );
     }
@@ -72,8 +73,9 @@ async function POSTHandler(req: NextRequest) {
     await run(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`, ...params);
 
     if (newCount >= MAX_FAILED_ATTEMPTS) {
+      // P2.12.1 F1 — message générique : ne pas divulguer la durée du lockout.
       return NextResponse.json(
-        { error: `Trop de tentatives. Compte bloqué pendant ${LOCKOUT_MINUTES} minutes.` },
+        { error: "Trop de tentatives. Compte temporairement bloqué." },
         { status: 423 },
       );
     }

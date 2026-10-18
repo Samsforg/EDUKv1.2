@@ -30,12 +30,12 @@ async function ensureTables() {
   await run(`CREATE TABLE IF NOT EXISTS growth_strategies (
     id TEXT PRIMARY KEY, date TEXT NOT NULL, objective TEXT, audience TEXT,
     hook TEXT, strategy TEXT, kpis JSONB DEFAULT '[]', status TEXT DEFAULT 'draft',
-    created_at TEXT DEFAULT now()
+    created_at TEXT DEFAULT (datetime('now'))
   )`).catch(() => {});
   await run(`CREATE TABLE IF NOT EXISTS growth_contents (
     id TEXT PRIMARY KEY, strategy_id TEXT, platform TEXT NOT NULL, text TEXT,
     hashtags JSONB DEFAULT '[]', cta TEXT, visual_prompt TEXT, score INTEGER,
-    status TEXT DEFAULT 'draft', created_at TEXT DEFAULT now()
+    status TEXT DEFAULT 'draft', created_at TEXT DEFAULT (datetime('now'))
   )`).catch(() => {});
   await run(`CREATE TABLE IF NOT EXISTS growth_metrics (
     date TEXT PRIMARY KEY, signups INTEGER DEFAULT 0, active_users INTEGER DEFAULT 0,
@@ -46,7 +46,7 @@ async function ensureTables() {
   await run(`CREATE TABLE IF NOT EXISTS growth_recommendations (
     id TEXT PRIMARY KEY, date TEXT, type TEXT, title TEXT, description TEXT,
     priority TEXT DEFAULT 'medium', estimated_impact TEXT,
-    created_at TEXT DEFAULT now()
+    created_at TEXT DEFAULT (datetime('now'))
   )`).catch(() => {});
 }
 
@@ -54,37 +54,37 @@ export async function getStore(): Promise<GrowthStore> {
   await ensureTables();
   return {
     async getStrategy(date) {
-      return (await queryOne<GrowthStrategy>(`${S_STRATEGY} WHERE date = $1`, date)) ?? null;
+      return (await queryOne<GrowthStrategy>(`${S_STRATEGY} WHERE date = ?`, date)) ?? null;
     },
     async saveStrategy(s) {
       await run(
         `INSERT INTO growth_strategies (id, date, objective, audience, hook, strategy, kpis, status, created_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+         VALUES (?,?,?,?,?,?,?,?,?)`,
         s.id, s.date, s.objective, s.audience, s.hook, s.strategy, JSON.stringify(s.kpis), s.status, s.createdAt
       );
     },
     async getStrategies(limit = 30) {
-      return await query<GrowthStrategy>(`${S_STRATEGY} ORDER BY created_at DESC LIMIT $1`, limit);
+      return await query<GrowthStrategy>(`${S_STRATEGY} ORDER BY created_at DESC LIMIT ?`, limit);
     },
     async saveContent(c) {
       await run(
         `INSERT INTO growth_contents (id, strategy_id, platform, text, hashtags, cta, visual_prompt, score, status, created_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+         VALUES (?,?,?,?,?,?,?,?,?,?)`,
         c.id, c.strategyId, c.platform, c.text, JSON.stringify(c.hashtags), c.cta,
         c.visualPrompt ?? null, c.score ?? null, c.status, c.createdAt
       );
     },
     async getContentByStrategy(strategyId) {
-      return await query<Content>(`${S_CONTENT} WHERE strategy_id = $1 ORDER BY created_at DESC`, strategyId);
+      return await query<Content>(`${S_CONTENT} WHERE strategy_id = ? ORDER BY created_at DESC`, strategyId);
     },
     async getAllContent(limit = 50) {
-      return await query<Content>(`${S_CONTENT} ORDER BY created_at DESC LIMIT $1`, limit);
+      return await query<Content>(`${S_CONTENT} ORDER BY created_at DESC LIMIT ?`, limit);
     },
     async updateContentStatus(id, status) {
-      await run("UPDATE growth_contents SET status = $1 WHERE id = $2", status, id);
+      await run("UPDATE growth_contents SET status = ? WHERE id = ?", status, id);
     },
     async updateStrategyStatus(id, status) {
-      await run("UPDATE growth_strategies SET status = $1 WHERE id = $2", status, id);
+      await run("UPDATE growth_strategies SET status = ? WHERE id = ?", status, id);
     },
     async getLatestMetrics() {
       return (await queryOne<Metrics>(`${S_METRICS} ORDER BY date DESC LIMIT 1`)) ?? null;
@@ -92,7 +92,7 @@ export async function getStore(): Promise<GrowthStore> {
     async saveMetrics(m) {
       // P1.0 : UPSERT portable — les placeholders ne doivent apparaître
       // qu'une seule fois (better-sqlite3 compte chaque occurrence : la
-      // forme $2..$9 répétée dans ON CONFLICT sortait du nombre de params
+      // forme ?..? répétée dans ON CONFLICT sortait du nombre de params
       // → "column index out of range"). `excluded.*` évite tout paramètre
       // supplémentaire et est supporté par SQLite comme par PostgreSQL.
       await run(
@@ -114,15 +114,15 @@ export async function getStore(): Promise<GrowthStore> {
     async saveRecommendation(r) {
       await run(
         `INSERT INTO growth_recommendations (id, date, type, title, description, priority, estimated_impact, created_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+         VALUES (?,?,?,?,?,?,?,?)`,
         r.id, r.date, r.type, r.title, r.description, r.priority, r.estimatedImpact, r.createdAt
       );
     },
     async getRecommendations(limit = 20) {
-      return await query<Recommendation>(`${S_RECOMMENDATION} ORDER BY created_at DESC LIMIT $1`, limit);
+      return await query<Recommendation>(`${S_RECOMMENDATION} ORDER BY created_at DESC LIMIT ?`, limit);
     },
     async updateRecommendationStatus(id, status) {
-      await run("UPDATE growth_recommendations SET priority = $1 WHERE id = $2", status, id);
+      await run("UPDATE growth_recommendations SET priority = ? WHERE id = ?", status, id);
     },
   };
 }

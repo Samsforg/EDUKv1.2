@@ -17,7 +17,8 @@ export default function AdSenseLoader() {
         const match = document.cookie.match(/(?:^|; )edukora_consent=([^;]*)/);
         if (!match) return false;
         const prefs = JSON.parse(decodeURIComponent(match[1]));
-        return prefs.marketing === true || prefs.ia === true;
+        // P2.12.1 A1 — AdSense = finalité publicitaire, exige `marketing` seul.
+        return prefs.marketing === true;
       } catch {
         return false;
       }

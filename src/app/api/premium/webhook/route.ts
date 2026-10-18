@@ -260,15 +260,8 @@ async function handleTransactionEvent(event: string, data: WebhookTransactionDat
   if (nextStatus === "active") {
     await sendReceiptIfActive(reference);
     void (async () => {
-      try {
-        const subUser = await queryOne<{ user_id: number }>("SELECT user_id FROM subscriptions WHERE provider_subscription_id = ? ORDER BY id DESC LIMIT 1", String(reference ?? ""));
-        if (!subUser) return;
-        const filleul = await queryOne<{ referred_by: number | null; first_name: string }>("SELECT referred_by, first_name FROM users WHERE id = ?", subUser.user_id);
-        if (filleul?.referred_by) {
-          await addXp(filleul.referred_by, 300);
-          await notify(filleul.referred_by, "Prime parrainage payant !", `${filleul.first_name} s'est abonné : +300 XP + prime Wave à réclamer sur /parrainage.`, "payments");
-        }
-      } catch (e: unknown) { logger.warn("webhook:referral_xp_failed", { error: e instanceof Error ? e.message : String(e) }); }
+      try { await awardReferralBonusOnce(String(reference ?? "")); }
+      catch (e: unknown) { logger.warn("webhook:referral_xp_failed", { error: e instanceof Error ? e.message : String(e) }); }
     })();
   }
   return nextStatus ?? null;
@@ -325,15 +318,8 @@ async function handleSubscriptionEvent(event: string, sub: WebhookSubscriptionDa
     if (nextStatus === "active") {
       await sendReceiptIfActive(sub.id);
       void (async () => {
-        try {
-          const subUser = await queryOne<{ user_id: number }>("SELECT user_id FROM subscriptions WHERE provider_subscription_id = ? ORDER BY id DESC LIMIT 1", String(sub.id));
-          if (!subUser) return;
-          const filleul = await queryOne<{ referred_by: number | null; first_name: string }>("SELECT referred_by, first_name FROM users WHERE id = ?", subUser.user_id);
-          if (filleul?.referred_by) {
-            await addXp(filleul.referred_by, 300);
-            await notify(filleul.referred_by, "Prime parrainage payant !", `${filleul.first_name} s'est abonné : +300 XP + prime Wave à réclamer sur /parrainage.`, "payments");
-          }
-        } catch (e: unknown) { logger.warn("webhook:referral_xp_failed", { error: e instanceof Error ? e.message : String(e) }); }
+        try { await awardReferralBonusOnce(String(sub.id)); }
+        catch (e: unknown) { logger.warn("webhook:referral_xp_failed", { error: e instanceof Error ? e.message : String(e) }); }
       })();
     }
     return nextStatus;
@@ -371,18 +357,48 @@ async function handleSubscriptionEvent(event: string, sub: WebhookSubscriptionDa
   if (nextStatus === "active") {
     await sendReceiptIfActive(sub.id);
     void (async () => {
-      try {
-        const subUser = await queryOne<{ user_id: number }>("SELECT user_id FROM subscriptions WHERE provider_subscription_id = ? ORDER BY id DESC LIMIT 1", String(sub.id));
-        if (!subUser) return;
-        const filleul = await queryOne<{ referred_by: number | null; first_name: string }>("SELECT referred_by, first_name FROM users WHERE id = ?", subUser.user_id);
-        if (filleul?.referred_by) {
-          await addXp(filleul.referred_by, 300);
-          await notify(filleul.referred_by, "Prime parrainage payant !", `${filleul.first_name} s'est abonné : +300 XP + prime Wave à réclamer sur /parrainage.`, "payments");
-        }
-      } catch (e: unknown) { logger.warn("webhook:referral_xp_failed", { error: e instanceof Error ? e.message : String(e) }); }
+      try { await awardReferralBonusOnce(String(sub.id)); }
+      catch (e: unknown) { logger.warn("webhook:referral_xp_failed", { error: e instanceof Error ? e.message : String(e) }); }
     })();
   }
   return nextStatus;
+}
+
+/**
+ * P2.12.1 D1 — accorde la prime de parrainage payant (+300 XP au parrain)
+ * **une seule fois par filleul**, au premier passage en `active`.
+ *
+ * Avant : le bloc était dupliqué 3× et se déclenchait à chaque renouvellement
+ * (chaque webhook `subscription.renewed`/`charged` remettait `active`), ce qui
+ * multipliait indéfiniment les +300 XP. La colonne `users.referral_bonus_at`
+ * sert de garde d'idempotence : renseignée à l'attribution, bloquant toute
+ * attribution ultérieure pour le même filleul.
+ */
+async function awardReferralBonusOnce(providerSubscriptionId: string) {
+  const subUser = await queryOne<{ user_id: number }>(
+    "SELECT user_id FROM subscriptions WHERE provider_subscription_id = ? ORDER BY id DESC LIMIT 1",
+    providerSubscriptionId,
+  );
+  if (!subUser) return;
+  const filleul = await queryOne<{ referred_by: number | null; first_name: string; referral_bonus_at: string | null }>(
+    "SELECT referred_by, first_name, referral_bonus_at FROM users WHERE id = ?",
+    subUser.user_id,
+  );
+  if (!filleul?.referred_by) return;
+  if (filleul.referral_bonus_at) return; // déjà primé — idempotent
+  // Garde atomique : ne marque primé que si encore NULL (évite un double
+  // accordé si deux webhooks identiques arrivent en parallèle). Seul le
+  // gagnant de la réservation crédite XP et notifie : sans ce test, deux
+  // requêtes concurrentes passeraient toutes les deux la garde ci-dessus
+  // (toutes deux lues avant l'écriture) et créditeraient deux fois.
+  const bonusClaimed = await run(
+    "UPDATE users SET referral_bonus_at = ? WHERE id = ? AND referral_bonus_at IS NULL",
+    new Date().toISOString(),
+    subUser.user_id,
+  );
+  if (bonusClaimed.changes !== 1) return; // perdu la course : l'autre traitement crédite
+  await addXp(filleul.referred_by, 300);
+  await notify(filleul.referred_by, "Prime parrainage payant !", `${filleul.first_name} s'est abonné : +300 XP + prime Wave à réclamer sur /parrainage.`, "payments");
 }
 
 async function GETHandler() {
@@ -417,12 +433,15 @@ async function POSTHandler(req: Request) {
   }
 
   const eventId = `${event}:${payload.data?.reference ?? payload.data?.id ?? payload.data?.subscription?.id ?? raw.slice(0, 80)}:${tsHdr ?? ""}`.slice(0, 200);
-  const dup = await queryOne<{ event_id: string }>("SELECT event_id FROM webhook_events WHERE event_id = ?", eventId);
-  if (dup) {
+  // Réservation atomique : un seul traitement par event_id, même en cas de
+  // livraisons concurrentes. Un simple SELECT préalable ne suffirait pas
+  // (deux requêtes simultanées le manqueraient toutes les deux) ; ici
+  // `changes === 0` prouve qu'un autre traitement a déjà réservé la clé.
+  const claimed = await run("INSERT INTO webhook_events (event_id) VALUES (?) ON CONFLICT(event_id) DO NOTHING", eventId);
+  if (claimed.changes === 0) {
     logger.info("webhook:duplicate_ignored", { eventId });
     return NextResponse.json({ received: true, duplicate: true });
   }
-  await run("INSERT INTO webhook_events (event_id) VALUES (?) ON CONFLICT(event_id) DO NOTHING", eventId);
 
   const data = payload.data ?? {};
 

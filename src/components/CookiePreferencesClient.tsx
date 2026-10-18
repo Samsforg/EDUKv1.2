@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+
+const STORAGE_KEY = "edukora_cookie_prefs";
+const DEFAULTS = { analytics: false, marketing: false, ia: false, essential: true };
 
 export default function CookiePreferencesClient() {
-  const STORAGE_KEY = "edukora_cookie_prefs";
-  const DEFAULTS = { analytics: false, marketing: false, ia: false, essential: true };
-
   function applyPrefs(prefs: { essential: boolean; analytics: boolean; marketing: boolean; ia: boolean }) {
     const analyticsToggle = document.getElementById("toggle_analytics") as HTMLInputElement;
+    const marketingToggle = document.getElementById("toggle_marketing") as HTMLInputElement;
     const iaToggle = document.getElementById("toggle_ia") as HTMLInputElement;
     if (analyticsToggle) analyticsToggle.checked = !!prefs.analytics;
+    if (marketingToggle) marketingToggle.checked = !!prefs.marketing;
     if (iaToggle) iaToggle.checked = !!prefs.ia;
     document.querySelectorAll<HTMLInputElement>(".toggle-checkbox").forEach((cb) => {
       if (!cb.disabled && cb.checked) {
@@ -24,15 +26,20 @@ export default function CookiePreferencesClient() {
   function savePrefs(prefs: { essential: boolean; analytics: boolean; marketing: boolean; ia: boolean }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
     document.cookie = "edukora_consent=" + encodeURIComponent(JSON.stringify(prefs)) + ";path=/;max-age=15552000;samesite=lax";
+    // P2.12.1 — notifier les scripts (AdSense, pixels) d'un changement de choix.
+    window.dispatchEvent(new CustomEvent("edukora-consent-updated", { detail: prefs }));
   }
 
   function collectPrefs() {
     const analyticsToggle = document.getElementById("toggle_analytics") as HTMLInputElement;
+    const marketingToggle = document.getElementById("toggle_marketing") as HTMLInputElement;
     const iaToggle = document.getElementById("toggle_ia") as HTMLInputElement;
     return {
       essential: true,
       analytics: analyticsToggle?.checked ?? false,
-      marketing: iaToggle?.checked ?? false,
+      // P2.12.1 A1 — `marketing` a désormais son propre toggle, il n'est plus
+      // dérivé du toggle IA (ce qui activait la pub au simple accord IA).
+      marketing: marketingToggle?.checked ?? false,
       ia: iaToggle?.checked ?? false,
     };
   }

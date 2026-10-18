@@ -21,7 +21,10 @@ function marketingAccepted(): boolean {
   if (!match) return false;
   try {
     const prefs = JSON.parse(decodeURIComponent(match[1]));
-    return prefs.marketing === true || prefs.ia === true;
+    // P2.12.1 A1 — la personnalisation IA ne vaut PAS consentement publicitaire.
+    // Les pixels / AdSense ne se déclenchent que sur un consentement `marketing`
+    // explicite (finalité distincte, ePrivacy / RGPD art. 5(1)(b)).
+    return prefs.marketing === true;
   } catch {
     return false;
   }
@@ -39,9 +42,8 @@ export function loadMarketingScripts(): void {
     s.async = true;
     s.src = "https://connect.facebook.net/en_US/fbevents.js";
     document.head.appendChild(s);
-    // @ts-ignore
+    // @ts-expect-error -- window.fbq est monkey-patché (SDK Meta hors typings)
     window.fbq = window.fbq || function (...args: unknown[]) { (window.fbq!.q = (window.fbq!.q as unknown[]) ?? []).push(args); };
-    // @ts-ignore
     window._fbq = window._fbq || [];
     window.fbq!("init", META_PIXEL_ID);
     window.fbq!("track", "PageView");
@@ -55,7 +57,6 @@ export function loadMarketingScripts(): void {
     s.src = "https://analytics.tiktok.com/i18n/pixel/events.js";
     s.onload = () => {
       try {
-        // @ts-ignore
         window.ttq?.load(TIKTOK_PIXEL_ID);
         window.ttq?.page();
       } catch {}
@@ -65,7 +66,7 @@ export function loadMarketingScripts(): void {
 
   // Google Ads (gtag déjà chargé par analytics.ts si GA_ID présent, on réutilise)
   if (GOOGLE_ADS_ID && typeof (window as unknown as Record<string, unknown>).gtag === "function") {
-    // @ts-ignore
+    // @ts-expect-error -- gtag est une fonction dynamique, non typée par Record<string, unknown>
     (window as unknown as Record<string, unknown>).gtag("config", GOOGLE_ADS_ID);
   }
 

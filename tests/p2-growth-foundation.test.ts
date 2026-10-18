@@ -415,8 +415,13 @@ describe("P2 §9 — tables growth : etat reel + dettes G1/G2 verrouillees", () 
     expect(storeSrc.indexOf("_init = true;")).toBeLessThan(
       storeSrc.indexOf("CREATE TABLE IF NOT EXISTS growth_strategies"),
     );
-    // syntaxe PG seule dans 3 des 4 DDL (growth_metrics n'a pas de created_at)
-    expect((storeSrc.match(/DEFAULT now\(\)/g) ?? []).length).toBe(3);
+    // P2.12.1 B3 — le DDL des tables growth utilise désormais `DEFAULT
+    // (datetime('now'))`, portable SQLite/PG (run() traduit datetime('now') →
+    // now()/to_char côté PG). L'ancienne signature `DEFAULT now()` (syntaxe PG
+    // seule, causait l'erreur 42804 sur PG pour une colonne TEXT) a disparu :
+    // il ne doit plus y avoir AUCUNE occurrence résiduelle.
+    expect((storeSrc.match(/DEFAULT now\(\)/g) ?? []).length).toBe(0);
+    expect((storeSrc.match(/DEFAULT \(datetime\('now'\)\)/g) ?? []).length).toBeGreaterThanOrEqual(3);
   });
 
   it("G2 — aucune lecture SQL de referrals/courses, jamais creees dans le schema", () => {

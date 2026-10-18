@@ -93,4 +93,59 @@ describe("webhook GeniusPay (spec officiel)", () => {
     );
     expect(res.status).toBe(200);
   });
+
+  it("rejeu identique (même event_id) → 200 duplicate:true, sans retraitement", async () => {
+    // Référence inconnue : aucun effet métier (pas d'abonnement, pas d'utilisateur),
+    // seul l'enregistrement d'événement est exercé — sans résidu fonctionnel.
+    const ref = `TXN-DUP-${process.pid}-${Date.now()}`;
+    const payload = { event: "payment.success", data: { reference: ref, customer_phone: "+2250700000000" } };
+    const raw = JSON.stringify(payload);
+    const ts = Math.floor(Date.now() / 1000).toString();
+    const sig = sign(raw, ts);
+    const send = () =>
+      POST(
+        new Request("http://x", {
+          method: "POST",
+          body: raw,
+          headers: {
+            "content-type": "application/json",
+            "x-webhook-signature": sig,
+            "x-webhook-timestamp": ts,
+            "x-webhook-event": "payment.success",
+          },
+        }) as any,
+      );
+    const first = await send();
+    expect(first.status).toBe(200);
+    expect((await first.json()).duplicate ?? false).toBe(false);
+    const second = await send();
+    expect(second.status).toBe(200);
+    expect(await second.json()).toEqual({ received: true, duplicate: true });
+  });
+
+  it("timestamp différent → event_id distinct, pas un duplicata", async () => {
+    const ref = `TXN-NODUP-${process.pid}-${Date.now()}`;
+    const send = (ts: string) => {
+      const payload = { event: "payment.success", data: { reference: ref, customer_phone: "+2250700000000" } };
+      const raw = JSON.stringify(payload);
+      return POST(
+        new Request("http://x", {
+          method: "POST",
+          body: raw,
+          headers: {
+            "content-type": "application/json",
+            "x-webhook-signature": sign(raw, ts),
+            "x-webhook-timestamp": ts,
+            "x-webhook-event": "payment.success",
+          },
+        }) as any,
+      );
+    };
+    const now = Math.floor(Date.now() / 1000);
+    const r1 = await send(now.toString());
+    const r2 = await send((now - 60).toString());
+    expect(r1.status).toBe(200);
+    expect(r2.status).toBe(200);
+    expect((await r2.json()).duplicate ?? false).toBe(false);
+  });
 });
