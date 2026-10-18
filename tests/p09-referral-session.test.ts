@@ -22,6 +22,11 @@ import { query, queryOne, run } from "@/lib/db";
 import { getCanonicalMRR } from "@/lib/business-metrics";
 import { RegisterSchema } from "@/lib/validation";
 
+// P2.12.1 A2 — le secret de démonstration en dur a été supprimé (fail-closed).
+// Les fixtures d'inscription créent une session : SESSION_SECRET doit être
+// fourni explicitement pour que createSession() réussisse.
+process.env.SESSION_SECRET = "p09-referral-unit-test-secret-0123456789abcdef";
+
 const read = (...p: string[]) => readFileSync(join(__dirname, "..", ...p), "utf8");
 const inscriptionSrc = read("src", "app", "inscription-1-2-edukora", "page.tsx");
 

@@ -9,6 +9,7 @@ import { resolveUserGradeIds } from "./level";
 import { ensureRentreePromo } from "./promo";
 import { cleanupRevokedSessions } from "./session";
 import { testEmailOnlyWhere } from "./test-users";
+import { logger } from "@/lib/logger";
 
 let readyPromise: Promise<void> | null = null;
 
@@ -49,6 +50,15 @@ async function doInit() {
     await migrate("users", "gender", "TEXT");
     await migrate("users", "goal", "TEXT");
     await migrate("users", "seen_onboarding", "INTEGER");
+    // P2.12.1 A3 — epoch de session : incrémenté à chaque changement /
+    // réinitialisation de mot de passe pour invalider les tokens HMAC encore
+    // valides (30 j) sans stocker les tokens. Un token porte {uid, exp, epoch}.
+    await migrate("users", "session_epoch", "INTEGER NOT NULL DEFAULT 0");
+    // P2.12.1 D1 — horodatage d'attribution de la prime de parrainage payant.
+    // NULL = prime jamais accordée. Sert de garde d'idempotence : la prime
+    // +300 XP n'est accordée qu'une fois par filleul (au 1er paiement actif),
+    // et non à chaque renouvellement d'abonnement.
+    await migrate("users", "referral_bonus_at", "TEXT");
     // P0-1 : marqueur structurel des comptes de test. `is_test` est la source
     // de vérité ; la liste d'emails réservés sert de filet de sécurité (voir
     // src/lib/test-users.ts). DEFAULT 0 : un compte créé par l'inscription
@@ -563,12 +573,12 @@ async function seedTechnicalChapters() {
   await seedTechnicalSubjects();
 
   // Get grade IDs
-  const grade2ndeG2 = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='2nde_g2'"))!.id;
-  const grade2ndeAB = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='2nde_ab'"))!.id;
-  const grade1ereG2 = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='1ere_g2'"))!.id;
-  const grade1ereB = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='1ere_b'"))!.id;
-  const gradeTermB = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='term_b'"))!.id;
-  const gradeTermG2 = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='term_g2'"))!.id;
+  const _grade2ndeG2 = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='2nde_g2'"))!.id;
+  const _grade2ndeAB = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='2nde_ab'"))!.id;
+  const _grade1ereG2 = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='1ere_g2'"))!.id;
+  const _grade1ereB = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='1ere_b'"))!.id;
+  const _gradeTermB = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='term_b'"))!.id;
+  const _gradeTermG2 = (await queryOne<{id:number}>("SELECT id FROM grades WHERE code='term_g2'"))!.id;
 
   // Get subject IDs
   const comptaId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='comptabilite'"))!.id;
@@ -577,12 +587,12 @@ async function seedTechnicalChapters() {
   const infoId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='informatique'"))!.id;
   const marketingId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='marketing'"))!.id;
   const gestionId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='gestion'"))!.id;
-  const mathsId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='maths'"))!.id;
-  const pcId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='pc'"))!.id;
-  const svtId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='svt'"))!.id;
-  const frId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='francais'"))!.id;
-  const hgId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='hg'"))!.id;
-  const enId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='anglais'"))!.id;
+  const _mathsId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='maths'"))!.id;
+  const _pcId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='pc'"))!.id;
+  const _svtId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='svt'"))!.id;
+  const _frId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='francais'"))!.id;
+  const _hgId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='hg'"))!.id;
+  const _enId = (await queryOne<{id:number}>("SELECT id FROM subjects WHERE code='anglais'"))!.id;
 
   // Technical track chapters (focus on 2nde G2/AB, 1ère G2/B, Term B/G2)
   const techChapters: [number, string, string, string, string, number][] = [
@@ -792,7 +802,7 @@ async function cleanupDuplicateSubjects() {
       }
     }
     await run("DELETE FROM subjects WHERE id = ?", d.id);
-    console.log(`[init] matière en double « ${d.code} » supprimée`);
+    logger.info(`[init] matière en double « ${d.code} » supprimée`);
   }
 }
 
@@ -827,7 +837,7 @@ async function reconcileEdhc() {
   await run("DELETE FROM subjects WHERE id = ?", dup.id);
   // 4. Normaliser le code de la matière existante maintenant que 'edhc' est libre
   await run("UPDATE subjects SET code = 'edhc' WHERE id = ? AND code = 'EDHC'", canon.id);
-  console.log("[init] EDHC consolidé dans une seule matière");
+  logger.info("[init] EDHC consolidé dans une seule matière");
 }
 
 async function seedForum() {
@@ -1565,7 +1575,7 @@ async function seedMENAET() {
     );
   }
 
-  console.log("MENAET seed completed: grades, subjects, chapters inserted");
+  logger.info("MENAET seed completed: grades, subjects, chapters inserted");
 }
 
 async function ensureSubscriptionPlans() {
@@ -1632,7 +1642,7 @@ async function ensureSubscriptionPlans() {
     for (const d of dupes) {
       await run("UPDATE subscriptions SET plan_id = ? WHERE plan_id = ?", canonicalReussiteId, d.id);
       await run("DELETE FROM subscription_plans WHERE id = ?", d.id);
-      console.log(`[init] plan doublon supprimé (${d.id}: ${JSON.stringify(d.name)}) — ré-orienté vers « Réussite » (#${canonicalReussiteId})`);
+      logger.info(`[init] plan doublon supprimé (${d.id}: ${JSON.stringify(d.name)}) — ré-orienté vers « Réussite » (#${canonicalReussiteId})`);
     }
   }
 
@@ -1682,7 +1692,7 @@ async function ensureSubscriptionPlans() {
     );
   }
 
-  console.log("Subscription plans ensured: Découverte (0 FCFA), Réussite (4 900 FCFA/mois, 30 questions IA), Réussite Trimestriel (14 700 FCFA/trimestre, 100 questions IA)");
+  logger.info("Subscription plans ensured: Découverte (0 FCFA), Réussite (4 900 FCFA/mois, 30 questions IA), Réussite Trimestriel (14 700 FCFA/trimestre, 100 questions IA)");
 }
 
 /**
@@ -1724,7 +1734,7 @@ async function applyFreemiumLessons() {
         if (r && Number(r.lastInsertRowid) >= 0) flagged++;
       }
     }
-    console.log(
+    logger.info(
       `[init] freemium: ${flagged} leçon(s) premium vérifiées/activées (${FREE_LESSONS_PER_CHAPTER} gratuite(s) par chapitre).`,
     );
   } catch (e) {

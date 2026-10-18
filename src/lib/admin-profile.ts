@@ -1,6 +1,7 @@
 import { queryOne, run } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
+import { revokeUserSessions } from "@/lib/session";
 
 export interface AdminProfile {
   id: number;
@@ -79,7 +80,8 @@ export async function changeAdminPassword(
   if (newPassword === currentPassword) return { error: "Le nouveau mot de passe doit être différent de l'actuel" };
 
   await run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(newPassword), actorId);
-  await run("DELETE FROM sessions WHERE user_id = ?", actorId);
+  // P2.12.1 A3 — révoque les sessions HMAC (la route réémet un token frais).
+  await revokeUserSessions(actorId);
   await logAudit(actorId, "mot_de_passe", "Mot de passe administrateur modifié");
   return { ok: true };
 }

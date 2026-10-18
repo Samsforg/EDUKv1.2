@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { createHash } from "node:crypto";
+import {  } from "node:crypto";
 import {
   AB_PRICING_COOKIE,
   AB_PRICING_MAX_AGE,
@@ -17,10 +17,9 @@ function generateNonce(): string {
 }
 
 function sessionSecret(): string | null {
-  const secret = process.env.SESSION_SECRET;
-  if (secret) return secret;
-  if (process.env.NODE_ENV !== "production") return "edukora-session-secret-v1-demo";
-  return null;
+  // P2.12.1 A2 — aucun fallback : sans SESSION_SECRET, les sessions sont
+  // refusées (fail-closed) dans tous les environnements.
+  return process.env.SESSION_SECRET || null;
 }
 
 function signToken(payload: string): string {
@@ -76,6 +75,34 @@ function verifyCsrf(req: NextRequest, session: { uid: number } | null): boolean 
   const b = Buffer.from(expected);
   if (a.length !== b.length) return false;
   return timingSafeEqual(a, b);
+}
+
+// F2 — endpoints d'authentification pré-session (aucun cookie de session à
+// ce stade : impossible d'y attacher un jeton CSRF lié à la session). On
+// applique donc une vérification d'origine fail-closed : si un en-tête
+// `Origin` est présent, il doit correspondre à l'hôte de la requête. Les
+// navigateurs envoient toujours `Origin` sur un POST cross-origin, ce qui
+// bloque un login CSRF forcé depuis un site tiers.
+const PREAUTH_MUTATION_ROUTES = [
+  "/api/auth/login",
+  "/api/auth/register",
+  "/api/auth/forgot",
+  "/api/auth/reset",
+];
+
+function originMatchesHost(req: NextRequest): boolean {
+  const origin = req.headers.get("origin");
+  // Pas d'Origin : requête same-origin ou navigateur très ancien — on ne
+  // bloque pas (le contrôle CORS/preflight et `form-action 'self'` restent
+  // en place). Fail-closed uniquement sur une origine présente mais étrangère.
+  if (!origin) return true;
+  const host = req.headers.get("host");
+  if (!host) return false;
+  try {
+    return new URL(origin).host === host;
+  } catch {
+    return false;
+  }
 }
 
 const CSP_BASE = [
@@ -239,6 +266,15 @@ export async function proxy(req: NextRequest) {
 
   // Public routes — always allowed
   if (PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/"))) {
+    // F2 — contrôle d'origine sur les mutations d'auth pré-session (login,
+    // register, forgot, reset) qui échappent au CSRF lié à une session.
+    if (
+      (req.method === "POST" || req.method === "PUT" || req.method === "PATCH" || req.method === "DELETE") &&
+      PREAUTH_MUTATION_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/")) &&
+      !originMatchesHost(req)
+    ) {
+      return NextResponse.json({ error: "Origine non autorisée" }, { status: 403 });
+    }
     if (pathname === "/tarifs" && isPricingAbEnabled()) {
       const forced = req.nextUrl.searchParams.get("ab_variant");
       let variant = forced ?? req.cookies.get(AB_PRICING_COOKIE)?.value ?? null;

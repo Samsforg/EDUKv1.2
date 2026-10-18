@@ -2,6 +2,7 @@ import { guardApi } from "@/lib/api-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb, queryOne, run } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
+import { revokeUserSessions } from "@/lib/session";
 import { rateLimit, rateLimitResponse, getClientIp } from "@/lib/rate-limit";
 
 async function POSTHandler(req: NextRequest) {
@@ -9,7 +10,7 @@ async function POSTHandler(req: NextRequest) {
   const rl = await rateLimit(`reset:${ip}`, "login");
   if (!rl.allowed) return rateLimitResponse(rl.resetAt);
 
-  const db = getDb();
+  const _db = getDb();
   const body = await req.json().catch(() => null);
   const { token, password } = body ?? {};
 
@@ -34,8 +35,9 @@ async function POSTHandler(req: NextRequest) {
 
   await run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(password), reset.user_id);
   await run("DELETE FROM password_resets WHERE token = ?", token);
-  // Invalide toutes les sessions existantes pour sécurité
-  await run("DELETE FROM sessions WHERE user_id = ?", reset.user_id);
+  // P2.12.1 A3 — invalide les sessions HMAC encore valides (les tokens sont
+  // sans état : l'ancien DELETE sur la table legacy `sessions` était sans effet).
+  await revokeUserSessions(reset.user_id);
 
   return NextResponse.json({ ok: true });
 }

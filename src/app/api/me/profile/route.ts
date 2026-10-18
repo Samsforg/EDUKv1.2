@@ -1,7 +1,7 @@
 import { guardApi } from "@/lib/api-guard";
 import { NextResponse } from "next/server";
 import { query, queryOne, run } from "@/lib/db";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, revokeUserSessions, createSession, setSessionCookie } from "@/lib/session";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 
 async function GETHandler() {
@@ -14,7 +14,7 @@ async function GETHandler() {
   );
 
   const quizStats = await query<{ best_percent: number | null; total_attempts: number }>(
-    `SELECT MAX(a.score * 100.0 / a.max_score) AS best_percent, COUNT(a.id) AS total_attempts
+    `SELECT MAX(a.score * 100.0 / NULLIF(a.max_score, 0)) AS best_percent, COUNT(a.id) AS total_attempts
      FROM quiz_attempts a WHERE a.user_id = ?`,
     user.id,
   );
@@ -118,6 +118,7 @@ async function PATCHHandler(req: Request) {
 
   const body = await req.json().catch(() => ({}));
   const { first_name, last_name, email, phone, commune, gender, serie_id, class_level, current_password, new_password } = body;
+  let passwordChanged = false;
 
   if (new_password) {
     if (!current_password) return NextResponse.json({ error: "Mot de passe actuel requis" }, { status: 400 });
@@ -125,6 +126,7 @@ async function PATCHHandler(req: Request) {
     if (!stored || !verifyPassword(current_password, stored.password_hash)) return NextResponse.json({ error: "Mot de passe actuel incorrect" }, { status: 400 });
     if (new_password.length < 6) return NextResponse.json({ error: "Le nouveau mot de passe doit contenir au moins 6 caractères" }, { status: 400 });
     await run("UPDATE users SET password_hash = ? WHERE id = ?", hashPassword(new_password), user.id);
+    passwordChanged = true;
   }
 
   if (email !== undefined && email !== user.email) {
@@ -179,7 +181,16 @@ async function PATCHHandler(req: Request) {
     user.id,
   );
 
-  return NextResponse.json({ ok: true, user: updated });
+  const res = NextResponse.json({ ok: true, user: updated });
+  if (passwordChanged) {
+    // P2.12.1 A3 — le changement de mot de passe révoque toutes les sessions
+    // antérieures (epoch+1), puis réémet un token frais pour que l'utilisateur
+    // reste connecté ici sans qu'un ancien volé/ouvert ailleurs subsiste.
+    await revokeUserSessions(user.id);
+    const token = await createSession(user.id);
+    setSessionCookie(res, token);
+  }
+  return res;
 }
 
 export const PATCH = guardApi("PATCH /api/me/profile", PATCHHandler);

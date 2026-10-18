@@ -6,29 +6,30 @@ import { getDueReviews } from "./spaced-repetition";
 import { resolveUserGradeIds, gradeInClause } from "./level";
 
 const COOKIE_NAME = "edukora_session";
-const SESSION_DAYS = 30;
+const _SESSION_DAYS = 30;
 const TOKEN_VERSION = "v1";
 
 function sessionSecret(): string | null {
+  // P2.12.1 A2 — aucun fallback : sans SESSION_SECRET, les sessions sont
+  // refusées (fail-closed) dans tous les environnements.
   const secret = process.env.SESSION_SECRET;
   if (secret) return secret;
-  if (process.env.NODE_ENV !== "production") return "edukora-session-secret-v1-demo";
-  console.error("[session] SESSION_SECRET non défini en production");
+  console.error("[session] SESSION_SECRET non défini — sessions refusées par sécurité.");
   return null;
 }
 
 function signSessionToken(payload: string): string {
   const secret = sessionSecret();
-  if (!secret) throw new Error("SESSION_SECRET manquant en production");
+  if (!secret) throw new Error("SESSION_SECRET manquant");
   return createHmac("sha256", secret).update(payload).digest("base64url");
 }
 
-function signPayload(userId: number, exp: number): string {
-  const payload = Buffer.from(JSON.stringify({ uid: userId, exp })).toString("base64url");
+function _signPayload(userId: number, exp: number, epoch: number): string {
+  const payload = Buffer.from(JSON.stringify({ uid: userId, exp, epoch })).toString("base64url");
   return `${TOKEN_VERSION}.${payload}.${signSessionToken(payload)}`;
 }
 
-function verifySessionToken(token: string): { uid: number; exp: number } | null {
+function verifySessionToken(token: string): { uid: number; exp: number; epoch: number } | null {
   const secret = sessionSecret();
   if (!secret) return null;
   const parts = token.split(".");
@@ -42,10 +43,12 @@ function verifySessionToken(token: string): { uid: number; exp: number } | null 
     const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as {
       uid: number;
       exp: number;
+      epoch?: number;
     };
     if (typeof data.uid !== "number" || typeof data.exp !== "number") return null;
     if (data.exp < Date.now()) return null;
-    return data;
+    // P2.12.1 A3 — rétro-compat : un token sans `epoch` vaut 0 (avant A3).
+    return { uid: data.uid, exp: data.exp, epoch: typeof data.epoch === "number" ? data.epoch : 0 };
   } catch {
     return null;
   }
@@ -64,14 +67,16 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   );
   if (revoked) return null;
 
-  const user = await queryOne<SessionUser>(
+  const user = await queryOne<SessionUser & { session_epoch: number | null }>(
     `SELECT id, role, email, phone, first_name, last_name, serie_id, class_level,
-            xp, streak, referral_code, commune, gender, avatar_url, blocked, goal
+            xp, streak, referral_code, commune, gender, avatar_url, blocked, goal, session_epoch
      FROM users WHERE id = ?`,
     session.uid,
   );
   if (!user) return null;
   if (user.blocked) return null;
+  // P2.12.1 A3 — rejet des tokens antérieurs à un changement de mot de passe.
+  if ((user.session_epoch ?? 0) !== session.epoch) return null;
   return user;
 });
 
@@ -152,7 +157,7 @@ export async function getProgressData(userId: number): Promise<ProgressData> {
     total_attempts: number;
   }>(
     `SELECT s.id AS subject_id, s.name, s.icon, s.color,
-            MAX(a.score * 100.0 / a.max_score) AS best_percent,
+            MAX(a.score * 100.0 / NULLIF(a.max_score, 0)) AS best_percent,
             COUNT(a.id) AS total_attempts
      FROM subjects s
      LEFT JOIN quizzes q ON q.subject_id = s.id
@@ -265,7 +270,7 @@ export async function getReReads(userId: number): Promise<ReReadItem[]> {
     attempts: number;
   }>(
     `SELECT q.id, q.subject_id, q.chapter_id, q.title,
-            (SELECT MAX(a.score * 100.0 / a.max_score) FROM quiz_attempts a WHERE a.quiz_id = q.id AND a.user_id = ?) AS best,
+            (SELECT MAX(a.score * 100.0 / NULLIF(a.max_score, 0)) FROM quiz_attempts a WHERE a.quiz_id = q.id AND a.user_id = ?) AS best,
             (SELECT COUNT(*) FROM quiz_attempts a WHERE a.quiz_id = q.id AND a.user_id = ?) AS attempts
      FROM quizzes q WHERE ${quizChapterClause}
      ORDER BY q.subject_id, q.id`,

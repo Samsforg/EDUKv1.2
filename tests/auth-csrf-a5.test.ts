@@ -19,9 +19,11 @@ jest.mock("next/headers", () => ({
 
 const mockDestroySession = jest.fn(async (..._a: unknown[]) => {});
 const mockClearSessionCookie = jest.fn((..._a: unknown[]) => undefined);
+const mockRevokeUserSessions = jest.fn(async (..._a: unknown[]) => {});
 jest.mock("@/lib/session", () => ({
   destroySession: (...a: unknown[]) => mockDestroySession(...a),
   clearSessionCookie: (...a: unknown[]) => mockClearSessionCookie(...a),
+  revokeUserSessions: (...a: unknown[]) => mockRevokeUserSessions(...a),
 }));
 
 const mockSendMail = jest.fn(async (..._a: unknown[]) => true);

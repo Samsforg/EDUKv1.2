@@ -3,10 +3,8 @@ import { createHmac } from "node:crypto";
 import { getCurrentUser } from "@/lib/session";
 
 function sessionSecret(): string | null {
-  const secret = process.env.SESSION_SECRET;
-  if (secret) return secret;
-  if (process.env.NODE_ENV !== "production") return "edukora-session-secret-v1-demo";
-  return null;
+  // P2.12.1 A2 — aucun fallback : sans SESSION_SECRET, refus (fail-closed).
+  return process.env.SESSION_SECRET || null;
 }
 
 export async function GET() {

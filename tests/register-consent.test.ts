@@ -2,6 +2,11 @@ import { POST } from "@/app/api/auth/register/route";
 import { NextRequest } from "next/server";
 import { queryOne } from "@/lib/db";
 
+// P2.12.1 A2 — le secret de démonstration en dur a été supprimé (fail-closed).
+// Ce test crée une session à l'inscription : il doit désormais fournir
+// SESSION_SECRET explicitement pour que createSession() réussisse.
+process.env.SESSION_SECRET = "register-consent-unit-test-secret-0123456789abcdef";
+
 function makeReq(body: unknown): NextRequest {
   return new NextRequest("http://localhost/api/auth/register", {
     method: "POST",
