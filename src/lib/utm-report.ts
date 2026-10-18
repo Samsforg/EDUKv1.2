@@ -103,7 +103,10 @@ export async function getUtmAcquisitionReport(): Promise<UtmAcquisitionReport> {
                      WHERE pv.user_id = p.user_id AND pv.event = 'purchase'
                    )), 0) AS purchases,
               COALESCE(SUM((
-                     SELECT SUM(s.price_cents) FROM subscriptions s
+                     SELECT SUM(COALESCE(s.price_cents, pl.price_cents) /
+                       CASE COALESCE(pl.interval, 'month') WHEN 'year' THEN 12 WHEN 'quarter' THEN 3 ELSE 1 END)
+                     FROM subscriptions s
+                     LEFT JOIN subscription_plans pl ON pl.id = s.plan_id
                      WHERE s.user_id = p.user_id AND s.status = 'active'
                        AND ${notTestU("s.user_id")}
                    )), 0) AS mrr_active_cents

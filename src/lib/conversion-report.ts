@@ -1,5 +1,6 @@
 import { query, queryOne, type SqlParam } from "@/lib/db";
 import { realUsersWhere, testUsersWhere } from "@/lib/test-users";
+import { getCanonicalMRR } from "@/lib/business-metrics";
 
 export interface ConversionStats {
   date: string;
@@ -62,9 +63,8 @@ export async function getConversionStats(days = 7): Promise<ConversionStats> {
   const revenueMonth = await sum(
     `SELECT COALESCE(SUM(s.price_cents),0) AS v FROM subscriptions s WHERE s.status='active' AND s.started_at >= datetime('now','-30 days') AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`,
   );
-  const mrr = await sum(
-    `SELECT COALESCE(SUM(s.price_cents),0) AS v FROM subscriptions s WHERE s.status='active' AND NOT EXISTS (SELECT 1 FROM users tu WHERE tu.id = s.user_id AND (${testUsersWhere("tu")}))`,
-  );
+  // P2.12.1 C — MRR unifié sur la source canonique (normalisé + non expiré).
+  const mrr = await getCanonicalMRR();
 
   const avgRevenueToday =
     subsToday > 0 ? Math.round(revenueToday / subsToday) : 0;
