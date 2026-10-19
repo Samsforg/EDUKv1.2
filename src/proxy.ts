@@ -187,6 +187,9 @@ const PUBLIC_ROUTES = [
   "/api/auth/reset",
   "/api/auth/me",
   "/api/health",
+  // VersionSync : identifiant de build public (aucune donnée sensible) pour
+  // détecter un bundle obsolète, y compris pour les visiteurs non connectés.
+  "/api/version",
   "/api/series",
   "/api/grades",
   "/api/newsletter",
