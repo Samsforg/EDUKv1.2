@@ -62,8 +62,12 @@ jobs:
 
       - run: npm ci
 
+      # --runInBand : les 3 jobs restent parallèles entre eux, mais les fichiers
+      # de test d'un même shard sont exécutés en série. Indispensable ici : tous
+      # les tests partagent une base SQLite unique (data/edukora.db), et un
+      # parallélisme intra-job provoquait des courses (migrations/seed).
       - name: Tests (shard ${{ matrix.shard }}/3)
-        run: npx jest --forceExit --shard=${{ matrix.shard }}/3
+        run: npx jest --forceExit --runInBand --shard=${{ matrix.shard }}/3
 
   build:
     runs-on: ubuntu-latest
