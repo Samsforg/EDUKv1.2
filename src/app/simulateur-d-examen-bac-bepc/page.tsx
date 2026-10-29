@@ -15,6 +15,8 @@ export const metadata: Metadata = {
     type: "website",
   },
 };
+export const dynamic = "force-static";
+export const revalidate = 300;
 
 export default function Page() {
   return (
@@ -48,7 +50,7 @@ Passer
 </header>
 <main className="flex-1 w-full max-w-md mx-auto flex flex-col px-6 pb-20 mt-4">
 
-<div className="relative w-full aspect-[4/5] rounded-xl bg-surface-container-low overflow-hidden mb-8 border border-outline-variant shadow-sm flex flex-col">
+<div className="relative w-full aspect-[4/5] rounded-xl bg-surface-container-low overflow-hidden mb-8 border border-outline-variant shadow-sm">
 
 <div className="absolute top-0 right-0 w-32 h-32 bg-primary-container/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 <div className="absolute bottom-0 left-0 w-48 h-48 bg-secondary-container/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
@@ -58,7 +60,7 @@ Passer
 <div className="flex justify-between items-center mb-6">
 <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-outline-variant shadow-sm">
 <span className="material-symbols-outlined text-secondary text-sm" data-icon="timer">timer</span>
-<span className="text-label-xs font-bold text-on-surface">14:59</span>
+<span className="text-label-xs font-bold text-on-surface tabular-nums">14:59</span>
 </div>
 <div className="flex items-center gap-1">
 <div className="h-1.5 w-12 bg-tertiary rounded-full"></div>
@@ -100,16 +102,15 @@ Passer
 </div>
 </div>
 
-<div className="mt-auto self-center bg-inverse-surface text-inverse-on-surface px-4 py-2 rounded-full flex items-center gap-2 shadow-lg translate-y-3">
+<div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface px-4 py-2 rounded-full flex items-center gap-2 shadow-lg">
 <span className="material-symbols-outlined text-tertiary-fixed" data-icon="check_circle" style={{"fontVariationSettings":"'FILL' 1"}}>check_circle</span>
 <span className="text-label-xs font-semibold">Correction détaillée instantanée</span>
 </div>
 </div>
 </div>
-
 <div className="space-y-4">
 <h1 className="text-display-lg-mobile md:text-display-lg text-on-surface font-bold leading-tight">
-                Prépare-toi avec le <span className="text-primary">Simulateur</span>
+Prépare-toi avec le <span className="text-primary">Simulateur</span>
 </h1>
 <p className="text-body-md text-on-surface-variant">
                 Entraîne-toi dans les conditions réelles de l'examen avec nos sessions chronométrées et nos corrections détaillées.
@@ -146,21 +147,6 @@ className="bg-secondary-container hover:bg-secondary text-white font-label text-
 </Link>
 </div>
 </footer>
-
-<script>
-        document.addEventListener('DOMContentLoaded', () =&gt; &#123;
-            // Micro-animation for the timer (visual only)
-            let seconds = 59;
-            const timerSpan = document.querySelector('.text-on-surface.font-bold');
-            if (timerSpan) &#123;
-                setInterval(() =&gt; &#123;
-                    seconds--;
-                    if (seconds &lt; 0) seconds = 59;
-                    timerSpan.innerText = `14:$&#123;seconds &lt; 10 ? '0' + seconds : seconds&#125;`;
-                &#125;, 1000);
-            &#125;
-        &#125;);
-    </script>
 
     </div>
   );
