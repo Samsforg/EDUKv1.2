@@ -5,6 +5,7 @@ import { hashPassword, verifyPassword } from "./auth";
 import { seedProgressionMENAET } from "./progression-menaet";
 import { seedProgressionGaps } from "./progression-gaps";
 import { seedCollegeContent, seedCollegeQuizzes } from "./college-content";
+import { seedTechnicalLessons } from "./tech-content";
 import { resolveUserGradeIds } from "./level";
 import { ensureRentreePromo } from "./promo";
 import { cleanupRevokedSessions } from "./session";
@@ -128,6 +129,7 @@ async function doInit() {
   await safeAsync("seedTechnicalGrades", seedTechnicalGrades);
   await safeAsync("seedGradeTracks", seedGradeTracks);
   await safeAsync("seedTechnicalChapters", seedTechnicalChapters);
+  await safeAsync("seedTechnicalLessons", seedTechnicalLessons);
   await safeAsync("normalizeDefaults", normalizeDefaults);
   await safeAsync("fixMojibake", fixMojibake);
   // Le compte admin est créé EN PREMIER : même si un seed échoue,
