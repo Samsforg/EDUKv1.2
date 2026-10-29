@@ -36,7 +36,7 @@ async function insertLesson(
   ).join("\n\n")}`;
 
   const result = await run(
-    "INSERT INTO lessons (chapter_id, title, summary, content_md, position, status) VALUES (?, ?, ?, ?, ?, 'pending')",
+    "INSERT INTO lessons (chapter_id, title, summary, content_md, position, status) VALUES (?, ?, ?, ?, ?, 'approved')",
     chapterId, lesson.title, lesson.summary, contentMd, position,
   );
   const lessonId = Number(result.lastInsertRowid);
@@ -451,4 +451,306 @@ export async function seedTechnicalLessons(): Promise<void> {
   }
 
   logger.info("[P239] Technical lessons seeding completed.");
+}
+
+// ─── QUIZ DATA ───────────────────────────────────────────────────────────────
+const TECH_QUIZZES: Record<number, { subject: string; questions: { q: string; opts: string[]; ans: number; exp: string }[] }> = {
+  // ls10455: Comptabilité — 2nde-AB — Les bases de la comptabilité
+  10455: {
+    subject: "comptabilite",
+    questions: [
+      { q: "La comptabilité ivoirienne est régie par :", opts: ["Le SYSCOHADA", "Le PLAN COMPTABLE", "L'OFCE", "Le Code civil"], ans: 0, exp: "Le SYSCOHADA est le référentiel comptable de l'UEMOA." },
+      { q: "Quel document justifie une vente de marchandises ?", opts: ["La facture", "Le bon de commande", "Le procès-verbal", "La lettre de transport"], ans: 0, exp: "La facture est la pièce justificative de toute vente." },
+      { q: "Un compte de la classe 2 du plan comptable SYSCOHADA contient :", opts: ["Des immobilisations", "Des stocks", "Des fournisseurs", "Du capital"], ans: 0, exp: "La classe 2 regroupe les immobilisations corporelles et incorporelles." },
+      { q: "Le fonds de roulement se calcule comme :", opts: ["Actif circulant − Dettes CT", "Actif total − Passif total", "Chiffre d'affaires − Achats", "Capitaux propres + Dettes"], ans: 0, exp: "FR = Actif circulant − Dettes à court terme." },
+      { q: "Quelle est la principale fonction de la comptabilité ?", opts: ["Enregistrer et analyser les opérations", "Payer les impôts", "Gérer les salariés", "Vendre des produits"], ans: 0, exp: "La comptabilité enregistre, classe et analyse les données financières." },
+    ],
+  },
+  // ls10456: Comptabilité — 1ère-G2 — Les coûts complets et partiels
+  10456: {
+    subject: "comptabilite",
+    questions: [
+      { q: "Une charge indirecte nécessite :", opts: ["Un répartiteur", "Aucun calcul", "Un budget prévisionnel", "Un audit externe"], ans: 0, exp: "Les charges indirectes sont réparties via des clés de répartition." },
+      { q: "Le coût de revient unitaire se calcule en divisant :", opts: ["Le coût total par le nombre d'unités", "Le CA par le nombre d'unités", "Le prix de vente par le nombre d'unités", "La marge par le nombre d'unités"], ans: 0, exp: "Coût unitaire = Coût total / Quantité produite." },
+      { q: "Au seuil de rentabilité :", opts: ["Le résultat est nul", "L'entreprise fait un bénéfice", "L'entreprise fait une perte", "Le CA est maximal"], ans: 0, exp: "Au seuil de rentabilité, CA = Coûts totaux, donc résultat = 0." },
+      { q: "La main-d'œuvre directe est une charge :", opts: ["Directe", "Indirecte", "Fixe uniquement", "Non déductible"], ans: 0, exp: "La main-d'œuvre directe est imputable directement au produit." },
+      { q: "La marge sur coûts variables = :", opts: ["CA − Coûts variables", "CA − Coûts fixes", "CA − Coûts totaux", "Prix de vente − Coût unitaire"], ans: 0, exp: "MCV = CA − CV. Elle couvre les charges fixes puis génère le résultat." },
+    ],
+  },
+  // ls10457: Comptabilité — 1ère-B — L'analyse des charges par comportement
+  10457: {
+    subject: "comptabilite",
+    questions: [
+      { q: "Un loyer est une charge :", opts: ["Fixe", "Variable", "Mixte", "Non déductible"], ans: 0, exp: "Le loyer est fixe : il ne varie pas avec le volume de production." },
+      { q: "La méthode de High-Low sert à :", opts: ["Séparer charges fixes et variables", "Calculer le CA", "Évaluer les stocks", "Déterminer le prix de vente"], ans: 0, exp: "Elle utilise les points extrêmes d'activité pour isoler la part fixe." },
+      { q: "Si le CV unitaire est de 200 FCFA et les CF de 100 000 FCFA, la charge totale pour 500 unités est :", opts: ["200 000 FCFA", "100 000 FCFA", "300 000 FCFA", "150 000 FCFA"], ans: 0, exp: "Charge totale = 100 000 + (500 × 200) = 200 000 FCFA." },
+      { q: "Les charges variables totales :", opts: ["Augmentent avec l'activité", "Restent constantes", "Diminuent avec l'activité", "Sont indépendantes de l'activité"], ans: 0, exp: "Les charges variables varient proportionnellement au volume d'activité." },
+      { q: "CV unitaire avec point haut 2 000 unités/600 000 FCFA et point bas 800 unités/360 000 FCFA :", opts: ["200 FCFA", "300 FCFA", "400 FCFA", "150 FCFA"], ans: 0, exp: "CV = (600 000 − 360 000) / (2 000 − 800) = 200 FCFA." },
+    ],
+  },
+  // ls10458: Comptabilité — Tle-G2 — Les regroupements comptables
+  10458: {
+    subject: "comptabilite",
+    questions: [
+      { q: "Le BFR mesure :", opts: ["Le décalage entre encaissements et décaissements", "Le résultat net", "Le chiffre d'affaires", "La trésorerie bancaire"], ans: 0, exp: "Le BFR reflète le besoin en trésorerie lié au cycle d'exploitation." },
+      { q: "Le FR = Ressources stabiles − :", opts: ["Emplois stabiles", "Dettes CT", "Capitaux propres", "Actif circulant"], ans: 0, exp: "FR = Ressources stabiles − Emplois stabiles." },
+      { q: "Un BFR négatif signifie :", opts: ["Les dettes CT dépassent le BCA", "L'entreprise est en faillite", "Le FR est négatif", "L'actif immobilisé est insuffisant"], ans: 0, exp: "BFR négatif = dettes CT > BCA : l'entreprise est financée par ses fournisseurs." },
+      { q: "La trésorerie nette est positive si :", opts: ["FR > BFR", "FR < BFR", "BFR = 0", "FR = 0"], ans: 0, exp: "Trésorerie nette = FR − BFR. Positive si le FR couvre le BFR." },
+      { q: "FR = 80M, BFR = 60M. Trésorerie nette :", opts: ["20M", "140M", "−20M", "80M"], ans: 0, exp: "Trésorerie = 80 − 60 = 20 millions FCFA." },
+    ],
+  },
+  // ls10459: Économie — 2nde-AB — Les agents économiques
+  10459: {
+    subject: "economie",
+    questions: [
+      { q: "Quel agent offre du travail sur le marché ?", opts: ["Les ménages", "Les entreprises", "L'État", "Le reste du monde"], ans: 0, exp: "Les ménages fournissent les facteurs de production (travail, capital)." },
+      { q: "Le cacao exporté entre dans :", opts: ["Les exportations (X)", "La consommation (C)", "L'investissement (I)", "Les dépenses publiques (G)"], ans: 0, exp: "Le cacao est la principale exportation ivoirienne." },
+      { q: "PIB = C + I + G + :", opts: ["(X − M)", "(M − X)", "C × I", "G × X"], ans: 0, exp: "PIB par la dépense : C + I + G + (Exportations − Importations)." },
+      { q: "L'État en Côte d'Ivoire :", opts: ["Prélève des impôts et fournit des services", "Produit uniquement des biens privés", "N'intervient pas dans l'économie", "Ne facture aucun service"], ans: 0, exp: "L'État collecte les impôts et finance les services publics." },
+      { q: "Le secteur informelle en Côte d'Ivoire représente :", opts: ["> 80% de l'emploi", "< 10% de l'emploi", "Exactement 50%", "Uniquement le secteur agricole"], ans: 0, exp: "L'informeldomine l'emploi ivoirien (>80%)." },
+    ],
+  },
+  // ls10460: Économie — 1ère-G2 — La politique monétaire UEMOA
+  10460: {
+    subject: "economie",
+    questions: [
+      { q: "Le siège de la BCEAO est à :", opts: ["Abidjan", "Paris", "Douala", "Lagos"], ans: 0, exp: "La BCEAO a son siège à Abidjan, Côte d'Ivoire." },
+      { q: "L'objectif principal de la BCEAO est :", opts: ["La stabilité des prix", "La croissance du PIB", "La réduction du chômage", "L'équilibre commercial"], ans: 0, exp: "Stabilité des prix = inflation < 3% en zone UEMOA." },
+      { q: "Quand la BCEAO augmente le taux directeur :", opts: ["Le coût du crédit augmente", "Le coût du crédit diminue", "Le PIB augmente immédiatement", "L'inflation chute instantanément"], ans: 0, exp: "Taux directeur ↑ → coût du crédit ↑ → investissement ↓ → inflation ↓." },
+      { q: "Le franc CFA (XOF) est adossé à :", opts: ["L'euro", "Le dollar américain", "Le livre sterling", "Le franc suisse"], ans: 0, exp: "Le franc CFA est lié à l'euro à un taux de fixée (655,957 XOF = 1 EUR)." },
+      { q: "L'indépendance de la BCEAO vise à :", opts: ["Éviter le financement monetaire des déficits", "Augmenter les profits bancaires", "Contrôler les taux de change privés", "Remplacer la Banque de France"], ans: 0, exp: "Sans indépendance, le gouvernement pourrait imprimer de la monnaie, causant de l'inflation." },
+    ],
+  },
+  // ls10461: Économie — 1ère-B — Demande et offre
+  10461: {
+    subject: "economie",
+    questions: [
+      { q: "Quand le prix est au-dessus de l'équilibre, il y a :", opts: ["Un surplus", "Une pénurie", "Un équilibre parfait", "Une demande excessive"], ans: 0, exp: "À un prix trop élevé, l'offre excède la demande → surplus." },
+      { q: "Une hausse du revenu des ménages déplace la demande vers :", opts: ["La droite", "La gauche", "Reste inchangée", "Vers le bas"], ans: 0, exp: "Un revenu plus élevé augmente la demande à chaque prix." },
+      { q: "Si Qd = 200 − 10P et Qo = 50 + 5P, le prix d'équilibre est :", opts: ["10", "5", "15", "20"], ans: 0, exp: "200 − 10P = 50 + 5P → 150 = 15P → P = 10." },
+      { q: "Une subvention aux producteurs déplace l'offre vers :", opts: ["La droite", "La gauche", "Reste inchangée", "Vers le haut"], ans: 0, exp: "Une subvention réduit le coût de production → offre augmente." },
+      { q: "Une sécheresse sur le marché du mangue déplace :", opts: ["L'offre vers la gauche", "La demande vers la droite", "L'offre vers la droite", "La demande vers la gauche"], ans: 0, exp: "La sécheresse réduit la production → offre se déplace vers la gauche." },
+    ],
+  },
+  // ls10462: Économie — Tle-G2 — Croissance et développement
+  10462: {
+    subject: "economie",
+    questions: [
+      { q: "L'IDH combine trois dimensions :", opts: ["Santé, éducation, revenu", "PIB, inflation, chômage", "Exportations, importations, IDE", "Population, surface, PIB"], ans: 0, exp: "IDH = espérance de vie + niveau d'instruction + revenu par habitant." },
+      { q: "Le PIB réel corrige :", opts: ["L'inflation", "Le taux de change", "La population", "Le chômage"], ans: 0, exp: "Le PIB réel est exprimé en prix constants, sans effet inflation." },
+      { q: "PIB nominal = 100M, indice des prix = 125. PIB réel :", opts: ["80M", "125M", "100M", "60M"], ans: 0, exp: "PIB réel = 100 / 1,25 = 80 millions FCFA." },
+      { q: "Un PIB élevé garantit un IDH élevé :", opts: ["Non, pas nécessairement", "Oui, toujours", "Seulement en Afrique", "Uniquement pour les pays riches"], ans: 0, exp: "Certains pays pétroliers ont un PIB élevé mais un IDH modéré." },
+      { q: "Le secteur agricole représente environ :", opts: ["~20% du PIB ivoirien", "~60%", "~80%", "< 5%"], ans: 0, exp: "L'agriculture (cacao, café, anacarde) représente ~20% du PIB." },
+    ],
+  },
+  // ls10463: Droit — 2nde-AB — Sources du droit en CI
+  10463: {
+    subject: "droit",
+    questions: [
+      { q: "La norme suprême en Côte d'Ivoire est :", opts: ["La Constitution", "La loi", "Le décret", "L'arrêté"], ans: 0, exp: "La Constitution de 1960 (révisée 2016) est la norme suprême." },
+      { q: "Un traité international ratifié a une valeur :", opts: ["Supérieure à la loi", "Inférieure à la loi", "Égale à la loi", "Nulle"], ans: 0, exp: "Art. 85 de la Constitution : les traités ratifiés priment sur les lois." },
+      { q: "L'OHADA a été fondée en :", opts: ["1993", "2001", "1960", "2010"], ans: 0, exp: "Traité d'Algésiras, 17 octobre 1993." },
+      { q: "Les actes uniformes OHADA prévalent sur :", opts: ["Le droit interne national", "La Constitution", "Les traités internationaux", "La coutume"], ans: 0, exp: "Les Actes Uniformes OHADA sont directement applicables et prévalent sur le droit national." },
+      { q: "Qui promulgue les lois en Côte d'Ivoire ?", opts: ["Le Président de la République", "L'Assemblée nationale", "Le Conseil constitutionnel", "Le Premier ministre"], ans: 0, exp: "Le Président promulgue les lois dans les 15 jours suivant leur adoption." },
+    ],
+  },
+  // ls10464: Droit — 1ère-B — Droit du travail en CI
+  10464: {
+    subject: "droit",
+    questions: [
+      { q: "La durée légale du travail en Côte d'Ivoire est de :", opts: ["40h par semaine", "35h par semaine", "48h par semaine", "38h par semaine"], ans: 0, exp: "40 heures par semaine, soit 8h par jour (Code du travail ivoirien)." },
+      { q: "Le SMI en 2024 est de :", opts: ["51 000 FCFA/mois", "30 000 FCFA/mois", "100 000 FCFA/mois", "25 000 FCFA/mois"], ans: 0, exp: "Le SMI a été revalorisé à 51 000 FCFA/mois en 2024." },
+      { q: "Un salarié licencié avec 5 ans d'ancienneté et 150 000 FCFA de salaire touche :", opts: ["750 000 FCFA d'indemnité", "150 000 FCFA", "300 000 FCFA", "Aucune indemnité"], ans: 0, exp: "Indemnité = 1 mois × 5 ans × 150 000 = 750 000 FCFA." },
+      { q: "Un CDD peut être renouvelé indéfiniment :", opts: ["Non, c'est interdit", "Oui, sans limite", "Oui, mais 3 fois max", "Oui, si le salarié accepte"], ans: 0, exp: "Le CDD a une durée limitée. Le renouvellement est strictement encadré." },
+      { q: "Les congés payés annuels en Côte d'Ivoire sont de :", opts: ["30 jours ouvrables", "15 jours", "20 jours", "25 jours"], ans: 0, exp: "2,5 jours ouvrables par mois de travail = 30 jours par an." },
+    ],
+  },
+  // ls10465: Droit — Tle-G2 — Procédures collectives
+  10465: {
+    subject: "droit",
+    questions: [
+      { q: "Le redressement judiciaire vise à :", opts: ["Permettre la continuation de l'activité", "Liquidater tous les actifs", "Fermer l'entreprise", "Remplacer le dirigeant"], ans: 0, exp: "Le redressement judiciaire sauvegarde l'emploi et l'activité." },
+      { q: "Qui peut demander l'ouverture d'une procédure collective ?", opts: ["Le débiteur, un créancier ou le ministère public", "Uniquement le débiteur", "Uniquement le créancier", "Uniquement le juge"], ans: 0, exp: "Trois catégories peuvent saisir le tribunal." },
+      { q: "Un jugement de liquidation judiciaire met fin à :", opts: ["L'activité de l'entreprise", "Uniquement les dettes", "Les contrats de travail", "Les emprunts"], ans: 0, exp: "La liquidation judiciaire entraîne la cessation d'activité." },
+      { q: "Passif Net Comptable = Dettes − Actifs. Dettes 500M, Actifs 300M :", opts: ["200M", "800M", "−200M", "300M"], ans: 0, exp: "PNC = 500 − 300 = 200 millions FCFA." },
+      { q: "L'Acte Uniforme OHADA relatif aux procédures collectives a été révisé en :", opts: ["2015", "2000", "1993", "2020"], ans: 0, exp: "L'AU PC a été révisé en 2015 pour moderniser le droit des procédures collectives." },
+    ],
+  },
+  // ls10466: Informatique — 2nde-AB — Introduction à l'informatique
+  10466: {
+    subject: "informatique",
+    questions: [
+      { q: "Le processeur (CPU) est surnommé :", opts: ["Le cerveau de l'ordinateur", "La mémoire de l'ordinateur", "L'écran de l'ordinateur", "Le disque dur"], ans: 0, exp: "Le CPU exécute les instructions et coordonne les composants." },
+      { q: "La RAM est une mémoire :", opts: ["Volatile", "Permanente", "Optique", "Magnétique"], ans: 0, exp: "La RAM perd son contenu lorsque l'ordinateur est éteint." },
+      { q: "Linux est un système d'exploitation :", opts: ["Open source", "Propriétaire", "Exclusivement Windows", "Un antivirus"], ans: 0, exp: "Linux est open source : son code source est librement accessible." },
+      { q: "Combien de bits dans 1 octet ?", opts: ["8", "4", "16", "32"], ans: 0, exp: "1 octet = 8 bits." },
+      { q: "Un SSD se distingue d'un disque dur par :", opts: ["Son absence de pièces mobiles", "Sa capacité moindre", "Son prix plus bas", "Son poids plus élevé"], ans: 0, exp: "Le SSD utilise des puces mémoire sans pièces mécaniques." },
+    ],
+  },
+  // ls10467: Informatique — 1ère-G2 — Algorithmique
+  10467: {
+    subject: "informatique",
+    questions: [
+      { q: "Le tri à bulles a une complexité en :", opts: ["O(n²)", "O(n)", "O(log n)", "O(1)"], ans: 0, exp: "Le tri à bulles effectue n×(n−1)/2 comparaisons dans le pire cas." },
+      { q: "`range(1, 5)` en Python génère :", opts: ["1, 2, 3, 4", "1, 2, 3, 4, 5", "0, 1, 2, 3, 4", "2, 3, 4, 5"], ans: 0, exp: "range(1, 5) va de 1 inclus à 5 exclus." },
+      { q: "Un tableau a une taille :", opts: ["Fixe", "Dynamique", "Aléatoire", "Infinie"], ans: 0, exp: "Les tableaux ont une taille fixe. Les listes Python sont dynamiques." },
+      { q: "Combien d'itérations pour trier 5 éléments avec le tri à bulles ?", opts: ["10", "5", "25", "20"], ans: 0, exp: "5×4/2 = 10 comparaisons dans le pire cas." },
+      { q: "L'opérateur `%` en Python est :", opts: ["Le modulo (reste de la division)", "La multiplication", "La puissance", "La division"], ans: 0, exp: "`17 % 5` donne 2, le reste de la division entière." },
+    ],
+  },
+  // ls10468: Informatique — 1ère-B — Programmation Python
+  10468: {
+    subject: "informatique",
+    questions: [
+      { q: "Quel type de donnée est `42` en Python ?", opts: ["int", "str", "float", "bool"], ans: 0, exp: "42 est un entier (integer)." },
+      { q: "La fonction `input()` retourne :", opts: ["Une chaîne de caractères", "Un entier", "Un flottant", "Un booléen"], ans: 0, exp: "input() lit une ligne au clavier et la retourne toujours comme str." },
+      { q: "`True` et `False` en Python sont :", opts: ["Des booléens intégrés", "Des chaînes de caractères", "Des fonctions", "Des variables"], ans: 0, exp: "True et False sont des booléens intégrés au langage." },
+      { q: "Pour convertir une chaîne en entier en Python :", opts: ["int('42')", "str(42)", "float('42')", "bool('42')"], ans: 0, exp: "int() convertit une chaîne numérique en entier." },
+      { q: "L'âge légal de la majorité en Côte d'Ivoire est :", opts: ["18 ans", "16 ans", "21 ans", "25 ans"], ans: 0, exp: "La majorité civile en Côte d'Ivoire est fixée à 18 ans." },
+    ],
+  },
+  // ls10469: Informatique — Tle-G2 — Réseaux
+  10469: {
+    subject: "informatique",
+    questions: [
+      { q: "Un switch fonctionne à la couche :", opts: ["2 (Liaison)", "3 (Réseau)", "1 (Physique)", "7 (Application)"], ans: 0, exp: "Le switch utilise les adresses MAC (couche 2 OSI)." },
+      { q: "L'adresse IP 192.168.1.1 est :", opts: ["Privée", "Publique", "De broadcast", "De multicast"], ans: 0, exp: "192.168.0.0/16 est réservé aux réseaux privés (RFC 1918)." },
+      { q: "Combien d'hôtes dans un réseau /24 ?", opts: ["254", "256", "255", "253"], ans: 0, exp: "2^8 − 2 = 254 hôtes (adresse réseau + broadcast exclus)." },
+      { q: "TCP est un protocole :", opts: ["Orienté connexion", "Non orienté connexion", "Sans fichier", "Sans protocole"], ans: 0, exp: "TCP établit une connexion avant transfert (3-way handshake)." },
+      { q: "Le protocole HTTP fonctionne à la couche :", opts: ["7 (Application)", "4 (Transport)", "3 (Réseau)", "2 (Liaison)"], ans: 0, exp: "HTTP est un protocole de la couche application (couche 7 OSI)." },
+    ],
+  },
+  // ls10470: Marketing — 2nde-AB — Fondamentaux
+  10470: {
+    subject: "marketing",
+    questions: [
+      { q: "Un besoin devient une demande quand il est soutenu par :", opts: ["Un pouvoir d'achat", "Une publicité", "Un marketing", "Une marque"], ans: 0, exp: "La demande = besoin + capacité à payer." },
+      { q: "Le processus marketing commence par :", opts: ["L'analyse du marché", "La vente", "La production", "La publicité"], ans: 0, exp: "Avant toute action, il faut comprendre le marché." },
+      { q: "Marketing et vente sont :", opts: ["Différents mais complémentaires", "Identiques", "Opposés", "Indépendants"], ans: 0, exp: "Le marketing est plus large : recherche, positionnement, mix marketing." },
+      { q: "Segmenter un marché consiste à :", opts: ["Diviser en groupes homogènes", "Vendre à tout le monde", "Fixer un prix bas", "Créer une marque"], ans: 0, exp: "La segmentation divise un marché hétérogène en sous-marchés homogènes." },
+      { q: "Le CA de 200 unités à 5 000 FCFA est :", opts: ["1 000 000 FCFA", "200 000 FCFA", "5 000 FCFA", "2 000 000 FCFA"], ans: 0, exp: "CA = 200 × 5 000 = 1 000 000 FCFA." },
+    ],
+  },
+  // ls10471: Marketing — 1ère-B — Mix marketing opérationnel
+  10471: {
+    subject: "marketing",
+    questions: [
+      { q: "La stratégie d'écrémage consiste à :", opts: ["Fixer un prix élevé au lancement", "Fixer un prix bas", "Ne pas publisier", "Distribuer gratuitement"], ans: 0, exp: "Écrémage : prix haut pour maximiser la marge sur les early adopters." },
+      { q: "Le prix 999 FCFA au lieu de 1 000 FCFA est une stratégie de :", opts: ["Prix charmant", "Prix d'écrémage", "Prix de pénétration", "Prix psychological"], ans: 0, exp: "Le prix charmant crée une illusion de prix inférieur." },
+      { q: "La promotion comprend :", opts: ["Publicité, RP, vente promo, marketing direct", "Uniquement la publicité", "Uniquement les réseaux sociaux", "Uniquement le bouche-à-oreille"], ans: 0, exp: "La promotion intègre tous les outils de communication commerciale." },
+      { q: "Budget promo 2M FCFA,CAC 5 000 FCFA. Clients acquis :", opts: ["400", "2 000", "100", "10 000"], ans: 0, exp: "Clients = 2 000 000 / 5 000 = 400." },
+      { q: "Le e-commerce en Côte d'Ivoire est porté par :", opts: ["Jumia CI, Yala, vendeurs WhatsApp", "Uniquement Facebook", "Uniquement Amazon", "Uniquement Instagram"], ans: 0, exp: "Le e-commerce ivoirien combine plateformes et réseaux sociaux." },
+    ],
+  },
+  // ls10472: Marketing — Tle-B — Marketing stratégique
+  10472: {
+    subject: "marketing",
+    questions: [
+      { q: "Dans la matrice BCG, une vache à lait a :", opts: ["Fort part de marché, faible croissance", "Faible part de marché, forte croissance", "Fort part et forte croissance", "Faible part et faible croissance"], ans: 0, exp: "Les vaches à lait génèrent du cash avec peu d'investissement." },
+      { q: "SWOT analyse :", opts: ["Forces, faiblesses, opportunités, menaces", "Prix, produit, place, promotion", "Coûts, revenus, profits, pertes", "Clients, concurrents, fournisseurs, employés"], ans: 0, exp: "SWOT = Strengths, Weaknesses, Opportunities, Threats." },
+      { q: "Le positionnement concerne :", opts: ["L'image du produit dans l'esprit du consommateur", "Uniquement le prix", "Uniquement la distribution", "Uniquement la publicité"], ans: 0, exp: "Le positionnement englobe image, qualité perçue, target, etc." },
+      { q: "Part de marché = CA entreprise / CA marché. CA entreprise 50M, marché 250M :", opts: ["20%", "50%", "25%", "10%"], ans: 0, exp: "Part de marché = 50/250 = 20%." },
+      { q: "L'analyse PESTEL étudie :", opts: ["Facteurs politiques, économiques, sociaux, technologiques, environnementaux, légaux", "Uniquement les facteurs financiers", "Uniquement la concurrence", "Uniquement les clients"], ans: 0, exp: "PESTEL = Political, Economic, Social, Technological, Environmental, Legal." },
+    ],
+  },
+  // ls10473: Gestion — 1ère-G2 — GRH
+  10473: {
+    subject: "gestion",
+    questions: [
+      { q: "Le turnover mesure :", opts: ["La rotation du personnel", "Le chiffre d'affaires", "Le nombre de clients", "Le volume de production"], ans: 0, exp: "Turnover = taux de départ des employés sur une période." },
+      { q: "25 départs sur 200 employés. Taux de turnover :", opts: ["12,5%", "25%", "50%", "10%"], ans: 0, exp: "Turnover = (25 / 200) × 100 = 12,5%." },
+      { q: "Le comité d'entreprise est obligatoire à partir de :", opts: ["20 salariés environ", "5 salariés", "100 salariés", "Jamais"], ans: 0, exp: "Le CE est obligatoire à partir d'un seuil d'effectif (généralement 20+)." },
+      { q: "La formation vise à :", opts: ["Développer les compétences des salariés", "Réduire les salaires", "Augmenter le turnover", "Supprimer les postes"], ans: 0, exp: "La formation améliore les compétences, la motivation et la productivité." },
+      { q: "Un défi de la GRH en PME ivoirienne est :", opts: ["L'attractivité face aux grandes entreprises", "Le trop grand nombre d'employés", "L'absence de.getCode du travail", "La saturation du marché du travail"], ans: 0, exp: "Les PME ivoiriennes peinent à attirer et retenir les talents qualifiés." },
+    ],
+  },
+  // ls10474: Gestion — Tle-G2 — Gestion stratégique
+  10474: {
+    subject: "gestion",
+    questions: [
+      { q: "SMART signifie :", opts: ["Spécifique, Mesurable, Atteignable, Réaliste, Temporel", "Simple, Rapide, Moderne, Agile, Rentable", "Stratégique, Méthodique, Ambitieux, Réfléchi, Temporel", "Standard, Mesuré, Adapté, Rigoureux, Mesurable"], ans: 0, exp: "Framework de fixation d'objectifs efficace." },
+      { q: "L'analyse PESTEL étudie :", opts: ["Facteurs macro-environnementaux", "Uniquement la concurrence", "Uniquement les finances", "Uniquement les RH"], ans: 0, exp: "PESTEL analyse le contexte politique, économique, social, etc." },
+      { q: "Un tableau de bord contient :", opts: ["KPI financiers et non-financiers", "Uniquement des chiffres financiers", "Uniquement des objectifs", "Uniquement des budgets"], ans: 0, exp: "Un tableau de bord moderne combine indicateurs financiers et qualitatifs." },
+      { q: "ROI = (Gain − Coût) / Coût. Gain 3M, Coût 2M :", opts: ["50%", "100%", "33%", "150%"], ans: 0, exp: "ROI = (3 − 2) / 2 = 0,5 = 50%." },
+      { q: "Le processus stratégique commence par :", opts: ["L'analyse stratégique (SWOT, PESTEL)", "La mise en œuvre", "L'évaluation", "La définition des objectifs"], ans: 0, exp: "Avant de fixer des objectifs, il faut analyser le contexte interne et externe." },
+    ],
+  },
+  // ls10475: ls1 repair — Comptabilité — 2nde-G2
+  10475: {
+    subject: "comptabilite",
+    questions: [
+      { q: "La comptabilité ivoirienne est régie par :", opts: ["Le SYSCOHADA", "Le code de commerce", "La loi financière", "Le plan Comptable français"], ans: 0, exp: "Le SYSCOHADA est le référentiel comptable applicable en Côte d'Ivoire." },
+      { q: "Quel document justifie une vente de marchandises ?", opts: ["La facture", "Le bordereau", "Le reçu", "Le contrat"], ans: 0, exp: "La facture est le document commercial qui constate une vente." },
+      { q: "Une remise de 10% sur 500 000 FCFA donne un net de :", opts: ["450 000 FCFA", "500 000 FCFA", "400 000 FCFA", "550 000 FCFA"], ans: 0, exp: "500 000 − (500 000 × 10%) = 450 000 FCFA." },
+      { q: "Le relevé bancaire est émis par :", opts: ["La banque", "L'entreprise", "Le fisc", "Le client"], ans: 0, exp: "Le relevé bancaire est émis par la banque." },
+      { q: "La comptabilité permet notamment de :", opts: ["Suivre les recettes et dépenses", "Éviter de payer des impôts", "Remplacer le dirigeant", "Supprimer les employés"], ans: 0, exp: "La comptabilité permet de suivre la situation financière et prendre des décisions." },
+    ],
+  },
+};
+
+// ─── SEED TECHNICAL QUIZZES ──────────────────────────────────────────────────
+
+// Mapping from original lesson IDs to lesson titles (for idempotent quiz creation across environments)
+const TECH_QUIZ_LESSON_TITLES: Record<number, string> = {
+  10455: "Les bases de la comptabilité",
+  10456: "Les coûts complets et partiels",
+  10457: "L'analyse des charges par comportement",
+  10458: "Les regroupements comptables",
+  10459: "Les agents économiques et leurs interactions",
+  10460: "La politique monétaire en zone UEMOA",
+  10461: "La demande et l'offre — équilibre de marché",
+  10462: "La croissance économique et le développement",
+  10463: "Les sources du droit en Côte d'Ivoire",
+  10464: "Le droit du travail en Côte d'Ivoire",
+  10465: "Les procédures collectives",
+  10466: "Introduction à l'informatique",
+  10467: "Algorithmique et structures de données",
+  10468: "Introduction à la programmation — Python",
+  10469: "Les réseaux informatiques",
+  10470: "Les fondamentaux du marketing",
+  10471: "Le mix marketing opérationnel",
+  10472: "Le marketing stratégique",
+  10473: "La gestion des ressources humaines",
+  10474: "La gestion stratégique d'entreprise",
+};
+
+export async function seedTechnicalQuizzes(): Promise<void> {
+  for (const [lessonIdStr, quizData] of Object.entries(TECH_QUIZZES)) {
+    const lid = Number(lessonIdStr);
+
+    const lessonTitle = TECH_QUIZ_LESSON_TITLES[lid];
+    if (!lessonTitle) { logger.info("[P239] Quiz skip: no title mapping for " + lid); continue; }
+    const lessonRow = await queryOne<{ id: number; chapter_id: number }>(
+      "SELECT id, chapter_id FROM lessons WHERE title = ?", lessonTitle,
+    );
+    if (!lessonRow) { logger.info("[P239] Quiz skip: lesson " + lid + " not found"); continue; }
+
+    const chRow = await queryOne<{ subject_id: number }>(
+      "SELECT subject_id FROM chapters WHERE id = ?", lessonRow.chapter_id,
+    );
+    if (!chRow) { logger.info("[P239] Quiz skip: chapter not found for lesson " + lid); continue; }
+
+    const existingQuiz = await queryOne<{ id: number }>(
+      "SELECT id FROM quizzes WHERE chapter_id = ? AND title LIKE ?",
+      lessonRow.chapter_id, "%Leçon " + lessonRow.id + "%",
+    );
+    if (existingQuiz) { logger.info("[P239] Quiz skip: quiz already exists for lesson " + lid); continue; }
+
+    const quizTitle = "Quiz : " + quizData.subject.toUpperCase() + " — Leçon " + lessonRow.id;
+    const quizResult = await run(
+      "INSERT INTO quizzes (subject_id, chapter_id, title, level, position, status) VALUES (?, ?, ?, '', 0, 'approved')",
+      chRow.subject_id, lessonRow.chapter_id, quizTitle,
+    );
+    const quizId = Number(quizResult.lastInsertRowid);
+    logger.info("[P239] Created quiz q" + quizId + " for lesson " + lid);
+
+    for (let qi = 0; qi < quizData.questions.length; qi++) {
+      const q = quizData.questions[qi];
+      await run(
+        "INSERT INTO questions (quiz_id, question, options, answer_index, explanation, points, position) VALUES (?, ?, ?, ?, ?, 1, ?)",
+        quizId, q.q, JSON.stringify(q.opts), q.ans, q.exp, qi,
+      );
+    }
+  }
+  logger.info("[P239] Technical quizzes seeding completed.");
 }
