@@ -15,7 +15,7 @@ import { Hanken_Grotesk, Inter } from "next/font/google";
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
   variable: "--font-hanken",
-  display: "swap",
+  display: "optional",
   preload: true,
   fallback: ["system-ui", "sans-serif"],
 });
@@ -23,7 +23,7 @@ const hankenGrotesk = Hanken_Grotesk({
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  display: "swap",
+  display: "optional",
   preload: true,
   fallback: ["system-ui", "sans-serif"],
 });

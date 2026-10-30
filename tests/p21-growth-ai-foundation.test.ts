@@ -39,6 +39,7 @@ import {
 import { computeGrowthData } from "@/lib/growth/decision/data";
 import type { GrowthData, SegmentKey } from "@/lib/growth/decision/types";
 import { queryOne, run } from "@/lib/db";
+import { ensureAnalyticsTable } from "@/lib/analytics-db";
 
 const NOW = "1999-01-08T12:00:00.000Z";
 const PERIOD = { from: "1999-01-01", to: "1999-01-07", days: 7 };
@@ -756,6 +757,13 @@ describe("P2.1 §18 — idempotence", () => {
 describe("P2.1 — couche data SQL (test users exclus, comptages réels)", () => {
   const ANCHOR = "1999-01-05";
   const createdUserIds: number[] = [];
+
+  beforeAll(async () => {
+    // CI shard 2 : aucune suite antérieure du shard n'appelle ensureAnalyticsTable,
+    // la table n'existe donc pas dans la SQLite vierge. Celui-ci garantit le DDL
+    // (CREATE TABLE IF NOT EXISTS, idempotent).
+    await ensureAnalyticsTable();
+  });
 
   async function makeFixtureUser(isTest: boolean): Promise<number> {
     const suffix = `${Date.now()}_${Math.floor(Math.random() * 1e6)}`;

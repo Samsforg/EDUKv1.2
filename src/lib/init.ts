@@ -5,6 +5,7 @@ import { hashPassword, verifyPassword } from "./auth";
 import { seedProgressionMENAET } from "./progression-menaet";
 import { seedProgressionGaps } from "./progression-gaps";
 import { seedCollegeContent, seedCollegeQuizzes } from "./college-content";
+import { seedTechnicalLessons, seedTechnicalQuizzes } from "./tech-content";
 import { resolveUserGradeIds } from "./level";
 import { ensureRentreePromo } from "./promo";
 import { cleanupRevokedSessions } from "./session";
@@ -128,6 +129,8 @@ async function doInit() {
   await safeAsync("seedTechnicalGrades", seedTechnicalGrades);
   await safeAsync("seedGradeTracks", seedGradeTracks);
   await safeAsync("seedTechnicalChapters", seedTechnicalChapters);
+  await safeAsync("seedTechnicalLessons", seedTechnicalLessons);
+  await safeAsync("seedTechnicalQuizzes", seedTechnicalQuizzes);
   await safeAsync("normalizeDefaults", normalizeDefaults);
   await safeAsync("fixMojibake", fixMojibake);
   // Le compte admin est créé EN PREMIER : même si un seed échoue,
@@ -531,7 +534,7 @@ async function seedGradeTracks() {
   );
 }
 
-async function seedTechnicalGrades() {
+export async function seedTechnicalGrades() {
   const existing = await queryOne<{ c: number }>("SELECT COUNT(*) AS c FROM grades WHERE code IN ('2nde_g2','2nde_ab','1ere_g2','1ere_b','term_b','term_g2')");
   if (existing && existing.c > 0) return;
 
@@ -549,7 +552,7 @@ async function seedTechnicalGrades() {
   }
 }
 
-async function seedTechnicalSubjects() {
+export async function seedTechnicalSubjects() {
   // Additional technical subjects (comptabilité, économie, droit, informatique, etc.)
   const techSubjects: [string, string, string, string, string][] = [
     ["comptabilite", "Comptabilité", "calculate", "#424242", '{"2nde_g2":2,"2nde_ab":3,"1ere_g2":3,"1ere_b":4,"term_b":5,"term_g2":4}'],
@@ -567,7 +570,7 @@ async function seedTechnicalSubjects() {
   }
 }
 
-async function seedTechnicalChapters() {
+export async function seedTechnicalChapters() {
   // Ensure technical grades exist
   await seedTechnicalGrades();
   await seedTechnicalSubjects();

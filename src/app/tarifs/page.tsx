@@ -25,6 +25,7 @@ export const metadata: Metadata = {
     type: "website",
   },
 };
+export const revalidate = 300;
 
 const faq = [
   {

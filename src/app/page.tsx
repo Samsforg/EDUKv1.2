@@ -11,6 +11,8 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
+export const dynamic = "force-static";
+export const revalidate = 300;
 
 export default function Page() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://edukora.net";
@@ -182,7 +184,7 @@ export default function Page() {
             <div className="relative">
               <div className="absolute -top-20 -right-20 w-80 h-80 bg-primary opacity-5 rounded-[999px] blur-3xl" />
               <div className="relative bg-white/80 backdrop-blur-md rounded-[32px] p-4 shadow-2xl border border-outline-variant/40 lg:rotate-2 transition-transform">
-                <div className="w-full h-full rounded-[24px] aspect-[4/5]">
+                <div className="w-full h-[320px] md:h-[400px] rounded-[24px] aspect-[4/5]">
                   <HeroCarousel />
                 </div>
                 <div className="absolute -left-4 md:-left-6 bottom-12 bg-white p-4 rounded-[20px] shadow-xl border border-outline-variant flex items-center gap-3 max-w-[200px]">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import MarketingHeader from "@/components/MarketingHeader";
 import MarketingFooter from "@/components/MarketingFooter";
 import NewsletterSection from "@/components/NewsletterSection";
@@ -24,6 +25,8 @@ export const metadata: Metadata = {
     type: "website",
   },
 };
+export const dynamic = "force-static";
+export const revalidate = 300;
 
 export default function Page() {
   const posts = getAllPosts();
@@ -116,7 +119,9 @@ export default function Page() {
         </div>
       </section>
 
-      <NewsletterSection source="blog" />
+      <Suspense fallback={<div className="py-20 px-4 md:px-8 bg-surface-container-low" aria-hidden="true" />} >
+        <NewsletterSection source="blog" />
+      </Suspense>
 
       <MarketingFooter />
     </div>
