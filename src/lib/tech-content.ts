@@ -217,12 +217,12 @@ const DROIT_LESSONS: Record<string, LessonSeed[]> = {
     {
       title: "Les sources du droit en Côte d'Ivoire",
       summary: "Constitution, lois, règlements — hiérarchie des normes.",
-      content: `Le droit ivoirien repose sur plusieurs sources, hiérarchisées selon la pyramide de Kelsen.\n\n**Pyramide des normes :**\n1. Constitution (norme suprême, révisée en 2016)\n2. Traités internationaux ratifiés (art. 85)\n3. Lois organiques et ordinaires\n4. Décrets (Président)\n5. Arrêtés (Ministres, Préfets, Maires)\n\n**L'OHADA** (Organisation pour l'Harmonisation en Afrique du Droit des Affaires) : les Actes Uniformes prévalent sur le droit interne national. La Côte d'Ivoire est membre fondateur (1993).\n\n**Actes uniformes OHADA appliqués :** Droit commercial général, Sociétés commerciales, Droit des sûretés, Procédures collectives, Arbitrage.`,
+      content: `Le droit ivoirien repose sur plusieurs sources, hiérarchisées selon la pyramide de Kelsen.\n\n**Pyramide des normes :**\n1. Constitution (norme suprême : Constitution du 8 novembre 2016, loi n°2016-886)\n2. Traités internationaux ratifiés (art. 123 de la Constitution)\n3. Lois organiques et ordinaires\n4. Décrets (Président)\n5. Arrêtés (Ministres, Préfets, Maires)\n\n**L'OHADA** (Organisation pour l'Harmonisation en Afrique du Droit des Affaires) : les Actes Uniformes prévalent sur le droit interne national. La Côte d'Ivoire est membre fondateur (1993).\n\n**Actes uniformes OHADA appliqués :** Droit commercial général, Sociétés commerciales, Droit des sûretés, Procédures collectives, Arbitrage.`,
       exercises: [
-        { type: "qcm", question: "Quelle est la norme suprême en Côte d'Ivoire ?", answer: "La Constitution", explanation: "La Constitution de 1960 (révisée) est la norme suprême." },
-        { type: "qcm", question: "Un traité international ratifié a une valeur :", answer: "Supérieure à la loi", explanation: "Art. 85 de la Constitution ivoirienne." },
+        { type: "qcm", question: "Quelle est la norme suprême en Côte d'Ivoire ?", answer: "La Constitution", explanation: "La Constitution du 8 novembre 2016 (loi n°2016-886) est la norme suprême." },
+        { type: "qcm", question: "Un traité international ratifié a une valeur :", answer: "Supérieure à la loi", explanation: "Art. 123 de la Constitution du 8 novembre 2016 (loi n°2016-886)." },
         { type: "vrai_faux", question: "Un arrêté préfectoral peut contredire une loi.", answer: "Faux", explanation: "Un arrêté ne peut contredire une loi : hiérarchie des normes." },
-        { type: "qcm", question: "L'OHADA a été fondée en :", answer: "1993", explanation: "L'OHADA a été créée par le traité d'Algésiras le 17 octobre 1993." },
+        { type: "qcm", question: "L'OHADA a été fondée en :", answer: "1993", explanation: "L'OHADA a été créée par le traité de Port-Louis (Île Maurice) du 17 octobre 1993." },
         { type: "ouvert", question: "Pourquoi les Actes Uniformes OHADA sont-ils supérieurs au droit national ivoirien ?", answer: "Par le principe de primauté du droit communautaire : les Actes Uniformes sont directement applicables dans tous les États membres et prévalent sur les lois nationales contradictoires, assurant une sécurité juridique pour les affaires transfrontalières.", explanation: "" },
       ],
     },
@@ -231,12 +231,12 @@ const DROIT_LESSONS: Record<string, LessonSeed[]> = {
     {
       title: "Le droit du travail en Côte d'Ivoire",
       summary: "Code du travail, contrat de travail, droits et obligations des parties.",
-      content: `Le Code du travail ivoirien (Loi n°60-224 du 28 mars 1960, modifiée) régit les relations de travail.\n\n**Types de contrats :**\n| Contrat | Durée | Usage |\n|---------|-------|-------|\n| CDI | Indéterminée | Emploi stable |\n| CDD | Déterminée | Remplacement, saisonnier |\n| Contrat temporaire | Court terme | Travaux ponctuels |\n\n**Durée légale du travail :** 40h/semaine (8h/jour).\n**Salarié minimum interprofessionnel (SMI) 2024 :** 51 000 FCFA/mois (revalorisé annuellement).\n\n**Droits du salarié :**\n- Droit à un salaire équitable\n- Droit syndical et grève\n- Congés payés (2,5 jours ouvrables/mois = 30 jours/an)\n- Sécurité et santé au travail\n\n**Licenciement :** Doit être réel et sérieux. Indemnité légale = 1 mois de salaire par année d'ancienneté (plafonnée).`,
+      content: `Le Code du travail ivoirien (Loi n°60-224 du 28 mars 1960, modifiée) régit les relations de travail.\n\n**Types de contrats :**\n| Contrat | Durée | Usage |\n|---------|-------|-------|\n| CDI | Indéterminée | Emploi stable |\n| CDD | Déterminée | Remplacement, saisonnier |\n| Contrat temporaire | Court terme | Travaux ponctuels |\n\n**Durée légale du travail :** 40h/semaine (8h/jour).\n**SMIG (Salaire Minimum Interprofessionnel Garanti) :** 75 000 FCFA/mois (depuis le 1er janvier 2023 — décret n°2022-986 du 21/12/2022).\n\n**Droits du salarié :**\n- Droit à un salaire équitable\n- Droit syndical et grève\n- Congés payés (2,5 jours ouvrables/mois = 30 jours/an)\n- Sécurité et santé au travail\n\n**Licenciement :** Doit être réel et sérieux. Indemnité légale = 1 mois de salaire par année d'ancienneté (plafonnée).`,
       exercises: [
         { type: "qcm", question: "La durée légale du travail en Côte d'Ivoire est de :", answer: "40h par semaine", explanation: "40 heures par semaine, soit 8h par jour." },
         { type: "calcul", question: "Un salarié avec 5 ans d'ancienneté et un salaire de 150 000 FCFA est licencié. Quelle est son indemnité ?", answer: "750 000", explanation: "Indemnité = 150 000 × 5 = 750 000 FCFA." },
         { type: "vrai_faux", question: "Un CDD peut être renouvelé indéfiniment.", answer: "Faux", explanation: "Un CDD a une durée limitée. Le renouvellement est encadré par la loi." },
-        { type: "qcm", question: "Le salaire minimum interprofessionnel (SMI) en 2024 est de :", answer: "51 000 FCFA/mois", explanation: "Le SMI a été revalorisé à 51 000 FCFA en 2024." },
+        { type: "qcm", question: "Le SMIG en Côte d'Ivoire (depuis le 1er janvier 2023) est de :", answer: "75 000 FCFA/mois", explanation: "Le SMIG est passé de 60 000 à 75 000 FCFA/mois le 1er janvier 2023 (décret n°2022-986 du 21 décembre 2022)." },
         { type: "ouvert", question: "Quels sont les recours d'un salarié qui estime son licenciement abusif ?", answer: "Le salarié peut saisir le Conseil de prud'hommes (juridiction compétente). Si le licenciement est jugé abusif, l'employeur devra payer des dommages et intérêts. Le salarié peut aussi demander sa réintégration.", explanation: "" },
       ],
     },
@@ -409,11 +409,118 @@ const GESTION_LESSONS: Record<string, LessonSeed[]> = {
   ],
 };
 
+// ─── LOT B — LEÇONS MANQUANTES (P239.33) ────────────────────────────────────
+// Économie Tle-B: Le marché du travail (ch846)
+// Droit 2nde-G2: Introduction au droit (ch848)
+// Droit 1ère-G2: Les contrats (ch850)
+
+export const LOTB_ECO: Record<string, any[]> = {
+  "term_b": [
+{
+      title: "Le marché du travail",
+      summary: "Emploi, chômage, salaires et politiques de l'emploi en Côte d'Ivoire.",
+      content: "Le marché du travail est le lieu où se rencontrent l'offre de travail (les travailleurs) et la demande de travail (les employeurs). Il détermine le niveau d'emploi, le chômage et les salaires.\n\n**Le chômage**\n\nLe chômage est la situation d'une personne sans emploi qui cherche activement un travail. Le taux de chômage se calcule :\n\nTaux de chômage = (Nombre de chômeurs / Population active) × 100\n\n**Types de chômage :**\n- **Frictionnel** : transition entre deux emplois (normal, court terme)\n- **Structurel** : décalage entre les compétences des travailleurs et les besoins des entreprises\n- **Conjoncturel** : lié à la baisse de l'activité économique\n- **Saisonnier** : lié aux variations saisonnières (agriculture, tourisme)\n\n**Le salaire**\n\nLe salaire est la rémunération du travail. En Côte d'Ivoire :\n- **SMIG (Salaire Minimum Interprofessionnel Garanti)** : 75 000 FCFA/mois (depuis janvier 2023, décret n°2022-986)\n- **SMAG (Salaire Minimum Agricole Garanti)** : légèrement inférieur au SMIG\n\n**Déterminants du salaire :**\n- Productivité du travailleur\n- Niveau de qualification\n- Offre et demande sur le marché du travail\n- Négociations collectives (conventions collectives)\n- Réglementation (SMIG, SMAG)\n\n**Le marché du travail en Côte d'Ivoire**\n\n- Population active : ~12 millions (2024)\n- Taux de chômage officiel : ~3-4% (sous-estimé car l'informel domine)\n- Emploi informel : > 80% de l'emploi total\n- Secteurs porteurs : agriculture, BTP, services, télécoms\n\n**Politiques de l'emploi**\n\n1. **Formation professionnelle** : améliorer les compétences des jeunes\n2. **Création d'entreprises** : faciliter l'entrepreneuriat (CEPICI, incubateurs)\n3. **Investissement public** : infrastructures, BTP (création d'emplois)\n4. **Politique salariale** : revalorisation du SMIG\n\n**Erreurs fréquentes**\n1. Confondre chômage et inactivité (le chômeur cherche activement un emploi)\n2. Penser que le taux de chômage officiel reflète la réalité (l'informel masque le chômage)\n3. Ignorer le chômage structurel (formation inadaptée aux besoins)\n\n**Vocabulaire essentiel**\n- **Population active** : personnes en âge de travailler et disponibles pour travailler\n- **Chômage** : absence d'emploi avec recherche active\n- **SMI** : Salaire Minimum Interprofessionnel\n- **Informel** : activité économique non déclarée",
+      exercises: [
+        { type: "qcm", question: "Le taux de chômage se calcule comme :", answer: "Chômeurs / Population active × 100", explanation: "Taux de chômage = (Nombre de chômeurs / Population active) × 100." },
+        { type: "calcul", question: "Population active = 10M, chômeurs = 400 000. Taux de chômage ?", answer: "4%", explanation: "400 000 / 10 000 000 × 100 = 4%." },
+        { type: "qcm", question: "Le chômage structurel est lié à :", answer: "Un décalage compétences-besoins", explanation: "Le chômage structurel résulte d'un mismatch entre les compétences des travailleurs et les besoins des entreprises." },
+        { type: "vrai_faux", question: "Le SMIG en Côte d'Ivoire est de 75 000 FCFA/mois depuis le 1er janvier 2023.", answer: "Vrai", explanation: "SMIG passé de 60 000 à 75 000 FCFA/mois le 1er janvier 2023 (décret n°2022-986 du 21 décembre 2022)." },
+        { type: "ouvert", question: "Pourquoi le taux de chômage officiel en Côte d'Ivoire est-il sous-estimé ?", answer: "Parce que l'économie informelle représente plus de 80% de l'emploi. Les travailleurs informels sont comptés comme employés même s'ils sont sous-employés ou mal rémunérés.", explanation: "La réponse doit mentionner l'économie informelle." },
+      ],
+    },
+  ],
+};
+
+export const LOTB_DROIT: Record<string, any[]> = {
+  "2nde_g2": [
+{
+      title: "Introduction au droit",
+      summary: "Définition du droit, sources et hiérarchie des normes en Côte d'Ivoire.",
+      content: "Le droit est l'ensemble des règles qui régissent la vie en société. Il organise les relations entre les personnes, protège les droits fondamentaux et sanctionne les manquements.\n\n**Définition fondamentale**\nLe droit est un ensemble de règles obligatoires, générales et impersonnelles, sanctionnées par la force publique. Il s'impose à tous les membres de la société.\n\n**Les sources du droit en Côte d'Ivoire**\n\n1. **La Constitution** (norme suprême : Constitution du 8 novembre 2016)\n2. **Les traités internationaux ratifiés** (art. 123 de la Constitution)\n3. **Les lois** (votées par le Parlement)\n4. **Les décrets** (pris par le Président)\n5. **Les arrêtés** (pris par les ministres, préfets, maires)\n6. **La coutume** (usages locaux reconnus)\n\n**La pyramide de Kelsen**\nLes normes juridiques sont hiérarchisées : une norme inférieure ne peut pas contredire une norme supérieure.\n\n**L'OHADA**\nL'Organisation pour l'Harmonisation en Afrique du Droit des Affaires (OHADA) harmonise le droit des affaires dans 17 États africains. Ses Actes Uniformes sont directement applicables et prévalent sur le droit interne national.\n\n**Les grandes divisions du droit**\n- **Droit public** : relations entre l'État et les citoyens (droit constitutionnel, droit administratif, droit fiscal)\n- **Droit privé** : relations entre particuliers (droit civil, droit commercial, droit du travail)\n- **Droit pénal** : répression des infractions\n\n**Erreurs fréquentes**\n1. Confondre droit et morale (le droit est sanctionné par l'État, la morale par la conscience)\n2. Penser que la coutume est toujours supérieure à la loi\n3. Ignorer l'OHADA dans le droit des affaires\n\n**Vocabulaire essentiel**\n- **Norme juridique** : règle obligatoire sanctionnée par l'État\n- **Constitution** : loi fondamentale d'un État\n- **OHADA** : Organisation pour l'Harmonisation en Afrique du Droit des Affaires\n- **Acte uniforme** : règle juridique commune à plusieurs États",
+      exercises: [
+        { type: "qcm", question: "Quelle est la norme suprême en Côte d'Ivoire ?", answer: "La Constitution", explanation: "La Constitution du 8 novembre 2016 (loi n°2016-886) est la norme suprême." },
+        { type: "qcm", question: "Un traité international ratifié a une valeur :", answer: "Supérieure à la loi", explanation: "Art. 123 de la Constitution du 8 novembre 2016 (loi n°2016-886)." },
+        { type: "vrai_faux", question: "Un arrêté préfectoral peut contredire une loi.", answer: "Faux", explanation: "Un arrêté ne peut contredire une loi : hiérarchie des normes." },
+        { type: "qcm", question: "L'OHADA a été fondée en :", answer: "1993", explanation: "Traité de Port-Louis (Île Maurice) du 17 octobre 1993, révisé à Québec le 17 octobre 2008." },
+        { type: "ouvert", question: "Pourquoi les Actes Uniformes OHADA sont-ils supérieurs au droit national ivoirien ?", answer: "Par le principe de primauté du droit communautaire : les Actes Uniformes sont directement applicables dans tous les États membres et prévalent sur les lois nationales contradictoires.", explanation: "La réponse doit mentionner la primauté du droit communautaire." },
+      ],
+    },
+  ],
+  "1ere_g2": [
+{
+      title: "Les contrats",
+      summary: "Formation, exécution et rupture des contrats selon le droit ivoirien et l'OHADA.",
+      content: "Le contrat est un accord de volontés entre deux ou plusieurs personnes destiné à créer, modifier, transmettre ou éteindre des obligations.\n\n**Définition fondamentale**\nLe contrat est un accord de volontés destiné à produire des effets juridiques. Il est la source principale des obligations en droit privé.\n\n**Conditions de formation d'un contrat**\n\n1. **Consentement** : accord libre et éclairé des parties (pas de vice du consentement : erreur, dol, violence)\n2. **Capacité** : les parties doivent être capables (majeures, non protégées)\n3. **Objet** : la prestation doit être possible, déterminée ou déterminable, et licite\n4. **Cause** : la raison pour laquelle on s'engage (motive licite)\n\n**Types de contrats**\n\n| Type | Description | Exemple |\n|------|-------------|---------|\n| Bilatéral | Obligations réciproques | Vente, louage |\n| Unilatéral | Une seule partie s'engage | Donation, promesse |\n| À titre onéreux | Échange de valeurs | Vente, contrat de travail |\n| À titre gratuit | Sans contrepartie | Donation |\n| Synallagmatique | Obligations interdépendantes | Contrat de vente |\n| Nominate | Nom dans la loi | Vente, louage, prêt |\n| Innommé | Sans nom légal | Contrat atypique |\n\n**Exécution du contrat**\n- **Exécution volontaire** : les parties respectent leurs obligations\n- **Exécution forcée** : le créancier demande l'exécution par la justice\n- **Inexécution** : une partie ne respecte pas ses obligations → responsabilité contractuelle\n\n**Rupture du contrat**\n- **Résolution** : annulation rétroactive (comme si le contrat n'avait jamais existé)\n- **Résiliation** : annulation pour l'avenir (contrat à durée)\n- **Nullité** : le contrat est nul ab initio (vice de formation)\n\n**Application ivoirienne**\nEn Côte d'Ivoire, le droit des contrats est régi par le Code civil et les Actes Uniformes OHADA. Le contrat de vente est le contrat le plus courant (achat de marchandises, immobilier, etc.).\n\n**Erreurs fréquentes**\n1. Confondre résolution et résiliation (rétroactivité vs effet pour l'avenir)\n2. Penser qu'un contrat oral n'a pas de valeur (le contrat peut être verbal, sauf exceptions légales)\n3. Oublier de vérifier la capacité des parties\n\n**Vocabulaire essentiel**\n- **Consentement** : accord libre et éclairé\n- **Capacité** : aptitude juridique à contracter\n- **Obligation** : lien juridique entre créancier et débiteur\n- **Résolution** : annulation rétroactive du contrat\n- **Résiliation** : annulation pour l'avenir",
+      exercises: [
+        { type: "qcm", question: "Les conditions de formation d'un contrat sont :", answer: "Consentement, capacité, objet, cause", explanation: "Un contrat valide requiert ces 4 conditions cumulatives." },
+        { type: "qcm", question: "Un contrat synallagmatique comporte :", answer: "Des obligations réciproques", explanation: "Dans un contrat synallagmatique, les parties s'engagent réciproquement." },
+        { type: "vrai_faux", question: "Un contrat peut être formé oralement.", answer: "Vrai", explanation: "Le contrat peut être verbal, sauf exceptions légales (vente immobilière, etc.)." },
+        { type: "calcul", question: "Une vente de 100 unités à 5 000 FCFA. Montant total ?", answer: "500 000 FCFA", explanation: "100 × 5 000 = 500 000 FCFA." },
+        { type: "ouvert", question: "Qu'est-ce qu'un vice du consentement ? Donnez un exemple.", answer: "Un vice du consentement est un défaut dans l'accord des parties : erreur (sur la substance), dol (tromperie), violence (contrainte). Exemple : un vendeur qui ment sur la qualité d'un produit.", explanation: "La réponse doit mentionner erreur, dol ou violence." },
+      ],
+    },
+  ],
+};
+
+
+// ─── LOT 1 — LEÇONS MANQUANTES (P239.32) ────────────────────────────────────
+// Lot 1: 12 new lessons for chapters without lessons
+// Created for P239.31 — Technical Curriculum Expansion
+
+export const LOT1_COMPTA: Record<string, { title: string; summary: string; content: string; exercises: { type: any; question: string; answer: string; explanation: string }[] }[]> = {
+  "2nde_g2": [
+    {
+      title: "Le bilan comptable et l'équilibre patrimonial",
+      summary: "Structure du bilan, actif, passif et équation fondamentale selon le SYSCOHADA.",
+      content: "Le bilan est le document comptable qui présente la situation patrimoniale de l'entreprise à une date donnée. Il est l'un des deux documents de synthèse obligatoires (avec le compte de résultat) selon le SYSCOHADA.\n\n**Structure du bilan**\n\nLe bilan se présente en deux parties : l'actif (emplois) et le passif (ressources).\n\n**Actif (ce que l'entreprise possède) :**\n- Actif immobilisé : biens durables (bâtiments, matériel, véhicules, brevets)\n- Actif circulant : biens à court terme (stocks, créances clients, trésorerie)\n\n**Passif (ce que l'entreprise doit) :**\n- Capitaux propres : capital social, réserves, résultat de l'exercice\n- Dettes à long terme : emprunts bancaires > 1 an\n- Dettes à court terme : fournisseurs, impôts, salaires, TVA\n\n**Équation fondamentale :** Actif = Capitaux propres + Dettes\n\nCette équation est toujours vérifiée. Si elle ne l'est pas, il y a une erreur dans la comptabilité.\n\n**Exemple concret** : PME ivoirienne de transformation agroalimentaire au 31/12/2024 :\n| Actif | Montant (FCFA) | Passif | Montant (FCFA) |\n|-------|---------------:|--------|---------------:|\n| Immobilisations | 60 000 000 | Capital social | 20 000 000 |\n| Stocks | 15 000 000 | Réserves | 10 000 000 |\n| Créances clients | 10 000 000 | Résultat | 5 000 000 |\n| Caisse et banque | 5 000 000 | Emprunt LT | 30 000 000 |\n| | | Fournisseurs | 20 000 000 |\n| | | Impôts à payer | 5 000 000 |\n| **Total actif** | **90 000 000** | **Total passif** | **90 000 000** |\n\n**Ratios clés du bilan**\n\n| Ratio | Formule | Interprétation |\n|-------|---------|----------------|\n| Fonds de roulement | Actif circulant − Dettes CT | Capacité à financer le cycle d'exploitation |\n| BFR | Actif circulant − Dettes CT (exploitation) | Besoin de trésorerie lié à l'activité |\n| Trésorerie nette | FR − BFR | Liquidité disponible |\n| Taux d'endettement | Dettes / Capitaux propres | Niveau d'endettement |\n\n**Erreurs fréquentes**\n1. Confondre l'actif immobilisé et l'actif circulant (durée > 1 an = immobilisé)\n2. Oublier les amortissements dans le calcul de la valeur nette des immobilisations\n3. Classer un emprunt de 6 mois au passif LT au lieu du passif CT\n4. Ne pas distinguer les capitaux propres des dettes\n\n**Vocabulaire essentiel**\n- **Actif** : ensemble des biens et droits de l'entreprise\n- **Passif** : ensemble des obligations de l'entreprise\n- **Capitaux propres** : ressources appartenant aux associés\n- **Dettes** : obligations envers des tiers\n- **Fonds de roulement** : excédent de ressources stables sur emplois stables",
+      exercises: [
+        { type: "qcm", question: "Le bilan présente :", answer: "L'actif et le passif", explanation: "Le bilan présente l'actif (emplois) et le passif (ressources) à une date donnée." },
+        { type: "calcul", question: "Actif total = 90M, Dettes = 40M. Capitaux propres ?", answer: "50M", explanation: "Capitaux propres = Actif - Dettes = 90 - 40 = 50 millions FCFA." },
+        { type: "vrai_faux", question: "Le capital social fait partie des dettes de l'entreprise.", answer: "Faux", explanation: "Le capital social fait partie des capitaux propres, pas des dettes." },
+        { type: "calcul", question: "Actif circulant = 80M, Dettes CT = 50M. Fonds de roulement ?", answer: "30M", explanation: "FR = Actif circulant - Dettes CT = 80 - 50 = 30 millions FCFA." },
+        { type: "ouvert", question: "Qu'est-ce qu'un actif immobilisé ? Donnez deux exemples.", answer: "Un actif immobilisé est un bien durable utilisé depuis plus d'un an. Exemples : un véhicule utilitaire, une machine de production, un bâtiment.", explanation: "La réponse doit mentionner la durée (> 1 an) et donner au moins 2 exemples." },
+      ],
+    },
+  ],
+  "term_b": [
+    {
+      title: "Les états financiers",
+      summary: "Élaboration et interprétation du bilan, du compte de résultat et de l'annexe selon le SYSCOHADA.",
+      content: "Les états financiers sont les documents de synthèse qui présentent la situation financière et les résultats de l'entreprise sur un exercice. Selon le SYSCOHADA, ils comprennent le bilan, le compte de résultat et l'annexe.\n\n**Le bilan comptable**\n\nLe bilan présente l'actif (ce que l'entreprise possède) et le passif (ce qu'elle doit) à une date donnée.\n\n**Actif (emplois) :**\n- Immobilisations corporelles (bâtiments, matériel, véhicules)\n- Immobilisations incorporelles (brevets, licences, fonds commercial)\n- Stocks de marchandises et matières premières\n- Créances clients\n- Trésorerie active (caisse, banque)\n\n**Passif (ressources) :**\n- Capitaux propres (capital social, réserves, résultat de l'exercice)\n- Dettes à long terme (emprunts bancaires > 1 an)\n- Dettes à court terme (fournisseurs, impôts, salaires)\n\n**Équation fondamentale :** Actif = Capitaux propres + Dettes\n\n**Le compte de résultat**\n\nLe compte de résultat présente l'ensemble des produits (revenus) et des charges (dépenses) sur un exercice.\n\n**Structure (SYSCOHADA) :**\n\n| Rubrique | Montant |\n|----------|---------|\n| Chiffre d'affaires | XXX |\n| (-) Achats consommés | (XXX) |\n| (=) Valeur ajoutée | XXX |\n| (+) Autres produits d'exploitation | XXX |\n| (-) Charges de personnel | (XXX) |\n| (-) Impôts et taxes | (XXX) |\n| (-) Autres charges d'exploitation | (XXX) |\n| (=) Résultat d'exploitation | XXX |\n| (+/-) Résultat financier | XXX |\n| (=) Résultat avant impôt | XXX |\n| (-) Impôt sur les bénéfices | (XXX) |\n| (=) Résultat net | XXX |\n\n**Application :** Transport Côte SI — Résultat net = 22 400 000 FCFA (bénéfice).\n\n**L'annexe**\n\nL'annexe complète le bilan et le compte de résultat avec des informations détaillées :\n- Méthodes d'évaluation des stocks\n- Tableau des immobilisations\n- Engagement hors bilan\n- Informations sur les filiales et participations\n\n**Ratios clés**\n\n| Ratio | Formule | Interprétation |\n|-------|---------|----------------|\n| Marge brute | Marge brute / CA | Rentabilité commerciale |\n| Taux d'endettement | Dettes / Capitaux propres | Niveau d'endettement |\n| Rentabilité financière | Résultat net / Capitaux propres | Performance pour les actionnaires |\n| Liquidité générale | Actif circulant / Dettes CT | Capacité à payer les dettes CT |\n\n**Erreurs fréquentes**\n1. Confondre le bilan et le compte de résultat (le bilan est à une date, le résultat sur une période)\n2. Oublier l'annexe (obligatoire pour l'image fidèle)\n3. Ne pas classer correctement les dettes CT/LT\n4. Ignorer les amortissements dans le calcul du résultat\n\n**Vocabulaire essentiel**\n- **Bilan** : document présentant l'actif et le passif à une date\n- **Compte de résultat** : document présentant produits et charges sur une période\n- **Annexe** : document complémentaire au bilan et au compte de résultat\n- **Résultat net** : bénéfice ou perte de l'exercice\n- **Valeur ajoutée** : richesse créée par l'entreprise",
+      exercises: [
+        { type: "calcul", question: "CA = 200M, Achats = 80M, Charges personnel = 50M, Autres charges = 30M. Résultat d'exploitation ?", answer: "40M", explanation: "VA = 200 - 80 = 120M. RE = 120 - 50 - 30 = 40M FCFA." },
+        { type: "qcm", question: "Le résultat net est calculé après :", answer: "L'impôt sur les sociétés", explanation: "Le résultat net = Résultat avant impôt - Impôt sur les bénéfices." },
+        { type: "calcul", question: "Résultat avant impôt = 50M, IS = 30%. Résultat net ?", answer: "35M", explanation: "IS = 50 x 30% = 15M. Resultat net = 50 - 15 = 35M FCFA." },
+        { type: "vrai_faux", question: "La valeur ajoutée est égale au chiffre d'affaires moins les achats consommés.", answer: "Vrai", explanation: "Valeur ajoutée = CA - Achats consommés. C'est la richesse créée par l'entreprise." },
+        { type: "ouvert", question: "Expliquez la différence entre résultat d'exploitation et résultat courant avant impôt.", answer: "Le résultat d'exploitation intègre uniquement les opérations liées à l'activité normale. Le résultat courant avant impôt ajoute les produits et charges financiers.", explanation: "La réponse doit distinguer l'activité normale des opérations financières." },
+      ],
+    },
+  ],
+};
+
+const LOT1_ECO: Record<string, LessonSeed[]> = {
+  "2nde_g2": [
+    {
+      title: "Introduction à l'économie",
+      summary: "Définition, agents économiques et circuits économiques en Côte d'Ivoire.",
+      content: "L'économie est la science qui étudie la manière dont les sociétés utilisent des ressources rares pour satisfaire des besoins illimités.\n\n**Définition fondamentale**\nL'économie est la science de l'allocation des ressources rares entre des usages concurrents. Elle étudie les comportements des agents économiques (ménages, entreprises, État, reste du monde) et leurs interactions sur les marchés.\n\n**Les 4 agents économiques**\n\n| Agent | Rôle principal | Exemples ivoiriens |\n|-------|---------------|-------------------|\n| Ménages | Consomment, épargnent, offrent du travail | Familles de Cocody, Yopougon |\n| Entreprises | Produisent des biens et services | PME de transformation, grandes entreprises |\n| État | Collecte impôts, fournit services publics | Gouvernement, mairies, préfectures |\n| Reste du monde | Échanges avec l'étranger | Exportations de cacao, importations de pétrole |\n\n**Le circuit économique en Côte d'Ivoire**\n\n1. Les ménages offrent du travail aux entreprises → reçoivent des salaires\n2. Les entreprises produisent → vendent aux ménages → réalisent du chiffre d'affaires\n3. L'État prélève des impôts → finance les services publics (écoles, hôpitaux, routes)\n4. Le reste du monde échange avec la Côte d'Ivoire (exportations de cacao, importations de machines)\n\n**Formule du PIB (par la dépense) :**\nPIB = C + I + G + (X − M)\n- C = Consommation des ménages\n- I = Investissement (formation brute de capital)\n- G = Dépenses publiques\n- X = Exportations\n- M = Importations\n\n**PIB de la Côte d'Ivoire (~2024) :** ~75 000 milliards FCFA, croissance 6-7%/an.\n\n**Secteurs économiques ivoiriens :**\n- Agriculture : ~20% (cacao, café, anacarde, palme)\n- Industrie : ~20% (agro-industrie, raffinage, BTP)\n- Services : ~60% (commerce, transports, télécommunications, finance)\n\n**Les besoins et les biens**\n\nLes besoins sont illimités et variés. Les biens et services permettent de les satisfaire :\n- **Biens** : objets matériels (voiture, téléphone, vêtement)\n- **Services** : prestations immatérielles (transport, éducation, santé)\n\n**La rareté et le choix**\nLes ressources sont rares. L'économie étudie comment les allouer efficacement :\n- **Opportunité** : ce à quoi on renonce quand on fait un choix\n- **Coût d'opportunité** : la valeur de la meilleure alternative abandonnée\n\n**Erreurs fréquentes**\n1. Confondre économie et gestion (l'économie étudie la société, la gestion l'entreprise)\n2. Oublier le reste du monde dans le circuit économique\n3. Penser que le PIB mesure le bien-être (il mesure la production, pas la répartition)\n\n**Vocabulaire essentiel**\n- **PIB** : Produit Intérieur Brut — somme des valeurs ajoutées\n- **Valeur ajoutée** : richesse créée par l'entreprise\n- **Agent économique** : entité qui participe à la vie économique\n- **Marché** : lieu de rencontre de l'offre et de la demande\n- **Rareté** : caractère limité des ressources",
+      exercises: [
+        { type: "qcm", question: "Quel agent économique offre du travail ?", answer: "Les ménages", explanation: "Les ménages fournissent les facteurs de production (travail, capital)." },
+        { type: "qcm", question: "Le cacao exporté par la Côte d'Ivoire entre dans :", answer: "Les exportations (X)", explanation: "Le cacao est la principale exportation ivoirienne." },
+        { type: "calcul", question: "C = 30M, I = 10M, G = 15M, X = 8M, M = 12M. Calculez le PIB.", answer: "51M", explanation: "PIB = 30 + 10 + 15 + (8−12) = 51 millions." },
+        { type: "vrai_faux", question: "L'État est à la fois preneur et vendeur sur le marché des biens.", answer: "Vrai", explanation: "L'État achète des biens (marchés publics) et en produit (services publics)." },
+        { type: "ouvert", question: "Expliquez le rôle du reste du monde dans l'économie ivoirienne.", answer: "Le reste du monde représente les échanges extérieurs : exportations de cacao, café, anacarde ; importations de pétrole, machines, médicaments. La balance commerciale ivoirienne est souvent déficitaire car les importations dépassent les exportations.", explanation: "La réponse doit mentionner les exportations et importations ivoiriennes." },
+      ],
+    },
+  ],
+};
+
+
 // ─── MAIN SEED FUNCTION ──────────────────────────────────────────────────────
 export async function seedTechnicalLessons(): Promise<void> {
   await repairMissingExercises();
 
-  const allContent = { comptabilite: {...COMPTA_LESSONS}, economie: {...ECO_LESSONS}, droit: {...DROIT_LESSONS}, informatique: {...INFO_LESSONS}, marketing: {...MKT_LESSONS}, gestion: {...GESTION_LESSONS} };
+  const allContent = { comptabilite: {...COMPTA_LESSONS, ...LOT1_COMPTA}, economie: {...ECO_LESSONS, ...LOT1_ECO, ...LOTB_ECO}, droit: {...DROIT_LESSONS, ...LOTB_DROIT}, informatique: {...INFO_LESSONS}, marketing: {...MKT_LESSONS}, gestion: {...GESTION_LESSONS} };
 
   for (const [subjCode, gradeData] of Object.entries(allContent)) {
     const dbSubjCode = subjCode.toLowerCase();
@@ -547,9 +654,9 @@ const TECH_QUIZZES: Record<number, { subject: string; questions: { q: string; op
   10463: {
     subject: "droit",
     questions: [
-      { q: "La norme suprême en Côte d'Ivoire est :", opts: ["La Constitution", "La loi", "Le décret", "L'arrêté"], ans: 0, exp: "La Constitution de 1960 (révisée 2016) est la norme suprême." },
-      { q: "Un traité international ratifié a une valeur :", opts: ["Supérieure à la loi", "Inférieure à la loi", "Égale à la loi", "Nulle"], ans: 0, exp: "Art. 85 de la Constitution : les traités ratifiés priment sur les lois." },
-      { q: "L'OHADA a été fondée en :", opts: ["1993", "2001", "1960", "2010"], ans: 0, exp: "Traité d'Algésiras, 17 octobre 1993." },
+      { q: "La norme suprême en Côte d'Ivoire est :", opts: ["La Constitution", "La loi", "Le décret", "L'arrêté"], ans: 0, exp: "La Constitution du 8 novembre 2016 (loi n°2016-886) est la norme suprême." },
+      { q: "Un traité international ratifié a une valeur :", opts: ["Supérieure à la loi", "Inférieure à la loi", "Égale à la loi", "Nulle"], ans: 0, exp: "Art. 123 de la Constitution du 8 novembre 2016 (loi n°2016-886) : les traités ratifiés priment sur les lois." },
+      { q: "L'OHADA a été fondée en :", opts: ["1993", "2001", "1960", "2010"], ans: 0, exp: "Traité de Port-Louis (Île Maurice) du 17 octobre 1993, révisé à Québec le 17 octobre 2008." },
       { q: "Les actes uniformes OHADA prévalent sur :", opts: ["Le droit interne national", "La Constitution", "Les traités internationaux", "La coutume"], ans: 0, exp: "Les Actes Uniformes OHADA sont directement applicables et prévalent sur le droit national." },
       { q: "Qui promulgue les lois en Côte d'Ivoire ?", opts: ["Le Président de la République", "L'Assemblée nationale", "Le Conseil constitutionnel", "Le Premier ministre"], ans: 0, exp: "Le Président promulgue les lois dans les 15 jours suivant leur adoption." },
     ],
@@ -559,7 +666,7 @@ const TECH_QUIZZES: Record<number, { subject: string; questions: { q: string; op
     subject: "droit",
     questions: [
       { q: "La durée légale du travail en Côte d'Ivoire est de :", opts: ["40h par semaine", "35h par semaine", "48h par semaine", "38h par semaine"], ans: 0, exp: "40 heures par semaine, soit 8h par jour (Code du travail ivoirien)." },
-      { q: "Le SMI en 2024 est de :", opts: ["51 000 FCFA/mois", "30 000 FCFA/mois", "100 000 FCFA/mois", "25 000 FCFA/mois"], ans: 0, exp: "Le SMI a été revalorisé à 51 000 FCFA/mois en 2024." },
+      { q: "Le SMIG en Côte d'Ivoire est de :", opts: ["75 000 FCFA/mois", "51 000 FCFA/mois", "100 000 FCFA/mois", "25 000 FCFA/mois"], ans: 0, exp: "SMIG = 75 000 FCFA/mois depuis le 1er janvier 2023 (décret n°2022-986 du 21 décembre 2022) ; avant : 60 000 FCFA/mois." },
       { q: "Un salarié licencié avec 5 ans d'ancienneté et 150 000 FCFA de salaire touche :", opts: ["750 000 FCFA d'indemnité", "150 000 FCFA", "300 000 FCFA", "Aucune indemnité"], ans: 0, exp: "Indemnité = 1 mois × 5 ans × 150 000 = 750 000 FCFA." },
       { q: "Un CDD peut être renouvelé indéfiniment :", opts: ["Non, c'est interdit", "Oui, sans limite", "Oui, mais 3 fois max", "Oui, si le salarié accepte"], ans: 0, exp: "Le CDD a une durée limitée. Le renouvellement est strictement encadré." },
       { q: "Les congés payés annuels en Côte d'Ivoire sont de :", opts: ["30 jours ouvrables", "15 jours", "20 jours", "25 jours"], ans: 0, exp: "2,5 jours ouvrables par mois de travail = 30 jours par an." },
@@ -686,6 +793,68 @@ const TECH_QUIZZES: Record<number, { subject: string; questions: { q: string; op
       { q: "La comptabilité permet notamment de :", opts: ["Suivre les recettes et dépenses", "Éviter de payer des impôts", "Remplacer le dirigeant", "Supprimer les employés"], ans: 0, exp: "La comptabilité permet de suivre la situation financière et prendre des décisions." },
     ],
   },
+
+20001: {
+    subject: "comptabilite",
+    questions: [
+      { q: "Le bilan présente :", opts: ["L'actif et le passif", "Les produits et charges", "Les flux de trésorerie", "Les amortissements"], ans: 0, exp: "Le bilan présente l'actif (emplois) et le passif (ressources) à une date donnée." },
+      { q: "Actif total = 90M, Dettes = 40M. Capitaux propres ?", opts: ["50M", "130M", "40M", "90M"], ans: 0, exp: "Capitaux propres = Actif - Dettes = 90 - 40 = 50 millions FCFA." },
+      { q: "Le capital social fait partie des dettes :", opts: ["Faux", "Vrai", "Parfois", "Selon le pays"], ans: 0, exp: "Le capital social fait partie des capitaux propres, pas des dettes." },
+      { q: "Actif circulant = 80M, Dettes CT = 50M. Fonds de roulement ?", opts: ["30M", "130M", "80M", "50M"], ans: 0, exp: "FR = Actif circulant - Dettes CT = 80 - 50 = 30 millions FCFA." },
+      { q: "Un actif immobilisé est :", opts: ["Un bien durable (> 1 an)", "Un bien à court terme", "Une dette", "Un produit"], ans: 0, exp: "Un actif immobilisé est un bien durable utilisé depuis plus d'un an." },
+    ],
+  },
+  20002: {
+    subject: "comptabilite",
+    questions: [
+      { q: "Le compte de résultat présente :", opts: ["Produits et charges", "Actif et passif", "Flux de trésorerie", "Amortissements"], ans: 0, exp: "Le compte de résultat présente les produits et charges sur un exercice." },
+      { q: "CA = 200M, Achats = 80M, Charges personnel = 50M, Autres charges = 30M. RE ?", opts: ["40M", "120M", "100M", "200M"], ans: 0, exp: "VA = 200 - 80 = 120M. RE = 120 - 50 - 30 = 40M FCFA." },
+      { q: "Le résultat net est calculé après :", opts: ["L'impôt sur les sociétés", "Les charges de personnel", "Les achats", "Les amortissements"], ans: 0, exp: "Le résultat net = Résultat avant impôt - Impôt sur les bénéfices." },
+      { q: "Résultat avant impôt = 50M, IS = 30%. Résultat net ?", opts: ["35M", "15M", "50M", "65M"], ans: 0, exp: "IS = 50 x 30% = 15M. Resultat net = 50 - 15 = 35M FCFA." },
+      { q: "La valeur ajoutée est :", opts: ["CA - Achats consommés", "CA - Charges totales", "CA - Charges de personnel", "CA - Impôts"], ans: 0, exp: "Valeur ajoutée = CA - Achats consommés. C'est la richesse créée par l'entreprise." },
+    ],
+  },
+  20003: {
+    subject: "economie",
+    questions: [
+      { q: "Quel agent économique offre du travail ?", opts: ["Les ménages", "Les entreprises", "L'État", "Le reste du monde"], ans: 0, exp: "Les ménages fournissent les facteurs de production (travail, capital)." },
+      { q: "Le cacao exporté entre dans :", opts: ["Les exportations (X)", "La consommation (C)", "L'investissement (I)", "Les dépenses publiques (G)"], ans: 0, exp: "Le cacao est la principale exportation ivoirienne." },
+      { q: "PIB = C + I + G + :", opts: ["(X − M)", "(M − X)", "C × I", "G × X"], ans: 0, exp: "PIB par la dépense : C + I + G + (Exportations − Importations)." },
+      { q: "L'État en Côte d'Ivoire :", opts: ["Prélève des impôts et fournit des services", "Produit uniquement des biens privés", "N'intervient pas dans l'économie", "Ne facture aucun service"], ans: 0, exp: "L'État collecte les impôts et finance les services publics." },
+      { q: "Les secteurs économiques ivoiriens sont :", opts: ["Agriculture ~20%, Industrie ~20%, Services ~60%", "Agriculture ~60%, Industrie ~20%, Services ~20%", "Agriculture ~40%, Industrie ~40%, Services ~20%", "Agriculture ~10%, Industrie ~30%, Services ~60%"], ans: 0, exp: "L'agriculture représente ~20%, l'industrie ~20%, les services ~60% du PIB ivoirien." },
+    ],
+  },
+
+  20004: {
+    subject: "economie",
+    questions: [
+      { q: "Le taux de chômage se calcule comme :", opts: ["Chômeurs / Population active × 100", "Emploi / Population × 100", "Chômeurs / Emploi × 100", "Population / Chômeurs × 100"], ans: 0, exp: "Taux de chômage = (Nombre de chômeurs / Population active) × 100." },
+      { q: "Population active = 10M, chômeurs = 400 000. Taux de chômage ?", opts: ["4%", "40%", "0,4%", "400%"], ans: 0, exp: "400 000 / 10 000 000 × 100 = 4%." },
+      { q: "Le chômage structurel est lié à :", opts: ["Un décalage compétences-besoins", "La météo", "Les vacances", "Le week-end"], ans: 0, exp: "Le chômage structurel résulte d'un mismatch entre les compétences des travailleurs et les besoins des entreprises." },
+      { q: "Le SMIG en Côte d'Ivoire est de :", opts: ["75 000 FCFA/mois", "51 000 FCFA/mois", "100 000 FCFA/mois", "25 000 FCFA/mois"], ans: 0, exp: "SMIG = 75 000 FCFA/mois depuis le 1er janvier 2023 (décret n°2022-986 du 21 décembre 2022) ; avant : 60 000 FCFA/mois." },
+      { q: "Le chômage frictionnel est :", opts: ["La transition entre deux emplois", "Le chômage de longue durée", "Le chômage saisonnier", "Le chômage volontaire"], ans: 0, exp: "Le chômage frictionnel est normal et court terme (transition entre emplois)." },
+    ],
+  },
+  20005: {
+    subject: "droit",
+    questions: [
+      { q: "Quelle est la norme suprême en Côte d'Ivoire ?", opts: ["La Constitution", "La loi", "Le décret", "L'arrêté"], ans: 0, exp: "La Constitution du 8 novembre 2016 (loi n°2016-886) est la norme suprême." },
+      { q: "Un traité international ratifié a une valeur :", opts: ["Supérieure à la loi", "Inférieure à la loi", "Égale à la loi", "Nulle"], ans: 0, exp: "Art. 123 de la Constitution du 8 novembre 2016 (loi n°2016-886)." },
+      { q: "L'OHADA a été fondée en :", opts: ["1993", "2001", "1960", "2010"], ans: 0, exp: "Traité de Port-Louis (Île Maurice) du 17 octobre 1993, révisé à Québec le 17 octobre 2008." },
+      { q: "Les actes uniformes OHADA prévalent sur :", opts: ["Le droit interne national", "La Constitution", "Les traités internationaux", "La coutume"], ans: 0, exp: "Les Actes Uniformes OHADA sont directement applicables et prévalent sur le droit national." },
+      { q: "Qui promulgue les lois en Côte d'Ivoire ?", opts: ["Le Président de la République", "L'Assemblée nationale", "Le Conseil constitutionnel", "Le Premier ministre"], ans: 0, exp: "Le Président promulgue les lois dans les 15 jours suivant leur adoption." },
+    ],
+  },
+  20006: {
+    subject: "droit",
+    questions: [
+      { q: "Les conditions de formation d'un contrat sont :", opts: ["Consentement, capacité, objet, cause", "Consentement, prix, durée, lieu", "Capacité, objet, cause, forme", "Consentement, capacité, prix, cause"], ans: 0, exp: "Un contrat valide requiert ces 4 conditions cumulatives." },
+      { q: "Un contrat synallagmatique comporte :", opts: ["Des obligations réciproques", "Une seule obligation", "Des obligations unilatérales", "Aucune obligation"], ans: 0, exp: "Dans un contrat synallagmatique, les parties s'engagent réciproquement." },
+      { q: "Un contrat peut être formé oralement :", opts: ["Vrai", "Faux", "Seulement pour les ventes", "Seulement pour les locations"], ans: 0, exp: "Le contrat peut être verbal, sauf exceptions légales." },
+      { q: "Une vente de 100 unités à 5 000 FCFA. Montant total ?", opts: ["500 000 FCFA", "50 000 FCFA", "5 000 FCFA", "100 000 FCFA"], ans: 0, exp: "100 × 5 000 = 500 000 FCFA." },
+      { q: "Un vice du consentement est :", opts: ["Erreur, dol ou violence", "Prix trop élevé", "Durée trop longue", "Lieu inapproprié"], ans: 0, exp: "Un vice du consentement est un défaut dans l'accord des parties." },
+    ],
+  },
 };
 
 // ─── SEED TECHNICAL QUIZZES ──────────────────────────────────────────────────
@@ -712,6 +881,12 @@ const TECH_QUIZ_LESSON_TITLES: Record<number, string> = {
   10472: "Le marketing stratégique",
   10473: "La gestion des ressources humaines",
   10474: "La gestion stratégique d'entreprise",
+  20001: "Le bilan comptable et l'équilibre patrimonial",
+  20002: "Les états financiers",
+  20003: "Introduction à l'économie",
+  20004: "Le marché du travail",
+  20005: "Introduction au droit",
+  20006: "Les contrats",
 };
 
 export async function seedTechnicalQuizzes(): Promise<void> {
