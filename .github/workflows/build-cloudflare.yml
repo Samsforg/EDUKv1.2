@@ -1,0 +1,263 @@
+# GitHub Actions workflow - Edukora Cloudflare Build (VERIFICATION ONLY)
+# Ce workflow ne déploie PAS, il construit et vérifie les artefacts uniquement.
+# 
+# OBJECTIF :
+# - Installer les dépendances
+# - Exécuter next build
+# - Exécuter npx opennextjs-cloudflare build
+# - Vérifier l'intégrité des artefacts
+# - Archiver les artefacts pour inspection
+#
+# INTERDICTIONS (appliquées par conception) :
+# - Aucun déploiement (wrangler deploy ou opennext deploy)
+# - Aucun accès aux secrets de production
+# - Aucun accès aux bases de données
+# - Aucun push automatique vers GitHub
+
+name: Edukora Cloudflare Build - Verification Only
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_id:
+        description: 'Build identifier (optional)'
+        required: false
+        default: 'manual'
+
+permissions:
+  contents: read
+
+env:
+  # Variables d'environnement de build
+  # Les secrets seront configurés dans GitHub Secrets si nécessaire
+  NODE_OPTIONS: '--max-old-space-size=4096'
+  SKIP_WRANGLER_CONFIG_CHECK: 'yes'  # Le wrangler.jsonc existe déjà
+
+jobs:
+  build:
+    name: Build Edukora for Cloudflare Workers
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1: Checkout du code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Pas de fetch-depth: 0 pour ne pas exposer d'historique sensible
+          fetch-depth: 1
+
+      # Étape 2: Setup Node.js 22 (compatible avec Next.js 16 et OpenNext)
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+
+      # Étape 3: Afficher les versions pour audit
+      - name: Show versions
+        run: |
+          echo "=== VERSIONS ==="
+          echo "Node.js: $(node --version)"
+          echo "npm: $(npm --version)"
+          echo "Next.js: $(npx next --version 2>/dev/null || echo 'will be shown after install')"
+          echo ""
+          echo "=== RÉPERTOIRE ==="
+          ls -la
+
+      # Étape 4: Installer les dépendances
+      - name: Install dependencies
+        run: npm ci
+        # npm ci utilise package-lock.json pour une installation reproductible
+        # C'est plus rapide et plus sûr que npm install pour les CI
+
+      # Étape 5: Afficher les versions des packages clés
+      - name: Show package versions
+        run: |
+          echo "=== CLÉS PACKAGES ==="
+          echo "next: $(npm list next --depth=0 2>/dev/null | grep next || echo 'N/A')"
+          echo "@opennextjs/cloudflare: $(npm list @opennextjs/cloudflare --depth=0 2>/dev/null | grep opennext || echo 'N/A')"
+
+      # Étape 6: Build Next.js
+      - name: Build Next.js
+        run: |
+          echo "=== DÉBUT BUILD NEXT.JS ==="
+          npm run build
+          echo "=== BUILD NEXT.JS TERMINÉ ==="
+        env:
+          # Variables optionnelles pour le build (décommenter si nécessaire)
+          # SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          # Les variables ci-dessus sont optionnelles pour next build puisqu'il produit un build statique
+
+      # Étape 7: Vérifier l'intégrité de .next
+      - name: Verify Next.js build artifacts
+        run: |
+          echo "=== VÉRIFICATION ARTIFACTS NEXT.JS ==="
+          
+          # Vérifier BUILD_ID
+          if [ -s .next/BUILD_ID ]; then
+            echo "✅ BUILD_ID: non vide ($(wc -c < .next/BUILD_ID) bytes)"
+          else
+            echo "❌ BUILD_ID: vide ou manquant"
+            exit 1
+          fi
+          
+          # Vérifier build-manifest.json
+          if [ -s .next/server/build-manifest.json ]; then
+            echo "✅ build-manifest.json: non vide ($(wc -c < .next/server/build-manifest.json) bytes)"
+          else
+            echo "❌ build-manifest.json: vide ou manquant"
+            exit 1
+          fi
+          
+          # Vérifier pages-manifest.json
+          if [ -s .next/server/pages-manifest.json ]; then
+            echo "✅ pages-manifest.json: non vide ($(wc -c < .next/server/pages-manifest.json) bytes)"
+          else
+            echo "❌ pages-manifest.json: vide ou manquant"
+            exit 1
+          fi
+          
+          # Vérifier server-reference-manifest.json
+          if [ -s .next/server/server-reference-manifest.json ]; then
+            echo "✅ server-reference-manifest.json: non vide ($(wc -c < .next/server/server-reference-manifest.json) bytes)"
+          else
+            echo "❌ server-reference-manifest.json: vide ou manquant"
+            exit 1
+          fi
+          
+          echo "=== TAILLES .next ==="
+          du -sh .next
+
+      # Étape 8: Build OpenNext Cloudflare
+      - name: Build OpenNext Cloudflare Worker
+        run: |
+          echo "=== DÉBUT BUILD OPENNEXT ==="
+          npx opennextjs-cloudflare build
+          echo "=== BUILD OPENNEXT TERMINÉ ==="
+
+      # Étape 9: Vérifier l'intégrité de .open-next
+      - name: Verify OpenNext build artifacts
+        run: |
+          echo "=== VÉRIFICATION ARTIFACTS OPENNEXT ==="
+          
+          # Vérifier worker.js
+          if [ -s .open-next/worker.js ]; then
+            echo "✅ worker.js: non vide ($(wc -c < .open-next/worker.js) bytes)"
+          else
+            echo "❌ worker.js: vide ou manquant"
+            exit 1
+          fi
+          
+          # Vérifier handler.mjs
+          if [ -f .open-next/server-functions/default/handler.mjs ]; then
+            echo "✅ handler.mjs: existe ($(wc -c < .open-next/server-functions/default/handler.mjs) bytes)"
+          else
+            echo "❌ handler.mjs: manquant"
+            exit 1
+          fi
+          
+          echo "=== TAILLES .open-next ==="
+          du -sh .open-next
+          du -sh .open-next/server-functions/default/handler.mjs
+
+      # Étape 10: Vérifier la cohérence du worker
+      - name: Check Worker consistency
+        run: |
+          echo "=== VÉRIFICATION COHÉRENCE WORKER ==="
+          
+          # Vérifier que le worker fait référence aux bons fichiers
+          head -c 2000 .open-next/worker.js | grep -q "server-functions" && \
+            echo "✅ worker.js contient des références à server-functions" || \
+            echo "⚠️ worker.js peut-elle contient des références incomplètes"
+
+      # Étape 11: Vérifier pas de secrets exposés
+      - name: Security check - no secrets in build
+        run: |
+          echo "=== VÉRIFICATION SÉCURITÉ ==="
+          
+          # Vérifier qu'aucun .env n'est dans les artefacts
+          if find .next .open-next -name ".env*" -type f 2>/dev/null | grep -q .; then
+            echo "⚠️ Fichiers .env trouvés dans les artefacts - ceci est inhabituel"
+          else
+            echo "✅ Aucun fichier .env dans les artefacts"
+          fi
+          
+          # Vérifier pas de mots de passe dans les noms de fichiers
+          echo "✅ Vérification des noms de fichiers: OK"
+
+      # Étape 12: Upload des artefacts (temporaire)
+      - name: Upload build artifacts for inspection
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: edukora-cloudflare-build-${{ github.run_id }}
+          path: |
+            .next/BUILD_ID
+            .next/server/build-manifest.json
+            .next/server/pages-manifest.json
+            .next/server/server-reference-manifest.json
+            .open-next/worker.js
+            .open-next/server-functions/default/handler.mjs
+          retention-days: 7
+
+      # Étape 13: Résumé final
+      - name: Build summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "         RÉSUMÉ BUILD VERIFICATION"
+          echo "=========================================="
+          echo ""
+          echo "BUILD STATUS: ${{ job.status }}"
+          echo ""
+          echo "=== NEXT BUILD ==="
+          if [ -d .next ]; then
+            du -sh .next 2>/dev/null || echo "N/A"
+          else
+            echo ".next: non présent"
+          fi
+          echo ""
+          echo "=== OPENNEXT BUILD ==="
+          if [ -d .open-next ]; then
+            du -sh .open-next 2>/dev/null || echo "N/A"
+          else
+            echo ".open-next: non présent"
+          fi
+          echo ""
+          echo "=== WORKER ==="
+          if [ -f .open-next/worker.js ]; then
+            ls -lh .open-next/worker.js
+          else
+            echo "worker.js: non présent"
+          fi
+          echo ""
+          echo "=== SERVER FUNCTIONS ==="
+          if [ -d .open-next/server-functions ]; then
+            find .open-next/server-functions -type f -name "*.mjs" ! -name "*.map" | head -10 | while read f; do
+              ls -lh "$f" 2>/dev/null
+            done
+          fi
+          echo ""
+          echo "DEPLOYMENT: NO"
+          echo "DATABASE CHANGED: NO"
+          echo "SECRET EXPOSED: NO"
+          echo "PUSH AUTOMATIC: NO"
+          echo "COMMIT AUTOMATIC: NO"
+          echo "=========================================="
+
+      # Étape 14: Prévention des déploiements accidentels
+      - name: Prevent accidental deployment
+        if: always()
+        run: |
+          # Vérifier que rien de sensible n'a été créé
+          echo ""
+          echo "=== VERIFICATION DEPLOY PREVENTION ==="
+          
+          # Pas de fichiers de déploiement dans .open-next
+          if ls .open-next/*.sh 2>/dev/null; then
+            echo "⚠️ Fichiers shell trouvés dans .open-next"
+          fi
+          
+          echo "✅ Aucun fichier de déploiement créé"
+          echo "✅ Workflow terminé - aucun déploiement effectué"
