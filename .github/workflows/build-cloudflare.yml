@@ -99,8 +99,8 @@ jobs:
           fi
           
           # Vérifier build-manifest.json
-          if [ -s .next/server/build-manifest.json ]; then
-            echo "✅ build-manifest.json: non vide ($(wc -c < .next/server/build-manifest.json) bytes)"
+          if [ -s .next/build-manifest.json ]; then
+            echo "✅ build-manifest.json: non vide ($(wc -c < .next/build-manifest.json) bytes)"
           else
             echo "❌ build-manifest.json: vide ou manquant"
             exit 1
@@ -190,7 +190,7 @@ jobs:
           name: edukora-cloudflare-build-${{ github.run_id }}
           path: |
             .next/BUILD_ID
-            .next/server/build-manifest.json
+            .next/build-manifest.json
             .next/server/pages-manifest.json
             .next/server/server-reference-manifest.json
             .open-next/worker.js
