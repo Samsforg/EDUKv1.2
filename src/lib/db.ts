@@ -27,11 +27,16 @@ export const isVercel = !!process.env.VERCEL;
  */
 export function resolveDbMode(env: Record<string, string | undefined>): "postgres" | "sqlite" {
   const hasUrl = typeof env.DATABASE_URL === "string" && env.DATABASE_URL.trim() !== "";
+  // P-D.10.2 : Sur Cloudflare Workers (NEXTJS_ENV=workers), toujours utiliser
+  // le mode postgres via Hyperdrive ou DATABASE_URL secret. Ne jamais tomber
+  // en SQLite silencieusement sur Cloudflare.
+  const isCloudflareWorkers = env.NEXTJS_ENV === "workers";
   if (env.VERCEL && !hasUrl) {
     throw new Error(
       "DB_CONFIG: DATABASE_URL absente ou vide sur Vercel — fallback SQLite refusé (P1.6 F2 fail-fast)",
     );
   }
+  if (isCloudflareWorkers) return "postgres";
   return hasUrl ? "postgres" : "sqlite";
 }
 
@@ -213,7 +218,19 @@ function getPool(): Pool {
   if (!IS_PG) throw new Error("pg mode disabled");
   if (!pool) {
     const sslDisabled = process.env.DATABASE_SSL_DISABLED === "true";
-    const rawUrl = process.env.DATABASE_URL;
+    // P-D.10.2 : Sur Cloudflare Workers, tenter d'abord Hyperdrive.
+    // getCloudflareContext est synchrone et lit depuis globalThis.
+    let rawUrl: string | undefined = process.env.DATABASE_URL;
+    try {
+      // Accéder au contexte Cloudflare via le symbol global (mécanisme OpenNext)
+      const symbol = Symbol.for("__cloudflare-context__");
+      const ctx = (globalThis as any)[symbol];
+      if (ctx?.env?.HYPERDRIVE?.connectionString) {
+        rawUrl = ctx.env.HYPERDRIVE.connectionString;
+      }
+    } catch {
+      // Pas dans un environnement Cloudflare — utiliser DATABASE_URL
+    }
     pool = new Pool({
       // P2.0 C — suppression en mémoire de sslmode= (warning déprécié
       // pg-connection-string) : l'option ssl explicite ci-dessous définit le

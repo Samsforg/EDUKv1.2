@@ -193,6 +193,7 @@ jobs:
             .next/server/pages-manifest.json
             .next/server/server-reference-manifest.json
             .open-next/worker.js
+            .open-next/assets
             .open-next/server-functions/default/handler.mjs
           retention-days: 7
 

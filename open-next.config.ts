@@ -3,15 +3,15 @@
  *
  * Configuration minimale pour Edukora avec Hyperdrive PostgreSQL.
  * Version: @opennextjs/cloudflare 1.20.15
+ *
+ * NOTE D.10.2 : Le cache incrémental R2 a été retiré car R2 n'est pas
+ * activé sur le compte Cloudflare. OpenNext utilise son cache par défaut
+ * (en mémoire) en l'absence de configuration explicite.
  */
 
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
-import r2IncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/r2-incremental-cache";
 
 export default defineCloudflareConfig({
-  // Incremental cache utilisant R2 pour le cache côté Cloudflare
-  incrementalCache: r2IncrementalCache,
-
-  // Default settings - no custom providers or overrides needed
-  // The build will use default configurations for other services
+  // Configuration par défaut — pas de cache R2 (R2 non activé sur le compte).
+  // Le cache incrémental utilise le mécanisme par défaut d'OpenNext.
 });
