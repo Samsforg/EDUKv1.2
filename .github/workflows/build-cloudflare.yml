@@ -31,7 +31,6 @@ env:
   # Variables d'environnement de build
   # Les secrets seront configurés dans GitHub Secrets si nécessaire
   NODE_OPTIONS: '--max-old-space-size=4096'
-  SKIP_WRANGLER_CONFIG_CHECK: 'yes'  # Le wrangler.jsonc existe déjà
 
 jobs:
   build:
