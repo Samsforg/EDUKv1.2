@@ -84,10 +84,6 @@ jobs:
           echo "=== DÉBUT BUILD NEXT.JS ==="
           npm run build
           echo "=== BUILD NEXT.JS TERMINÉ ==="
-        env:
-          # Variables optionnelles pour le build (décommenter si nécessaire)
-          # SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-          # Les variables ci-dessus sont optionnelles pour next build puisqu'il produit un build statique
 
       # Étape 7: Vérifier l'intégrité de .next
       - name: Verify Next.js build artifacts
