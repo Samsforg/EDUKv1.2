@@ -23,6 +23,11 @@ on:
         description: 'Build identifier (optional)'
         required: false
         default: 'manual'
+      deploy_to_cloudflare:
+        description: 'Deploy to Cloudflare Workers (test only, default: false)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -181,6 +186,28 @@ jobs:
           # Vérifier pas de mots de passe dans les noms de fichiers
           echo "✅ Vérification des noms de fichiers: OK"
 
+      # Étape 10: Wrangler dry-run (vérification sans déploiement)
+      - name: Wrangler dry-run
+        run: |
+          echo "=== DRY-RUN WRANGLER ==="
+          npx wrangler deploy --dry-run 2>&1
+          echo "=== DRY-RUN TERMINÉ ==="
+
+      # Étape 11: Vérification de la taille du bundle
+      - name: Bundle size check
+        run: |
+          echo "=== TAILLE DU BUNDLE ==="
+          if [ -f .open-next/worker.js ]; then
+            echo "worker.js: $(wc -c < .open-next/worker.js) bytes"
+          fi
+          if [ -f .open-next/server-functions/default/handler.mjs ]; then
+            echo "handler.mjs: $(wc -c < .open-next/server-functions/default/handler.mjs) bytes"
+          fi
+          echo "=== LIMITES CLOUDFLARE ==="
+          echo "Limite Worker script (non compressé): 64 MiB (67 108 864 bytes)"
+          echo "Limite Worker script (compressé): 3 MiB (3 145 728 bytes)"
+          echo "=== VÉRIFICATION TERMINÉE ==="
+
       # Étape 12: Upload des artefacts (temporaire)
       - name: Upload build artifacts for inspection
         uses: actions/upload-artifact@v4
@@ -195,6 +222,10 @@ jobs:
             .open-next/worker.js
             .open-next/assets
             .open-next/server-functions/default/handler.mjs
+            .open-next/cloudflare
+            .open-next/middleware
+            .open-next/.build
+          include-hidden-files: true
           retention-days: 7
 
       # Étape 13: Résumé final
@@ -257,3 +288,13 @@ jobs:
           
           echo "✅ Aucun fichier de déploiement créé"
           echo "✅ Workflow terminé - aucun déploiement effectué"
+
+      # Étape 15: Déploiement conditionnel (désactivé par défaut) — DERNIÈRE ÉTAPE
+      - name: Deploy to Cloudflare Workers (test)
+        if: ${{ inputs.deploy_to_cloudflare == true && github.ref == 'refs/heads/test/cloudflare-hyperdrive-linux-validation' && success() }}
+        run: |
+          echo "=== DÉPLOIEMENT CLOUDFLARE (TEST) ==="
+          npx wrangler deploy
+          echo "=== DÉPLOIEMENT TERMINÉ ==="
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
